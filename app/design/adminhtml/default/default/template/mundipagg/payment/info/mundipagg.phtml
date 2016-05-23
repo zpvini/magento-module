@@ -1,0 +1,234 @@
+<?php
+/**
+ * Uecommerce
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Uecommerce EULA.
+ * It is also available through the world-wide-web at this URL:
+ * http://www.uecommerce.com.br/
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade the extension
+ * to newer versions in the future. If you wish to customize the extension
+ * for your needs please refer to http://www.uecommerce.com.br/ for more information
+ *
+ * @category   Uecommerce
+ * @package    Uecommerce_Mundipagg
+ * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
+ * @license    http://www.uecommerce.com.br/
+ */
+
+/**
+ * Mundipagg Payment module
+ *
+ * @category   Uecommerce
+ * @package    Uecommerce_Mundipagg
+ * @author     Uecommerce Dev Team
+ */
+
+$helper = Mage::helper('mundipagg');
+
+if(Mage::registry('current_order')):
+    $_order = $this->getOrder();
+endif;
+
+if(Mage::registry('current_invoice')):
+    $_order = $this->getInvoice()->getOrder();
+endif;
+
+if(Mage::registry('current_shipment')):
+    $_order = $this->getShipment()->getOrder();
+endif;
+
+if(Mage::registry('current_creditmemo')):
+    $data = Mage::registry('current_creditmemo')->getData();
+    
+    $_order = Mage::getModel('sales/order')->load($data['order_id']);
+endif;
+
+$standard = Mage::getModel('mundipagg/standard');
+
+$paymentAction = $standard->getPaymentAction();
+
+if ($paymentAction == 'authorize') {
+    $paymentAction = 'authorization';
+}
+?>
+<div>
+    <p>
+    <?php 
+    $PaymentMethod = $_order->getPayment()->getAdditionalInformation('PaymentMethod');
+    
+    echo $helper->__('Method').': '.$helper->__($PaymentMethod).'<br/>';
+
+    if($orderKey = $_order->getPayment()->getAdditionalInformation('OrderKey')):
+        echo $helper->__('OrderKey').': '.$orderKey.'<br/>';
+    endif;
+
+    if($OrderReference = $_order->getPayment()->getAdditionalInformation('OrderReference')):
+        echo $helper->__('OrderReference').': '.$OrderReference.'<br/>';
+    endif;
+
+    // Informations about transaction
+    $transaction = Mage::getModel('sales/order_payment_transaction')->getCollection()
+        ->addAttributeToFilter('order_id', array('eq' => $_order->getEntityId()))
+        ->addAttributeToFilter('txn_type', array('eq' => $paymentAction));                                                 
+    $authCode   = '';
+    $tid        = '';
+    $ccNumber   = '';
+    $message    = '';
+
+    foreach ($transaction as $t) :
+        $t = $t->getData();
+        $txDetail = $t['additional_information'];
+
+        if (!empty($txDetail)):                                                     
+            $authCode   = isset($txDetail['AuthorizationCode']) ? $txDetail['AuthorizationCode'] : null;
+            $tid        = isset($txDetail['TransactionIdentifier']) ? $txDetail['TransactionIdentifier'] : null;
+            $ccNumber   = isset($txDetail['MaskedCreditCardNumber']) ? $txDetail['MaskedCreditCardNumber'] : null;
+
+            if(isset($txDetail['CreditCardNumber'])) {
+                $ccNumber = $txDetail['CreditCardNumber'];
+            }
+
+            $message = isset($txDetail['AcquirerMessage']) ? $txDetail['AcquirerMessage'] : null;
+        endif;
+    endforeach;
+
+    if($PaymentMethod == '1CreditCards' || $PaymentMethod == 'mundipagg_creditcard'):
+        // Token
+        $token = $this->getInfo()->getAdditionalInformation('mundipagg_creditcard_token_1_1');
+
+        if($token && $token != 'new'):
+            echo $helper->__('Credit Card Issuer').': ';
+            echo $this->getInfo()->getAdditionalInformation('CreditCardBrandEnum_mundipagg_creditcard_token_1_1');
+            echo '<br/>';
+            if ($ccNumber) echo 'Numeração: '.$ccNumber.'<br>';
+
+            if ($this->getInfo()->getAdditionalInformation('mundipagg_creditcard_credito_parcelamento_1_1')):
+                echo $helper->__('InstallmentsCount').': ';
+                echo $this->getInfo()->getAdditionalInformation('mundipagg_creditcard_credito_parcelamento_1_1');
+                echo 'x<br/>';
+            endif;
+        else:
+            echo $helper->__('Credit Card Issuer').': ';
+            echo $this->getInfo()->getAdditionalInformation('mundipagg_creditcard_1_1_cc_type');
+            echo '<br/>';
+            if ($ccNumber) echo 'Numeração: '.$ccNumber.'<br>';
+
+            if ($this->getInfo()->getAdditionalInformation('mundipagg_creditcard_new_credito_parcelamento_1_1')):
+                echo $helper->__('InstallmentsCount').': ';
+                echo $this->getInfo()->getAdditionalInformation('mundipagg_creditcard_new_credito_parcelamento_1_1');
+                echo 'x<br/>';
+            endif;
+        endif;
+
+        if ($authCode):
+                echo 'Autorização: <b>'.$authCode.'</b><br/>';
+        endif;
+
+        if ($tid):
+                echo 'ID da Transação: '.$tid.'<br/>';
+        endif;
+
+        if ($message):
+            echo 'Retorno adquirente: '.$message.'<br/>';
+        endif;
+
+        if($CreditCardTransactionStatusEnum = $_order->getPayment()->getAdditionalInformation('1_CreditCardTransactionStatusEnum')):
+            echo $helper->__('Transaction Status').': '.$CreditCardTransactionStatusEnum.'<br/>';
+        else:
+            if($CreditCardTransactionStatusEnum = $_order->getPayment()->getAdditionalInformation('CreditCardTransactionStatusEnum')):
+                echo $helper->__('Transaction Status').': '.$CreditCardTransactionStatusEnum.'<br/>';
+            endif;
+        endif;
+    endif;
+
+    if($PaymentMethod == 'mundipagg_creditcardoneinstallment'):
+        // Token
+        $token = $this->getInfo()->getAdditionalInformation('mundipagg_creditcardoneinstallment_token_1_1');
+
+        if($token && $token != 'new'):
+            echo $helper->__('Credit Card Issuer').': ';
+            echo $this->getInfo()->getAdditionalInformation('CreditCardBrandEnum_mundipagg_creditcardoneinstallment_token_1_1');
+            echo '<br/>';
+            ?>
+        <?php
+        else:
+            echo $helper->__('Credit Card Issuer').': ';
+            echo $this->getInfo()->getAdditionalInformation('mundipagg_creditcardoneinstallment_1_1_cc_type');
+            echo '<br/>';
+        endif;
+
+        if ($authCode):
+            echo $helper->__('Autorização').': '.$authCode.'<br/>';
+        endif;
+
+        if ($tid):
+            echo $helper->__('Nosso Número').': '.$tid.'<br/>';
+        endif;
+
+        if ($message):
+            echo 'Retorno adquirente: '.$message.'<br/>';
+        endif;
+
+        if( $CreditCardTransactionStatusEnum = $_order->getPayment()->getAdditionalInformation('1_CreditCardTransactionStatusEnum') ):
+            echo $helper->__('Transaction Status').': '.$CreditCardTransactionStatusEnum.'<br/>';
+        else: 
+            if($CreditCardTransactionStatusEnum = $_order->getPayment()->getAdditionalInformation('CreditCardTransactionStatusEnum')):
+                echo $helper->__('Transaction Status').': '.$CreditCardTransactionStatusEnum.'<br/>';
+            endif;
+        endif;
+    endif;
+    
+    if(($PaymentMethod == 'BoletoBancario' || $PaymentMethod == 'mundipagg_boleto') && $boletoUrl = $_order->getPayment()->getAdditionalInformation('BoletoUrl')):
+
+        // Informations about transaction
+        if (version_compare(Mage::getVersion(), '1.5.0', '<')) { 
+            $transactionType = 'payment';
+        } else {
+            $transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
+        }
+
+        $transaction = Mage::getModel('sales/order_payment_transaction')->getCollection()
+            ->addAttributeToFilter('order_id', array('eq' => $_order->getEntityId()))
+            ->addAttributeToFilter('txn_type', array('eq' => $transactionType))
+            ->addAttributeToFilter('is_closed', array('eq' => '1'));                                                    
+        $nossoNumero    = '';
+        $barcode        = '';
+
+        foreach ($transaction as $t):
+            $t          = $t->getData();
+            $txDetail   = $t['additional_information'];
+
+            if (!empty($txDetail)):                                                                      
+                $nossoNumero    = $txDetail['NossoNumero'];
+                $barcode        = $txDetail['Barcode'];
+            endif;
+        endforeach;
+    ?> 
+        <p>
+            <?php echo $helper->__('Nosso Número'); ?>: <b><?php echo $nossoNumero; ?></b>
+        </p>
+        <p>
+            <?php echo $helper->__('Código de Barras'); ?>: <?php echo $barcode; ?>
+        </p>
+        <p>
+            <a href="<?php echo $boletoUrl;?>" target="_blank"><?php echo $helper->__('Print boleto');?></a>
+        </p>
+    <?php
+    endif;
+
+    if($PaymentMethod == 'mundipagg_debit'):
+        $bankName = $this->getInfo()->getAdditionalInformation('BankName');
+        $bankPaymentDate = $this->getInfo()->getAdditionalInformation('BankPaymentDate');
+    ?>
+        <?php if($bankName): echo $helper->__('Banco'); ?>: <?php echo $bankName; endif;?>
+        <?php if($bankPaymentDate): echo $helper->__('Data de pagamento'); ?>: <?php echo $bankPaymentDate; endif;?>
+    <?php 
+    endif;
+    ?>
+    </p>
+</div>

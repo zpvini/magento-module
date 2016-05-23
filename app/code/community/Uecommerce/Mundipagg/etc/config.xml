@@ -1,0 +1,350 @@
+<?xml version="1.0"?>
+<!-- 
+/**
+ * Uecommerce
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Uecommerce EULA.
+ * It is also available through the world-wide-web at this URL:
+ * http://www.uecommerce.com.br/
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade the extension
+ * to newer versions in the future. If you wish to customize the extension
+ * for your needs please refer to http://www.uecommerce.com.br/ for more information
+ *
+ * @category   Uecommerce
+ * @package    Uecommerce_Mundipagg
+ * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
+ * @license    http://www.uecommerce.com.br/
+ */
+
+/**
+ * Mundipagg Payment module
+ *
+ * @category   Uecommerce
+ * @package    Uecommerce_Mundipagg
+ * @author     Uecommerce Dev Team
+ */
+-->
+<config>
+    <modules>
+        <Uecommerce_Mundipagg>
+            <version>2.2.5</version>
+        </Uecommerce_Mundipagg>
+    </modules>
+
+    <global>
+        <models>
+            <mundipagg>
+                <class>Uecommerce_Mundipagg_Model</class>
+                <resourceModel>mundipagg_resource</resourceModel>
+            </mundipagg>
+            <mundipagg_resource>
+                <class>Uecommerce_Mundipagg_Model_Resource</class>
+                <entities>
+                    <mundipagg_customers>
+                        <table>mundipagg_customers</table>
+                    </mundipagg_customers>
+                    <mundipagg_card_on_file>
+                        <table>mundipagg_card_on_file</table>
+                    </mundipagg_card_on_file>
+                </entities>
+            </mundipagg_resource>
+        </models>
+
+        <events>
+            <controller_action_predispatch>
+                <observers>
+                    <sessionUpdate>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>sessionUpdate</method>
+                    </sessionUpdate>
+                </observers>
+            </controller_action_predispatch>
+            <payment_method_is_active>
+                <observers>
+                    <removePaymentMethods>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>removePaymentMethods</method>
+                    </removePaymentMethods>
+                </observers>
+            </payment_method_is_active>
+            <sales_order_place_after>
+                <observers>
+                    <onhold_order>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>updateStatus</method>
+                    </onhold_order>
+                </observers>
+            </sales_order_place_after>
+            <controller_action_postdispatch_checkout_onepage_savePayment>
+                <observers>
+                    <removeInterest>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>removeInterest</method>
+                    </removeInterest>
+                </observers>
+            </controller_action_postdispatch_checkout_onepage_savePayment>
+            <payment_method_is_active>
+                <observers>
+                    <checkForRecurrency>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>checkForRecurrency</method>
+                    </checkForRecurrency>
+                </observers>
+            </payment_method_is_active>
+            <sales_quote_collect_totals_after>
+                <observers>
+                    <mundipagg_discount_partial>
+                        <type>singleton</type>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>addDiscountWhenPartial</method>
+                    </mundipagg_discount_partial>
+                </observers>
+            </sales_quote_collect_totals_after>
+        </events>
+
+        <resources>
+            <mundipagg_setup>
+                <setup>
+                    <module>Uecommerce_Mundipagg</module>
+                    <class>Uecommerce_Mundipagg_Model_Resource_Setup</class>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </mundipagg_setup>
+            <mundipagg_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </mundipagg_write>
+            <mundipagg_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </mundipagg_read>
+        </resources>
+
+        <blocks>
+            <mundipagg>
+                <class>Uecommerce_Mundipagg_Block</class>
+            </mundipagg>
+            <adminhtml>
+                <rewrite>
+                    <sales_transactions_detail_grid>Uecommerce_Mundipagg_Block_Adminhtml_Sales_Transactions_Detail_Grid</sales_transactions_detail_grid>
+                    <sales_order_totals>Uecommerce_Mundipagg_Block_Adminhtml_Sales_Order_Totals</sales_order_totals>
+                    <sales_order_invoice_totals>Uecommerce_Mundipagg_Block_Adminhtml_Sales_Order_Invoice_Totals</sales_order_invoice_totals>
+                    <sales_order_creditmemo_totals>Uecommerce_Mundipagg_Block_Adminhtml_Sales_Order_Creditmemo_Totals</sales_order_creditmemo_totals>
+                </rewrite>
+            </adminhtml>
+            <sales>
+                <rewrite>
+                    <order_totals>Uecommerce_Mundipagg_Block_Sales_Order_Totals</order_totals>
+                    <order_invoice_totals>Uecommerce_Mundipagg_Block_Sales_Order_Invoice_Totals</order_invoice_totals>
+                    <order_creditmemo_totals>Uecommerce_Mundipagg_Block_Sales_Order_Creditmemo_Totals</order_creditmemo_totals>
+                </rewrite>
+            </sales>
+            <checkout>
+                <rewrite>
+                    <onepage_payment_methods>Uecommerce_Mundipagg_Block_Checkout_Onepage_Payment_Methods</onepage_payment_methods>
+                </rewrite>
+            </checkout>
+        </blocks>
+        
+        <helpers>
+            <mundipagg>
+                <class>Uecommerce_Mundipagg_Helper</class>
+            </mundipagg>
+        </helpers>
+
+        <sales>
+            <quote>
+                <totals>
+                    <mundipagg_interest>
+                        <class>Uecommerce_Mundipagg_Model_Quote_Address_Interest</class>
+                        <after>shipping</after>
+                        <before>grand_total</before>
+                    </mundipagg_interest>
+                </totals>
+            </quote>
+            <order>
+                <totals>
+                    <mundipagg_interest>
+                        <class>Uecommerce_Mundipagg_Model_Quote_Address_Interest</class>
+                        <after>shipping</after>
+                        <before>grand_total</before>
+                    </mundipagg_interest>
+                </totals>
+            </order>
+            <order_invoice>
+                <totals>
+                    <your_total>
+                        <class>Uecommerce_Mundipagg_Model_Order_Invoice_Interest</class>
+                        <after>shipping</after>
+                        <before>grand_total</before>
+                    </your_total>
+                </totals>
+            </order_invoice>
+        </sales>
+
+        <fieldsets>
+            <sales_convert_quote_address>
+                <mundipagg_interest>
+                    <to_order>*</to_order>
+                </mundipagg_interest>
+                <mundipagg_base_interest>
+                    <to_order>*</to_order>
+                </mundipagg_base_interest>
+            </sales_convert_quote_address>
+            <sales_convert_order>
+                <mundipagg_interest>
+                    <to_invoice>*</to_invoice>
+                    <to_shipment>*</to_shipment>
+                    <to_cm>*</to_cm>
+                </mundipagg_interest>
+                <mundipagg_base_interest>
+                    <to_invoice>*</to_invoice>
+                    <to_shipment>*</to_shipment>
+                    <to_cm>*</to_cm>
+                </mundipagg_base_interest>
+            </sales_convert_order>
+        </fieldsets>
+    </global>
+
+    <frontend>
+        <routers>
+            <mundipagg>
+                <use>standard</use>
+                <args>
+                    <module>Uecommerce_Mundipagg</module>
+                    <frontName>mundipagg</frontName>
+                </args>
+            </mundipagg>
+        </routers>
+        <translate>
+            <modules>
+                <mundipagg>
+                    <files>
+                        <default>Uecommerce_Mundipagg.csv</default>
+                    </files>
+                </mundipagg>
+            </modules>
+        </translate>
+        <layout>
+            <updates>
+                <mundipagg module="Uecommerce_Mundipagg">
+                    <file>mundipagg.xml</file>
+                </mundipagg>
+            </updates>
+        </layout>
+    </frontend>
+
+    <adminhtml>
+        <translate>
+            <modules>
+                <mundipagg>
+                    <files>
+                        <default>Uecommerce_Mundipagg.csv</default>
+                    </files>
+                </mundipagg>
+            </modules>
+        </translate>
+        <layout>
+            <updates>
+                <mundipagg module="Uecommerce_Mundipagg">
+                    <file>mundipagg.xml</file>
+                </mundipagg>
+            </updates>
+        </layout>
+    </adminhtml>
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <mundipagg after="Mage_Adminhtml">Uecommerce_Mundipagg_Adminhtml</mundipagg>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
+      
+    <default>
+        <payment>
+            <mundipagg_standard>
+                <model>mundipagg/standard</model>
+                <apiUrlStaging>https://sandbox.mundipaggone.com/sale/</apiUrlStaging>
+                <apiUrlProduction>https://transactionv2.mundipaggone.com/Sale/</apiUrlProduction>
+                <clearsale>0</clearsale>
+                <debug>1</debug>
+                <payment_action>order</payment_action>
+                <save_cardonfile>1</save_cardonfile>
+                <delivery_deadline>5</delivery_deadline>
+                <shipping_company>Correios</shipping_company>
+            </mundipagg_standard>
+            <mundipagg_creditcardoneinstallment>
+                <model>mundipagg/creditcardoneinstallment</model>
+                <active>0</active>
+                <title><![CDATA[Cartão de Crédito à vista]]></title>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_creditcardoneinstallment>
+            <mundipagg_creditcard>
+                <model>mundipagg/creditcard</model>
+                <active>0</active>
+                <title><![CDATA[Cartão de Crédito]]></title>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_creditcard>
+            <mundipagg_twocreditcards>
+                <model>mundipagg/twocreditcards</model>
+                <active>0</active>
+                <title><![CDATA[2 Cartões de Crédito]]></title>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_twocreditcards>
+            <mundipagg_threecreditcards>
+                <model>mundipagg/threecreditcards</model>
+                <active>0</active>
+                <title><![CDATA[3 Cartões de Crédito]]></title>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_threecreditcards>
+            <mundipagg_fourcreditcards>
+                <model>mundipagg/fourcreditcards</model>
+                <active>0</active>
+                <title><![CDATA[4 Cartões de Crédito]]></title>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_fourcreditcards>
+            <mundipagg_fivecreditcards>
+                <model>mundipagg/fivecreditcards</model>
+                <active>0</active>
+                <title><![CDATA[5 Cartões de Crédito]]></title>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_fivecreditcards>
+            <mundipagg_boleto>
+                <model>mundipagg/boleto</model>
+                <active>0</active>
+                <title><![CDATA[Boleto]]></title>
+                <dias_validade_boleto>3</dias_validade_boleto>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_boleto>
+            <mundipagg_debit>
+                <model>mundipagg/debit</model>
+                <active>0</active>
+                <title><![CDATA[Débito]]></title>
+                <apiDebitUrl>https://api.mundipaggone.com/Order/OnlineDebit/</apiDebitUrl>
+                <apiDebitStagingUrl>https://apisandbox.mundipaggone.com/Order/OnlineDebit/</apiDebitStagingUrl>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_debit>
+        </payment>
+    </default>
+</config>

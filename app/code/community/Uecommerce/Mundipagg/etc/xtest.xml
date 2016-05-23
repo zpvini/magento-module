@@ -1,0 +1,143 @@
+<config>
+    <default>
+        <xtest>
+            <selenium>
+                <screenshot>
+                    <breakpoints>1280x1024</breakpoints>
+                </screenshot>
+            </selenium>
+
+            <fixtures>
+
+                <customer>
+                    <email>devnull@mundipagg.com.br</email>
+                    <firstname>Test Firstname</firstname>
+                    <lastname>Test Lastname</lastname>
+
+                    <billing_address>
+                        <firstname>Test Firstname</firstname>
+                        <lastname>Test Firstname</lastname>
+                        <street>Test Street</street>
+                        <city>Test City</city>
+                        <postcode>01310909</postcode>
+                        <telephone>1199999999</telephone>
+                        <country_id>BR</country_id>
+                        <region_id></region_id>
+                    </billing_address>
+
+                    <shipping_address>
+                        <firstname>Test Firstname</firstname>
+                        <lastname>Test Lastname</lastname>
+                        <street>Test Street</street>
+                        <city>Test City</city>
+                        <postcode>01310909</postcode>
+                        <telephone>1199999999</telephone>
+                        <country_id>BR</country_id>
+                        <region_id></region_id>
+                    </shipping_address>
+
+                </customer>
+
+                <order>
+
+                    <customer_id>0</customer_id>
+                    <customer_data>
+                        <email>devnull@mundipagg.com.br</email>
+                        <firstname>Test Firstname</firstname>
+                        <lastname>Test Lastname</lastname>
+                    </customer_data>
+
+                    <payment_method>
+                        <method>mundipagg_boleto</method>
+                        <!-- some other options-->
+                    </payment_method>
+
+                    <shipping_method>
+                        <method>flatrate_flatrate</method>
+                    </shipping_method>
+
+                    <billing_address>
+                        <firstname>Test Firstname</firstname>
+                        <lastname>Test Lastname</lastname>
+                        <street>Test Street</street>
+                        <city>Test City</city>
+                        <postcode>33100</postcode>
+                        <telephone>Xtest Phone</telephone>
+                        <country_id>DE</country_id>
+                        <region_id>88</region_id>
+                    </billing_address>
+
+                    <shipping_address>
+                        <firstname>Xtest Firstname</firstname>
+                        <lastname>Xtest Lastname</lastname>
+                        <street>Xtest Street</street>
+                        <city>Xtest City</city>
+                        <postcode>01310909</postcode>
+                        <telephone>1199999999</telephone>
+                        <country_id>BR</country_id>
+                        <region_id></region_id>
+                    </shipping_address>
+
+                    <items>
+
+                        <item>
+                            <qty>1</qty>
+                            <sku>test</sku>
+                        </item>
+
+                    </items>
+
+                </order>
+            </fixtures>
+
+            <selenium>
+
+                <checkout>
+
+                    <customer>
+                        <email>selenium@mundipagg.com.br</email>
+                        <firstname>Firstname</firstname>
+                        <lastname>Lasntname</lastname>
+                    </customer>
+
+                    <addtocart>
+
+                        <product_1>
+                            <sku>test</sku>
+                            <qty>1</qty>
+                        </product_1>
+
+                    </addtocart>
+
+                    <billing_address>
+
+                        <firstname>test firstname</firstname>
+                        <lastname>test lastname</lastname>
+                        <company>company</company>
+                        <telephone>123456</telephone>
+                        <street1>Teststreet 32</street1>
+                        <city>Testcity</city>
+                        <postcode>33100</postcode>
+                        <use_for_shipping_no>1</use_for_shipping_no>
+
+                    </billing_address>
+
+                    <shipping_address>
+                        <!-- todo -->
+                    </shipping_address>
+
+                    <shipping_method>
+                        <method>flatrate_flatrate</method>
+                    </shipping_method>
+
+                    <payment_method>
+                        <method>mundipagg_boleto</method>
+                    </payment_method>
+
+                </checkout>
+
+            </selenium>
+
+        </xtest>
+    </default>
+</config>

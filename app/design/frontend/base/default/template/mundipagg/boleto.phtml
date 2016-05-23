@@ -1,0 +1,30 @@
+<?php 
+$_code = $this->getMethodCode();
+
+// We check if taxvat is enabled
+$_taxvat = $this->getLayout()->createBlock('customer/widget_taxvat');
+?>
+<fieldset>	
+	<ul id="payment_form_<?php echo $_code ?>" style="display:none;">
+	    <li>
+	        <div id="mundipagg_boleto">
+	            <ul >
+	            	
+			        <li>
+		                <div id="boleto" style="float:left; text-align:center">
+				            <img src="<?php echo $this->getSkinUrl('images/mundipagg/boleto.jpg');?>" alt="<?php echo $this->__('Boleto Bancário') ?>" /> <?php echo $this->__('Print your boleto after you have placed your order.') ?>
+		                </div>
+			        </li>
+                                <?php if(!$_taxvat->isEnabled() && Mage::getSingleton('customer/session')->getCustomer()->getTaxvat() == ''): ?>
+                                <li style="clear:both">
+			        	<div class="input-box">	
+			        		<label><?php echo $this->__('CPF ou CNPJ') ?> <span class="required">*</span></label><br/>
+			        		<input type="text" id="<?php echo $_code ?>_boleto_taxvat" name="payment[boleto_taxvat]" title="<?php echo $this->__('Taxvat') ?>" class="validar_cpf required-entry" onkeydown="remove_characters(event);"/>
+			        	</div>
+			        </li>
+			    	<?php endif; ?>
+		        </ul>
+	    	</div>
+		</li>
+	</ul>
+</fieldset>

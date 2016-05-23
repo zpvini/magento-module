@@ -1,0 +1,129 @@
+/**
+ * Uecommerce
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Uecommerce EULA.
+ * It is also available through the world-wide-web at this URL:
+ * http://www.uecommerce.com.br/
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade the extension
+ * to newer versions in the future. If you wish to customize the extension
+ * for your needs please refer to http://www.uecommerce.com.br/ for more information
+ *
+ * @category   Uecommerce
+ * @package    Uecommerce_Mundipagg
+ * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
+ * @license    http://www.uecommerce.com.br/
+ */
+
+/**
+ * Mundipagg Payment module
+ *
+ * @category   Uecommerce
+ * @package    Uecommerce_Mundipagg
+ * @author     Uecommerce Dev Team
+ */
+
+.issuers{
+	text-align: center;
+	padding-right: 10px;
+}
+
+.cursor_hand {
+	cursor: pointer;
+}
+
+ul.inline {
+	float:left;
+}
+
+ul.inline li {
+	float: left;
+	width: 30%;
+	margin-right: 2%;
+	text-align: center;
+}
+
+ul.inline.input-radio > li {
+	width: 40px;
+    margin-right:4px
+}
+
+fieldset ul.inline.input-radio > li{
+    margin-right: 3px
+}
+
+ul.inline li img {
+	width: 100%;
+	height: auto;
+	clear: both;
+	display: block;
+	margin-bottom: 5px;
+}
+
+.sp-methods select.month {
+	width: 145px;
+}
+
+.cc_brand_types{
+    width:42px;
+    height:26px;
+    margin-right: 10px;
+    background: url('../images/mundipagg/cc_types.png');
+    margin-bottom: 5px;
+}
+
+.cc_brand_types.vi{
+    background-position: 0 -26px;
+}
+.cc_brand_types.vi.active{
+    background-position: 0 0;
+}
+.cc_brand_types.mc{
+    background-position: -42px -26px;
+}
+.cc_brand_types.mc.active{
+    background-position:  -42px 0;
+}
+.cc_brand_types.ae{
+    background-position: -208px -26px;
+}
+.cc_brand_types.ae.active{
+    background-position: -208px 0;
+}
+.cc_brand_types.di{
+    background-position: -167px -26px;
+}
+.cc_brand_types.di.active{
+    background-position: -167px 0;
+}
+.cc_brand_types.el{
+    background-position: -126px -26px;
+}
+.cc_brand_types.el.active{
+    background-position: -126px 0;
+}
+.cc_brand_types.hi{
+    background-position: -84px -26px;
+}
+.cc_brand_types.hi.active{
+    background-position: -84px 0;
+}
+
+.cc_brands input[type=radio]{display:none}
+
+.mundipagg_reload{
+    position: absolute;
+    z-index: 10;
+    margin-top: -19px;
+}
+
+.division{width:100%;clear:both;height: 10px;border-top:1px solid #ddd;margin-top:10px}
+
+.info-payment{clear:both}
+
+#onestepcheckout-payment-method-wrapper .field{width: 100%}
+

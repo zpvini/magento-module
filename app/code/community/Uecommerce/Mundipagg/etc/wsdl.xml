@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns:typens="urn:{{var wsdl.name}}" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+             xmlns="http://schemas.xmlsoap.org/wsdl/"
+             name="{{var wsdl.name}}" targetNamespace="urn:{{var wsdl.name}}">
+    <types>
+        <schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:Magento">
+            <complexType name="shoppingCartPaymentEntity">
+                <all>
+                    <element name="payment_id" type="xsd:string" minOccurs="0"/>
+                    <element name="created_at" type="xsd:string" minOccurs="0"/>
+                    <element name="updated_at" type="xsd:string" minOccurs="0"/>
+                    <element name="method" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_type" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_number_enc" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_last4" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_cid_enc" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_owner" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_exp_month" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_exp_year" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_ss_owner" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_ss_start_month" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_ss_start_year" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_ss_issue" type="xsd:string" minOccurs="0"/>
+                    <element name="po_number" type="xsd:string" minOccurs="0"/>
+                    <element name="additional_data" type="xsd:string" minOccurs="0"/>
+                    <element name="additional_information" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_type" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_cc_holder_name_1_1" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_1_1_cc_number" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_expirationMonth_1_1" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_expirationYear_1_1" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_cc_cid_1_1" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_1_1_cc_type" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_new_credito_parcelamento_1_1" type="xsd:string" minOccurs="0"/>
+                </all>
+            </complexType>
+
+            <complexType name="shoppingCartPaymentMethodEntity">
+                <all>
+                    <element name="po_number" type="xsd:string" minOccurs="0"/>
+                    <element name="method" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_cid" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_owner" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_number" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_type" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_exp_year" type="xsd:string" minOccurs="0"/>
+                    <element name="cc_exp_month" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_type" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_cc_holder_name_1_1" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_1_1_cc_number" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_expirationMonth_1_1" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_expirationYear_1_1" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_cc_cid_1_1" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_1_1_cc_type" type="xsd:string" minOccurs="0"/>
+                    <element name="mundipagg_creditcard_new_credito_parcelamento_1_1" type="xsd:string" minOccurs="0"/>
+                </all>
+            </complexType>
+        </schema>
+    </types>
+</definitions>

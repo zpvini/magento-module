@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<jstranslator>
+    <validar_cpf translate="message" module="mundipagg">
+        <message>The taxvat is invalid</message>
+    </validar_cpf>
+    <check_values translate="message" module="mundipagg">
+        <message>Check the values to pass on each card</message>
+    </check_values>
+    <validate-cc-exp-cus translate="message" module="mundipagg">
+        <message>Expiration date of the incorrect card</message>
+    </validate-cc-exp-cus>
+    <template_insterest translate="message" module="mundipagg">
+        <message>Total amount with interest: USD{%%%}</message>
+    </template_insterest>
+</jstranslator>

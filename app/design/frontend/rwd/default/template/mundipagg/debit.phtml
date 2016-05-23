@@ -1,0 +1,52 @@
+<?php 
+$_code = $this->getMethodCode();
+
+// We check if taxvat is enabled
+$_taxvat = $this->getLayout()->createBlock('customer/widget_taxvat');
+?>
+
+	
+	<ul id="payment_form_<?php echo $_code ?>" style="display:none;">
+	    <li>
+	        <div id="mundipagg_debit">
+	            <ul >
+	            	<li>
+		                <div class="field">
+                			<div class="input-box" >
+						        <ul class="inline input-radio">
+						        <?php 
+						        $debitTypes = $this->getDebitTypes();
+						        $_i = 1;
+						        ?>
+						            <?php foreach($debitTypes as $debitType): ?>
+						            	<li>
+											<?php if(strpos($debitType, 'cielo') !== false) {
+												$value = 'Cielo';
+											} else {
+												$value = $debitType;
+											} ?>
+											<label for="<?php echo $_code . '_' . $debitType; ?>"><img src="<?php echo $this->getSkinUrl('images/mundipagg/' . $debitType . '.png'); ?>" alt="<?php echo $debitType ?>" border="0" style="cursor:pointer"/></label>
+											<input type="radio" name="payment[<?php echo $_code; ?>]" id="<?php echo $_code . '_' . $debitType; ?>" value="<?php echo $value ?>" class="<?php if ($_i == 1): ?>validate-one-required-by-name<?php endif; ?>">
+										</li>
+						            <?php 
+						            $_i++;
+						            endforeach 
+						            ?>
+					        	</ul>
+							</div>
+						</div>
+			        </li>
+	            	<?php if(!$_taxvat->isEnabled() && Mage::getSingleton('customer/session')->getCustomer()->getTaxvat() == ''): ?>
+			        <li style="clear:both">
+                                        <label><?php echo $this->__('CPF ou CNPJ') ?> <span class="required">*</span></label>
+			        	<div class="input-box">	
+			        		
+			        		<input type="text" id="<?php echo $_code ?>_taxvat" name="payment[taxvat]" title="<?php echo $this->__('Taxvat') ?>" class="validar_cpf required-entry input-text" onkeydown="remove_characters(event);"/>
+			        	</div>
+			        </li>
+			    	<?php endif; ?>
+		        </ul>
+	    	</div>
+		</li>
+	</ul>
+

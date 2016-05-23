@@ -1,0 +1,963 @@
+<?xml version="1.0"?>
+<!-- 
+/**
+ * Uecommerce
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Uecommerce EULA.
+ * It is also available through the world-wide-web at this URL:
+ * http://www.uecommerce.com.br/
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade the extension
+ * to newer versions in the future. If you wish to customize the extension
+ * for your needs please refer to http://www.uecommerce.com.br/ for more information
+ *
+ * @category   Uecommerce
+ * @package    Uecommerce_Mundipagg
+ * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
+ * @license    http://www.uecommerce.com.br/
+ */
+
+/**
+ * Mundipagg Payment module
+ *
+ * @category   Uecommerce
+ * @package    Uecommerce_Mundipagg
+ * @author     Uecommerce Dev Team
+ */
+-->
+<config>
+    <sections>
+        <payment translate="label" module="payment">
+            <groups>
+                <mundipagg_standard type="group" translate="label">
+                    <label><![CDATA[MundiPagg]]></label>
+                    <sort_order>420</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <fields>
+                        <version translate="label">
+                            <label>Version</label>
+                            <frontend_type>select</frontend_type>
+                            <frontend_model>Uecommerce_Mundipagg_Block_Adminhtml_Version</frontend_model>
+                            <sort_order>0</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </version>
+
+                        <environment translate="label">
+                            <label>Environment</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Uecommerce_Mundipagg_Model_Source_Environment</source_model>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[<b>Development</b> = ambiente de teste<br/><b>Production</b> = ambiente de produção]]></comment>
+                        </environment>
+
+                        <debug translate="label">
+                            <label>Debug</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>4</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[O Debug permite gravar o retorno da MundiPagg nos logs do Magento (/var/log/system.log), para tal é necessário ter os logs do Magento ativados (System -> Configuration -> Advanced -> Developer -> Log Settings -> Yes)]]></comment>
+                        </debug>
+
+                        <apiUrlStaging translate="label">
+                            <label>Api URL Staging</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>5</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </apiUrlStaging>
+
+                        <merchantKeyStaging translate="label">
+                            <label>merchantKey Staging</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>6</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </merchantKeyStaging>
+
+                        <apiUrlProduction translate="label">
+                            <label>Api URL Production</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>7</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </apiUrlProduction>
+
+                        <merchantKeyProduction translate="label">
+                            <label>merchantKey Production</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>8</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </merchantKeyProduction>
+
+                        <payment_action translate="label">
+                            <label>Payment Action</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Uecommerce_Mundipagg_Model_Source_PaymentAction</source_model>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[<b>AuthOnly</b> = Autorizar<br/><b>AuthAndCapture</b> = Autorizar e capturar]]></comment>
+                        </payment_action>
+
+                        <clearsale translate="label">
+                            <label>Comunicar com ClearSale pela MundiPagg?</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>9</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Para utilizar a ClearSale, é necessário contratar os serviços da ClearSale e em seguida solicitar o cadastro do anti-fraude para a loja e enviar a chave de afiliação da ClearSale para o suporte da Mundipagg.]]></comment>
+                        </clearsale>
+
+                        <cc_types translate="label">
+                            <label>Credit Card Issuers</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <source_model>Uecommerce_Mundipagg_Model_Source_Cctypes</source_model>
+                            <sort_order>12</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Escolha as bandeiras que você aceita na sua loja]]></comment>
+                        </cc_types>
+
+                        <heading_installments translate="label">
+                            <label>Installments and Interest</label>
+                            <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+                            <sort_order>13</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </heading_installments>
+
+                        <enable_installments translate="label">
+                            <label>Ativar parcelamento?</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>15</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </enable_installments>
+
+                        <display_total>
+                            <label>Exibir total com juros ao lado das parcelas?</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>18</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </display_total>
+
+                        <product_pages_installment_default>
+                            <label>Qual parcelamento exibir na página do produto?</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Uecommerce_Mundipagg_Model_Source_CctypeProductInstallments</source_model>
+                            <sort_order>19</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </product_pages_installment_default>
+                        
+                        <setoldsettings translate="label comment tooltip">
+                            <label>Set old settings</label>
+                            <sort_order>20</sort_order>
+                            <frontend_type>button</frontend_type>
+                            <frontend_model>mundipagg/adminhtml_system_config_form_button</frontend_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>If you just update the module and its old version is below 2.0.0, you can click this button to generate the installments as were set in the old version of the module.</comment>
+                            <tooltip>If you have already set manually, CAUTION! This function will reset all installments.</tooltip>
+                        </setoldsettings>
+
+                        <installments translate="label">
+                            <label>Installments default</label>
+                            <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
+                            <backend_model>mundipagg/system_config_backend_installments</backend_model>
+                            <sort_order>21</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+
+                        </installments>
+
+                        <installments_VI translate="label">
+                            <label>Installments for Visa</label>
+                            <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
+                            <backend_model>mundipagg/system_config_backend_installments</backend_model>
+                            <sort_order>22</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+
+                        </installments_VI>
+
+                        <installments_MC translate="label">
+                            <label>Installments for Mastercard</label>
+                            <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
+                            <backend_model>mundipagg/system_config_backend_installments</backend_model>
+                            <sort_order>23</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+
+                        </installments_MC>
+
+                        <installments_AE translate="label">
+                            <label>Installments for Amex</label>
+                            <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
+                            <backend_model>mundipagg/system_config_backend_installments</backend_model>
+                            <sort_order>24</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+
+                        </installments_AE>
+
+                        <installments_DI translate="label">
+                            <label>Installments for Diners</label>
+                            <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
+                            <backend_model>mundipagg/system_config_backend_installments</backend_model>
+                            <sort_order>25</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comments>This is the fallback if specific credit card type has no installments configured</comments>
+                        </installments_DI>
+
+                        <installments_EL translate="label">
+                            <label>Installments for Elo</label>
+                            <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
+                            <backend_model>mundipagg/system_config_backend_installments</backend_model>
+                            <sort_order>26</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+
+                        </installments_EL>
+
+                        <installments_HI translate="label">
+                            <label>Installments for Hipercard</label>
+                            <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
+                            <backend_model>mundipagg/system_config_backend_installments</backend_model>
+                            <sort_order>27</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+
+                        </installments_HI>
+                        <heading_extras translate="label">
+                            <label>Extras</label>
+                            <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+                            <sort_order>59</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </heading_extras>
+                        <shipping_company>
+                            <label>Frete Padrão</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>60</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_website>1</show_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Empresa que realiza as entregas]]></comment>
+                        </shipping_company>
+                        <delivery_deadline translate="label">
+                            <label>Média de prazo de entrega</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>60</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Quantidade de dias em média para entrega de seus produtos.]]></comment>
+                        </delivery_deadline>
+                        <save_cardonfile translate="label">
+                            <label>Enable feature (use the card for future purchases)</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>61</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </save_cardonfile>
+                        <cielo_sku translate="label">
+                            <label>SKU produto de teste de R$1,00 da Cielo</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>62</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[SKU do produto de teste da Cielo para forçar o pagamento pela Cielo durante a homologação]]></comment>
+                        </cielo_sku>
+                    </fields>
+                </mundipagg_standard>
+                <mundipagg_creditcardoneinstallment type="group" translate="label">
+                    <label><![CDATA[MundiPagg - Cartão de Crédito à vista]]></label>
+                    <sort_order>430</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </active>
+
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Texto que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
+                        </title>
+
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>60</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </allowspecific>
+                        
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>61</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </specificcountry>
+
+                        <min_order_total translate="label">
+                            <label>Min Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>70</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </min_order_total>
+
+                        <max_order_total translate="label">
+                            <label>Max Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>80</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </max_order_total>
+
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </sort_order>
+                    </fields>
+                </mundipagg_creditcardoneinstallment>
+                <mundipagg_creditcard type="group" translate="label">
+                    <label><![CDATA[MundiPagg - Cartão de Crédito]]></label>
+                    <sort_order>430</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </active>
+
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Frase que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
+                        </title>
+
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>60</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </allowspecific>
+                        
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>61</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </specificcountry>
+
+                        <min_order_total translate="label">
+                            <label>Min Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>70</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </min_order_total>
+
+                        <max_order_total translate="label">
+                            <label>Max Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>80</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </max_order_total>
+
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </sort_order>
+                    </fields>
+                </mundipagg_creditcard>
+                <mundipagg_twocreditcards type="group" translate="label">
+                    <label><![CDATA[MundiPagg - 2 Cartões de Crédito]]></label>
+                    <sort_order>440</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span><br/><br/><h2>Para essa forma de pagamento funcionar a Mundipagg precisa ativar na sua conta a opção que permite ter o mesmo OrderKey para um pedido com o mesmo OrderReference</h2><br/><br/>]]></comment>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </active>
+
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Frase que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
+                        </title>
+
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>60</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </allowspecific>
+                        
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>61</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </specificcountry>
+
+                        <min_order_total translate="label">
+                            <label>Min Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>70</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </min_order_total>
+
+                        <max_order_total translate="label">
+                            <label>Max Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>80</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </max_order_total>
+
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </sort_order>
+                    </fields>
+                </mundipagg_twocreditcards>
+                <mundipagg_threecreditcards type="group" translate="label">
+                    <label><![CDATA[MundiPagg - 3 Cartões de Crédito]]></label>
+                    <sort_order>450</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span><br/><br/><h2>Para essa forma de pagamento funcionar a Mundipagg precisa ativar na sua conta a opção que permite ter o mesmo OrderKey para um pedido com o mesmo OrderReference</h2><br/><br/>]]></comment>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </active>
+
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Frase que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
+                        </title>
+
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>60</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </allowspecific>
+                        
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>61</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </specificcountry>
+
+                        <min_order_total translate="label">
+                            <label>Min Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>70</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </min_order_total>
+
+                        <max_order_total translate="label">
+                            <label>Max Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>80</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </max_order_total>
+
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </sort_order>
+                    </fields>
+                </mundipagg_threecreditcards>
+                <mundipagg_fourcreditcards type="group" translate="label">
+                    <label><![CDATA[MundiPagg - 4 Cartões de Crédito]]></label>
+                    <sort_order>460</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span><br/><br/><h2>Para essa forma de pagamento funcionar a Mundipagg precisa ativar na sua conta a opção que permite ter o mesmo OrderKey para um pedido com o mesmo OrderReference</h2><br/><br/>]]></comment>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </active>
+
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Frase que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
+                        </title>
+
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>60</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </allowspecific>
+                        
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>61</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </specificcountry>
+
+                        <min_order_total translate="label">
+                            <label>Min Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>70</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </min_order_total>
+
+                        <max_order_total translate="label">
+                            <label>Max Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>80</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </max_order_total>
+
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </sort_order>
+                    </fields>
+                </mundipagg_fourcreditcards>
+                <mundipagg_fivecreditcards type="group" translate="label">
+                    <label><![CDATA[MundiPagg - 5 Cartões de Crédito]]></label>
+                    <sort_order>470</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span><br/><br/><h2>Para essa forma de pagamento funcionar a Mundipagg precisa ativar na sua conta a opção que permite ter o mesmo OrderKey para um pedido com o mesmo OrderReference</h2><br/><br/>]]></comment>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </active>
+
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Frase que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
+                        </title>
+
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>60</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </allowspecific>
+                        
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>61</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </specificcountry>
+
+                        <min_order_total translate="label">
+                            <label>Min Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>70</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </min_order_total>
+
+                        <max_order_total translate="label">
+                            <label>Max Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>80</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </max_order_total>
+
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </sort_order>
+                    </fields>
+                </mundipagg_fivecreditcards>
+                <mundipagg_boleto type="group" translate="label">
+                    <label><![CDATA[MundiPagg - Boleto]]></label>
+                    <sort_order>480</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </active>
+
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Frase que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
+                        </title>
+
+                        <dias_validade_boleto translate="label">
+                            <label>Boleto - Dias validade</label>
+                            <frontend_type>text</frontend_type>
+                            <validate>validate-digits</validate>
+                            <sort_order>50</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Quantos dias o Boleto será válido para pagamento?]]></comment>
+                        </dias_validade_boleto>
+
+                        <instrucoes_caixa translate="label">
+                            <label>Boleto - Instrucões Caixa</label>
+                            <frontend_type>textarea</frontend_type>
+                            <sort_order>51</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Texto sobre as instruções caixa customizado por você que irá aparecer nos seus Boletos Bancários]]></comment>
+                        </instrucoes_caixa>
+
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>60</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </allowspecific>
+                        
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>61</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </specificcountry>
+
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </sort_order>
+                    </fields>
+                </mundipagg_boleto>
+                <mundipagg_debit type="group" translate="label">
+                    <label><![CDATA[MundiPagg - Debit]]></label>
+                    <sort_order>480</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <comment><![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </active>
+
+                        <title translate="label">
+                            <label>Title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Frase que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
+                        </title>
+
+                        <debit_types translate="label">
+                            <label>Debit</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <source_model>Uecommerce_Mundipagg_Model_Source_Debit</source_model>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Escolha os débitos que você aceita na sua loja]]></comment>
+                        </debit_types>
+
+                        <apiDebitUrl translate="label">
+                            <label>Api Debit URL</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>4</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </apiDebitUrl>
+
+                        <apiDebitStagingUrl translate="label">
+                            <label>Api Debit Staging URL</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>5</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </apiDebitStagingUrl>
+
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>6</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </allowspecific>
+                        
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>7</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </specificcountry>
+
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>8</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <frontend_class>validate-number</frontend_class>
+                        </sort_order>
+                    </fields>
+                </mundipagg_debit>
+            </groups>
+        </payment>
+    </sections>
+</config>

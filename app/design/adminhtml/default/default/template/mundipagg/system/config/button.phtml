@@ -1,0 +1,28 @@
+
+<?php echo $this->getButtonHtml(); ?>
+<script type="text/javascript">
+    //<![CDATA[
+    function setOldSettings() {
+        
+        new Ajax.Request('<?php echo $this->getAjaxOldSettingsUrl(); ?>', {
+            method:     'get',
+            onSuccess: function(transport){
+ 
+                if (transport.responseText){
+                    responseJSON = JSON.parse(transport.responseText);
+                    if(responseJSON.error){
+                        alert(responseJSON.error);
+                        return false;
+                    }
+                    
+                    if(responseJSON.success){
+                        alert(responseJSON.success);
+                        window.location.reload();
+                    }
+                    
+                }
+            }
+        });
+    }
+    //]]>
+</script>
