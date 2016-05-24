@@ -29,10 +29,18 @@
  */
 class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard {
 
-	private $logHelper;
+	private $helperLog;
+	private $helperUtil;
+	private $modelStandard;
+	private $debugEnabled;
+	private $moduleVersion;
 
 	public function __construct() {
-		$this->logHelper = new Uecommerce_Mundipagg_Helper_Log();
+		$this->helperLog = new Uecommerce_Mundipagg_Helper_Log();
+		$this->helperUtil = new Uecommerce_Mundipagg_Helper_Util();
+		$this->modelStandard = new Uecommerce_Mundipagg_Model_Standard();
+		$this->moduleVersion = Mage::helper('mundipagg')->getExtensionVersion();
+		$this->debugEnabled = $this->modelStandard->getDebug();
 		parent::_construct();
 	}
 
@@ -40,6 +48,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * Credit Card Transaction
 	 */
 	public function creditCardTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard) {
+		$_logRequest = array();
+
 		try {
 			// Installments configuration
 			$installment = $standard->getParcelamento();
@@ -168,6 +178,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = array();
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
+			//verify FControl Config and get antifraud data
+			$fControlData = $this->getFControlConfig();
+
+			if (is_array($fControlData)) {
+				$_request['requestData'] = $fControlData;
+			}
+
 			if ($standard->getDebug() == 1) {
 				$_logRequest = $_request;
 
@@ -190,58 +207,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				}
 			}
 
-			//verify FControl Config
-			$fControlData = $this->getFControlConfig();
-
-			if (is_array($fControlData)) {
-				$_request['requestData'] = $fControlData;
-			}
-
 			// Data
-			$dataToPost = json_encode($_request);
-
-			$this->logHelper->debug("Request: {$dataToPost}");
-
-			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($_logRequest, 1), null, 'Uecommerce_Mundipagg.log');
-
-			}
-
-			// Send payment data to MundiPagg
-			$ch = curl_init();
-
-			// Header
-			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $standard->getMerchantKey() . ''));
-
-			// Set the url, number of POST vars, POST data
-			curl_setopt($ch, CURLOPT_URL, $url);
-
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
-
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-			// Execute post
-			$_response = curl_exec($ch);
-
-			// Close connection
-			curl_close($ch);
-
-			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
-			}
-
-			// Is there an error?
-			$xml = simplexml_load_string($_response);
-			$json = json_encode($xml);
-			$dataR = array();
-			$dataR = json_decode($json, true);
-
-			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($dataR, 1), null, 'Uecommerce_Mundipagg.log');
-			}
+			$_response = $this->sendRequest($_request, $url, $_logRequest);
+			$xml = $_response['xmlData'];
+			$dataR = $_response['arrayData'];
 
 			if (isset($dataR['ErrorReport']) && !empty($dataR['ErrorReport'])) {
 				$_errorItemCollection = $dataR['ErrorReport']['ErrorItemCollection'];
@@ -507,7 +476,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = array();
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
-			//verify FControl Config
+			//verify FControl Config and get antifraud data
 			$fControlData = $this->getFControlConfig();
 
 			if (is_array($fControlData)) {
@@ -515,47 +484,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 
 			// Data
-			$dataToPost = json_encode($_request);
+			$_response = $this->sendRequest($_request, $url);
 
-			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($dataToPost, 1), null, 'Uecommerce_Mundipagg.log');
-			}
-
-			// Send payment data to MundiPagg
-			$ch = curl_init();
-
-			// Header
-			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $standard->getMerchantKey() . ''));
-
-			// Set the url, number of POST vars, POST data
-			curl_setopt($ch, CURLOPT_URL, $url);
-
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
-
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-			// Execute post
-			$_response = curl_exec($ch);
-
-			// Close connection
-			curl_close($ch);
-
-			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
-			}
-
-			// Is there an error?
-			$xml = simplexml_load_string($_response);
-			$json = json_encode($xml);
-			$data = array();
-			$data = json_decode($json, true);
-
-			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($data, 1), null, 'Uecommerce_Mundipagg.log');
-			}
+			$xml = $_response['xmlData'];
+			$data = $_response['arrayData'];
 
 			// Error
 			if (isset($data['ErrorReport']) && !empty($data['ErrorReport'])) {
@@ -693,13 +625,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			unset($_request['ShoppingCart']['DeliveryAddress']);
 			$_request['DeliveryAddress'] = $deliveryAddress;
 			$_request['ShoppingCart']['ShoppingCartItemCollection'][0]['DiscountAmountInCents'] = 0;
-
-			//verify FControl Config
-			$fControlData = $this->getFControlConfig();
-
-			if (is_array($fControlData)) {
-				$_request['requestData'] = $fControlData;
-			}
 
 			// Data
 			$dataToPost = json_encode($_request);
@@ -1585,6 +1510,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @param string $message
 	 */
 	public function mailError($message = '') {
+		$this->helperLog->error($message);
+
 		//Send email
 		$mail = Mage::getModel('core/email');
 		$mail->setToName(Mage::getStoreConfig('trans_email/ident_custom1/name'));
@@ -1604,51 +1531,134 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @author Ruan Azevedo <razvedo@mundipagg.com>
 	 * @since 05-19-2016
 	 * @throws Mage_Core_Exception
-	 * @return array
+	 * @return array $requestData
 	 */
 	private function getFControlConfig() {
 		$antifraud = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
+		$error = false;
+		$outputMsg = "";
+		$requestData = array();
 
-		if ($antifraud === false) {
-			$this->logHelper->info("Antifraud disabled...");
-			return false;
-
-		} else {
-			$antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider');
-
-			$this->logHelper->info("Antifraud enabled...");
-			$this->logHelper->debug("Antifraud provider: {$antifraudProvider}");
-
-			switch ($antifraudProvider) {
-				case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_NONE:
-					$errMsg = "Antifraud enabled and none antifraud provider selected.";
-
-					$this->logHelper->error($errMsg);
-					Mage::throwException($errMsg);
-					break;
-
-				case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_CLEARSALE:
-					$this->logHelper->info("Antifraud provider: Clearsale");
-					break;
-
-				case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL:
-					$httpCoreHelper = new Mage_Core_Helper_Http();
-					$customerIp = $httpCoreHelper->getRemoteAddr();
-					$requestData = array(
-						'IpAddress' => $customerIp,
-						'SessionId' => 'sessionId'
-					);
-
-					$this->logHelper->info("Antifraud provider: FControl.");
-
-					return $requestData;
-
-					break;
-
-				default:
-					$this->logHelper->debug("Antifraud check default ");
-					break;
-			}
+		if ($this->debugEnabled) {
+			$this->helperLog->debug("Checking antifraud config...");
 		}
+
+		if ($antifraud == false) {
+			if ($this->debugEnabled) {
+				$this->helperLog->debug("Antifraud disabled.");
+			}
+
+			return false;
+		}
+
+		$antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider');
+
+		switch ($antifraudProvider) {
+			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_NONE:
+				$outputMsg = "Antifraud enabled and none antifraud provider selected.";
+				$error = true;
+				break;
+
+			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_CLEARSALE:
+				$outputMsg = "Antifraud provider: Clearsale";
+				break;
+
+			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL:
+				$httpCoreHelper = new Mage_Core_Helper_Http();
+				$customerIp = $httpCoreHelper->getRemoteAddr();
+				$requestData = array(
+					'IpAddress' => $customerIp,
+					'SessionId' => 'sessionId'
+				);
+
+				$outputMsg = "Antifraud provider: FControl.";
+				break;
+		}
+
+		if ($this->debugEnabled) {
+			$this->helperLog->debug("Antifraud enabled.");
+
+			if ($error) {
+				$this->helperLog->error($outputMsg);
+				Mage::throwException($outputMsg);
+			}
+
+			$this->helperLog->debug($outputMsg);
+		}
+
+		if (empty($requestData)) {
+			$errMsg = __METHOD__ . "Exception: node 'requestData' could not be empty when FControl anti-fraud is enabled.";
+			throw new RuntimeException($errMsg);
+		}
+
+		return $requestData;
+
 	}
+
+	/**
+	 * Method to unify the transactions requests and his logs
+	 *
+	 * @author Ruan Azevedo <razvedo@mundipagg.com>
+	 * @since 05-24-2016
+	 * @param array  $dataToPost
+	 * @param string $url
+	 * @param array  $_logRequest
+	 * @return array $_response
+	 */
+	private function sendRequest($dataToPost, $url, $_logRequest = array()) {
+		if (empty($dataToPost) || empty($url)) {
+			$errMsg = __METHOD__ . "Exception: one or more arguments not informed to request";
+
+			$this->helperLog->error($errMsg);
+			throw new InvalidArgumentException($errMsg);
+		}
+
+		$debug = $this->modelStandard->getDebug();
+
+		if ($debug) {
+
+			if (empty($_logRequest)) {
+				$_logRequest = $dataToPost;
+			}
+			
+			
+			
+			$requestRawJson = json_encode($dataToPost);
+			$requestJSON = $this->helperUtil->jsonEncodePretty($_logRequest);
+
+			$this->helperLog->debug("Request: {$requestJSON}\n");
+		}
+
+		$ch = curl_init();
+
+		// Header
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $this->modelStandard->getMerchantKey() . ''));
+		// Set the url, number of POST vars, POST data
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRawJson);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		// Execute post
+		$_response = curl_exec($ch);
+
+		// Close connection
+		curl_close($ch);
+
+		// Is there an error?
+		$xml = simplexml_load_string($_response);
+		$responseJSON = $this->helperUtil->jsonEncodePretty($xml);
+		$responseArray = json_decode($responseJSON, true);
+
+		if ($debug) {
+			$this->helperLog->debug("Response: {$responseJSON} \n");
+		}
+
+		$responseData = array(
+			'xmlData'   => $xml,
+			'arrayData' => $responseArray
+		);
+
+		return $responseData;
+	}
+
 }
