@@ -30,7 +30,12 @@
  */
 -->
 <layout version="0.1.0">
-    <default></default>
+    <default>
+        <reference name="before_body_end">
+            <block type="core/template" name="fcontrol" template="mundipagg/fcontrol/fcontrol.phtml"/>
+        </reference>
+    </default>
+
     <checkout_onepage_index>
         <reference name="head">
             <action method="addItem">

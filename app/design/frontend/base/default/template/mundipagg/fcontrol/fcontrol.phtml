@@ -1,0 +1,10 @@
+<?php
+$fcontrol = Mage::getStoreConfig('payment/mundipagg_standard/fcontrol');
+
+if($fcontrol): ?>
+
+<script type="text/javascript" src="<?php echo $this->getSkinUrl('js/mundipagg/fcontrol/fcontrol.js') ?>"></script>
+
+<!--	<script type="text/javascript" src=""/></script>-->
+
+<?php endif; ?>
