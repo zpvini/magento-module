@@ -30,11 +30,11 @@
  */
 -->
 <layout version="0.1.0">
-    <default>
-        <reference name="before_body_end">
-            <block type="core/template" name="fcontrol" template="mundipagg/fcontrol/fcontrol.phtml"/>
-        </reference>
-    </default>
+    <!--<default>-->
+    <!--<reference name="before_body_end">-->
+    <!--<block type="core/template" name="fcontrol" template="mundipagg/fcontrol/fcontrol.phtml"/>-->
+    <!--</reference>-->
+    <!--</default>-->
 
     <checkout_onepage_index>
         <reference name="head">
@@ -50,6 +50,9 @@
                     <name>uecommerce/mundipagg.js</name>
                 </action>
             </block>
+            <reference name="before_body_end">
+                <block type="core/template" name="fcontrol" template="mundipagg/fcontrol/fcontrol.phtml"/>
+            </reference>
         </reference>
     </checkout_onepage_index>
     <onepagecheckout_index_index translate="label">

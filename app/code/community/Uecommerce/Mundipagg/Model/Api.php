@@ -29,14 +29,12 @@
  */
 class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard {
 
-	private $helperLog;
 	private $helperUtil;
 	private $modelStandard;
 	private $debugEnabled;
 	private $moduleVersion;
 
 	public function __construct() {
-		$this->helperLog = new Uecommerce_Mundipagg_Helper_Log();
 		$this->helperUtil = new Uecommerce_Mundipagg_Helper_Util();
 		$this->modelStandard = new Uecommerce_Mundipagg_Model_Standard();
 		$this->moduleVersion = Mage::helper('mundipagg')->getExtensionVersion();
@@ -139,7 +137,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$installmentCount = $paymentData['InstallmentCount'];
 
 				// BillingAddress
-				if ($standard->getClearsale() == 1) {
+				if ($standard->getAntiFraud() == 1) {
 					$addy = $this->buyerBillingData($order, $data, $_request, $standard);
 
 					$creditcardTransactionData->CreditCard->BillingAddress = $addy['AddressCollection'][0];
@@ -396,7 +394,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$creditcardTrans['Options']["PaymentMethodCode"] = $creditcardTransItem->Options->PaymentMethodCode;
 			}
 
-			if ($standard->getClearsale() == 1) {
+			if ($standard->getAntiFraud() == 1) {
 				$creditcardTrans['CreditCard']['BillingAddress'] = $creditcardTransItem->CreditCard->BillingAddress;
 
 				unset($creditcardTrans['CreditCard']['BillingAddress']['AddressType']);
@@ -1033,7 +1031,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$_request['ShoppingCartCollection']['ShippingCompany'] = Mage::getStoreConfig('payment/mundipagg_standard/shipping_company');
 
 		foreach ($items as $itemId) {
-			//if ($standard->getClearsale() == 1) {
 			$unitCostInCents = intval(strval(($itemId['price'] * $discount * 100)));
 
 			$_request["ShoppingCartCollection"]["ShoppingCartItemCollection"][$i]["Description"] = empty($itemId['description']) || ($itemId['description'] == '') ? $itemId['name'] : $itemId['description'];
@@ -1510,19 +1507,22 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @param string $message
 	 */
 	public function mailError($message = '') {
-		$this->helperLog->error($message);
+		try {
+			//Send email
+			$mail = Mage::getModel('core/email');
+			$mail->setToName(Mage::getStoreConfig('trans_email/ident_custom1/name'));
+			$mail->setToEmail(Mage::getStoreConfig('trans_email/ident_custom1/email'));
+			$mail->setBody($message);
+			$mail->setSubject('=?utf-8?B?' . base64_encode(Mage::getStoreConfig('system/store/name') . ' - erro') . '?=');
+			$mail->setFromEmail(Mage::getStoreConfig('trans_email/ident_sales/email'));
+			$mail->setFromName(Mage::getStoreConfig('trans_email/ident_sales/name'));
+			$mail->setType('html');
+			$mail->send();
 
-		//Send email
-		$mail = Mage::getModel('core/email');
-		$mail->setToName(Mage::getStoreConfig('trans_email/ident_custom1/name'));
-		$mail->setToEmail(Mage::getStoreConfig('trans_email/ident_custom1/email'));
-		$mail->setBody($message);
-		$mail->setSubject('=?utf-8?B?' . base64_encode(Mage::getStoreConfig('system/store/name') . ' - erro') . '?=');
-		$mail->setFromEmail(Mage::getStoreConfig('trans_email/ident_sales/email'));
-		$mail->setFromName(Mage::getStoreConfig('trans_email/ident_sales/name'));
-		$mail->setType('html');
-
-		$mail->send();
+		} catch (Exception $e) {
+			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+			$helperLog->error($e);
+		}
 	}
 
 	/**
@@ -1535,17 +1535,18 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 */
 	private function getFControlConfig() {
 		$antifraud = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$error = false;
 		$outputMsg = "";
 		$requestData = array();
 
 		if ($this->debugEnabled) {
-			$this->helperLog->debug("Checking antifraud config...");
+			$helperLog->debug("Checking antifraud config...");
 		}
 
 		if ($antifraud == false) {
 			if ($this->debugEnabled) {
-				$this->helperLog->debug("Antifraud disabled.");
+				$helperLog->debug("Antifraud disabled.");
 			}
 
 			return false;
@@ -1566,33 +1567,47 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL:
 				$httpCoreHelper = new Mage_Core_Helper_Http();
 				$customerIp = $httpCoreHelper->getRemoteAddr();
+
 				$requestData = array(
 					'IpAddress' => $customerIp,
-					'SessionId' => 'sessionId'
+					'SessionId' => $this->getDeviceId()
 				);
+
+				if (empty($requestData)) {
+					$errMsg = __METHOD__ . "Exception: node 'requestData' could not be empty when FControl anti-fraud is enabled.";
+					$helperLog->error($errMsg);
+
+					Mage::throwException($errMsg);
+				}
 
 				$outputMsg = "Antifraud provider: FControl.";
 				break;
 		}
 
 		if ($this->debugEnabled) {
-			$this->helperLog->debug("Antifraud enabled.");
+			$helperLog->debug("Antifraud enabled.");
 
 			if ($error) {
-				$this->helperLog->error($outputMsg);
+				$helperLog->error($outputMsg);
 				Mage::throwException($outputMsg);
 			}
 
-			$this->helperLog->debug($outputMsg);
-		}
-
-		if (empty($requestData)) {
-			$errMsg = __METHOD__ . "Exception: node 'requestData' could not be empty when FControl anti-fraud is enabled.";
-			throw new RuntimeException($errMsg);
+			$helperLog->debug($outputMsg);
 		}
 
 		return $requestData;
+	}
 
+	private function getDeviceId() {
+		$customerSession = Mage::getSingleton('customer/session');
+		$deviceId = $customerSession->getData('device_id');
+
+		return $deviceId;
+	}
+
+	private function resetDeviceId(){
+		$customerSession = Mage::getSingleton('customer/session');
+		$customerSession->unsetData('device_id');
 	}
 
 	/**
@@ -1606,10 +1621,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @return array $_response
 	 */
 	private function sendRequest($dataToPost, $url, $_logRequest = array()) {
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
 		if (empty($dataToPost) || empty($url)) {
 			$errMsg = __METHOD__ . "Exception: one or more arguments not informed to request";
 
-			$this->helperLog->error($errMsg);
+			$helperLog->error($errMsg);
 			throw new InvalidArgumentException($errMsg);
 		}
 
@@ -1620,13 +1637,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			if (empty($_logRequest)) {
 				$_logRequest = $dataToPost;
 			}
-			
-			
-			
+
 			$requestRawJson = json_encode($dataToPost);
 			$requestJSON = $this->helperUtil->jsonEncodePretty($_logRequest);
 
-			$this->helperLog->debug("Request: {$requestJSON}\n");
+			$helperLog->debug("Request: {$requestJSON}\n");
 		}
 
 		$ch = curl_init();
@@ -1650,13 +1665,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$responseArray = json_decode($responseJSON, true);
 
 		if ($debug) {
-			$this->helperLog->debug("Response: {$responseJSON} \n");
+			$helperLog->debug("Response: {$responseJSON} \n");
 		}
 
 		$responseData = array(
 			'xmlData'   => $xml,
 			'arrayData' => $responseArray
 		);
+
+		$this->resetDeviceId();
 
 		return $responseData;
 	}

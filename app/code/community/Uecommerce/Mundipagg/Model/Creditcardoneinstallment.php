@@ -65,7 +65,7 @@ class Uecommerce_Mundipagg_Model_Creditcardoneinstallment extends Uecommerce_Mun
             default:
                 $this->setmerchantKey(trim($standard->getConfigData('merchantKeyStaging')));
                 $this->setUrl(trim($standard->getConfigData('apiUrlStaging')));
-                $this->setClearsale($standard->getConfigData('clearsale'));
+                $this->setAntiFraud($standard->getConfigData('antifraud'));
                 $this->setPaymentMethodCode(1);
                 $this->setBankNumber(341);
                 $this->setParcelamento($standard->getConfigData('parcelamento'));
@@ -79,7 +79,7 @@ class Uecommerce_Mundipagg_Model_Creditcardoneinstallment extends Uecommerce_Mun
             case 'production':
                 $this->setmerchantKey(trim($standard->getConfigData('merchantKeyProduction')));
                 $this->setUrl(trim($standard->getConfigData('apiUrlProduction')));
-                $this->setClearsale($standard->getConfigData('clearsale'));
+                $this->setAntiFraud($standard->getConfigData('antifraud'));
                 $this->setParcelamento($standard->getConfigData('parcelamento'));
                 $this->setParcelamentoMax($standard->getConfigData('parcelamento_max'));
                 $this->setPaymentAction($standard->getConfigData('payment_action'));

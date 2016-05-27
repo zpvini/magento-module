@@ -1,8 +1,19 @@
 <?php
 
+/**
+ * Log helper
+ * @author Ruan Azevedo <razvedo@mundipagg.com>
+ */
 class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract {
 
 	private $level;
+	private $method;
+
+	public function __construct($method = '') { $this->method = $method; }
+
+	public function setMethod($method) {
+		$this->method = $method;
+	}
 
 	public function info($msg) {
 		$this->level = Zend_Log::INFO;
@@ -14,6 +25,11 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract {
 		$this->write($msg);
 	}
 
+	public function warning($msg) {
+		$this->level = Zend_Log::WARN;
+		$this->write($msg);
+	}
+
 	public function error($msg) {
 		$this->level = Zend_Log::ERR;
 		$this->write($msg);
@@ -21,6 +37,11 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract {
 
 	private function write($msg) {
 		$file = "Uecommerce_Mundipagg_" . date('Y-m-d') . ".log";
+
+		if (!empty($this->method)) {
+			$msg = "[{$this->method}] {$msg}";
+		}
+
 		Mage::log($msg, $this->level, $file);
 	}
 

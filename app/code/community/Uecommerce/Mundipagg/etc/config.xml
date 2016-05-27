@@ -279,7 +279,7 @@
                 <model>mundipagg/standard</model>
                 <apiUrlStaging>https://sandbox.mundipaggone.com/sale/</apiUrlStaging>
                 <apiUrlProduction>https://transactionv2.mundipaggone.com/Sale/</apiUrlProduction>
-                <clearsale>0</clearsale>
+                <antifraud>0</antifraud>
                 <debug>1</debug>
                 <payment_action>order</payment_action>
                 <save_cardonfile>1</save_cardonfile>

@@ -212,12 +212,12 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
                                 $onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
                             }
 
-                            // We can capture only if Clearsale is disabled and payment action is "AuthorizeAndCapture"
+                            // We can capture only if anti fraud is disabled and payment action is "AuthorizeAndCapture"
                             $creditCardTransactionResultCollection = $resultPayment['result']->CreditCardTransactionResultCollection;
                             
                             if (
                                 count($creditCardTransactionResultCollection->CreditCardTransactionResult) > 1 && 
-                                $onepage->getClearsale() == 0 && 
+                                $onepage->getAntiFraud() == 0 && 
                                 $onepage->getPaymentAction() == 'order') {
                                 $resultCapture = $onepage->captureAndcreateInvoice($info);
                             }

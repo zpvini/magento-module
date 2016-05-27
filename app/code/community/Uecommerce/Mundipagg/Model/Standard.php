@@ -103,14 +103,14 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         return $this->paymentMethodCode;
     }
 
-    public function setClearsale($clearsale) 
+    public function setAntiFraud($antiFraud)
     {
-        $this->clearsale = $clearsale;
+        $this->antiFraud = $antiFraud;
     }
 
-    public function getClearsale() 
+    public function getAntiFraud()
     {
-        return $this->clearsale;
+        return $this->antiFraud;
     }
 
     public function setBankNumber($bankNumber) 
@@ -215,7 +215,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             default:
                 $this->setmerchantKey(trim($this->getConfigData('merchantKeyStaging')));
                 $this->setUrl(trim($this->getConfigData('apiUrlStaging')));
-                $this->setClearsale($this->getConfigData('clearsale'));
+                $this->setAntiFraud($this->getConfigData('antifraud'));
                 $this->setPaymentMethodCode(1);
                 $this->setBankNumber(341);
                 $this->setParcelamento($this->getConfigData('parcelamento'));
@@ -228,7 +228,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             case 'production':
                 $this->setmerchantKey(trim($this->getConfigData('merchantKeyProduction')));
                 $this->setUrl(trim($this->getConfigData('apiUrlProduction')));
-                $this->setClearsale($this->getConfigData('clearsale'));
+                $this->setAntiFraud($this->getConfigData('antifraud'));
                 $this->setParcelamento($this->getConfigData('parcelamento'));
                 $this->setParcelamentoMax($this->getConfigData('parcelamento_max'));
                 $this->setDebug($this->getConfigData('debug'));
@@ -680,11 +680,11 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
                     // We can capture only if:
                     // 1. Multiple Credit Cards Payment
-                    // 2. Clearsale is disabled 
+                    // 2. Anti fraud is disabled 
                     // 3. Payment action is "AuthorizeAndCapture"
                     if (
                         count($creditCardTransactionResultCollection) > 1 && 
-                        $this->getClearsale() == 0 && 
+                        $this->getAntiFraud() == 0 &&
                         $this->getPaymentAction() == 'order') 
                     {
                         $this->captureAndcreateInvoice($payment);
@@ -719,8 +719,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             Mage::throwException($helper->__('You cannot capture Boleto Bancário.'));
         }
 
-        if ($this->getClearsale() == 1) {
-            Mage::throwException($helper->__('You cannot capture having ClearSale activated.'));
+        if ($this->getAntiFraud() == 1) {
+            Mage::throwException($helper->__('You cannot capture having anti fraud activated.'));
         }
 
         // Already captured

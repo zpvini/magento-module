@@ -70,7 +70,7 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
             default:
                 $this->setmerchantKey(trim($standard->getConfigData('merchantKeyStaging')));
                 $this->setUrl(trim($standard->getConfigData('apiUrlStaging')));
-                $this->setClearsale($standard->getConfigData('clearsale'));
+                $this->setAntiFraud($standard->getConfigData('antifraud'));
                 $this->setPaymentMethodCode(1);
                 $this->setBankNumber(341);
                 $this->setDebug($standard->getConfigData('debug'));
@@ -82,7 +82,7 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
             case 'production':
                 $this->setmerchantKey(trim($standard->getConfigData('merchantKeyProduction')));
                 $this->setUrl(trim($standard->getConfigData('apiUrlProduction')));
-                $this->setClearsale($standard->getConfigData('clearsale'));
+                $this->setAntiFraud($standard->getConfigData('antifraud'));
                 $this->setDebug($standard->getConfigData('debug'));
                 $this->setDiasValidadeBoleto(trim($validadeBoleto));
                 $this->setInstrucoesCaixa(trim($this->getConfigData('instrucoes_caixa')));

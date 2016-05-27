@@ -1,10 +1,52 @@
 <?php
-$fcontrol = Mage::getStoreConfig('payment/mundipagg_standard/fcontrol');
+$fcontrol = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
+$antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider');
 
-if($fcontrol): ?>
+if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL): ?>
 
-<script type="text/javascript" src="<?php echo $this->getSkinUrl('js/mundipagg/fcontrol/fcontrol.js') ?>"></script>
+	<script type="text/javascript">
 
-<!--	<script type="text/javascript" src=""/></script>-->
+		try {
+			//Add calback method default
+			var fittipaldiCallback = function (deviceId) {
+				alert("deviceId: " + deviceId);
+			}
+
+			var customVars = new Object();
+			(function () {
+				var fittipaldi = document.createElement('script');
+				fittipaldi.type = 'text/javascript';
+				fittipaldi.async = true;
+				fittipaldi.id = "fittipaldi";
+				fittipaldi.src = (('https:' == document.location.protocol) ? 'https://' : 'http://') + 'df.fcontrol.com.br/js/fittipaldiJs.js';
+				customVars['ORDERID'] = 'valor123';
+
+				document.getElementsByTagName('body')[0].appendChild(fittipaldi);
+			})();
+		} catch (err) {
+			alert(err);
+		}
+
+		jQuery(document).ready(function () {
+
+			jQuery.ajax({
+				method: "POST",
+				url: "/mundipagg/fcontrol/session",
+
+				data: {
+					deviceId: 'codigoDeviceId'
+				},
+				success: function (data) {
+					console.log('success');
+					console.log(data);
+				},
+				error: function (err) {
+					console.log('error');
+				}
+			});
+
+		});
+
+	</script>
 
 <?php endif; ?>
