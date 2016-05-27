@@ -13,9 +13,6 @@ class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front
 		$requestServerName = $requestServer['SERVER_NAME'];
 
 		$helperLog->info("Checking request origin '{$requestServerName}'");
-		$helperLog->warning("[SecurityAlert] Someone have tried to forge a deviceId for a session. Request origin data:");
-		$helperLog->warning(print_r($requestServer, true));
-
 
 		//validating if the request is from the store
 		if ($requestServerName != $serverHost) {
@@ -23,10 +20,10 @@ class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front
 			$response['success'] = false;
 			$response['message'] = $message;
 
-			$helperLog->warning("[SecurityAlert] Someone have tried to forge a deviceId for a session.");
+			$helperLog->warning("[SecurityAlert] Someone have tried to forge a deviceId for a session. Request origin data:");
+			$helperLog->warning(print_r($requestServer, true));
 
 			$this->jsonResponse($response);
-
 			return;
 		}
 
