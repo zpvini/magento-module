@@ -177,7 +177,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
 			//verify FControl Config and get antifraud data
-			$fControlData = $this->getFControlConfig();
+			$fControlData = $this->getFControlConfig($_request['Order']['OrderReference']);
 
 			if (is_array($fControlData)) {
 				$_request['requestData'] = $fControlData;
@@ -475,7 +475,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
 			//verify FControl Config and get antifraud data
-			$fControlData = $this->getFControlConfig();
+			$fControlData = $this->getFControlConfig($_request['Order']['OrderReference']);
 
 			if (is_array($fControlData)) {
 				$_request['requestData'] = $fControlData;
@@ -1533,7 +1533,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @throws Mage_Core_Exception
 	 * @return array $requestData
 	 */
-	private function getFControlConfig() {
+	private function getFControlConfig($orderReference) {
 		$antifraud = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$error = false;
@@ -1567,10 +1567,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL:
 				$httpCoreHelper = new Mage_Core_Helper_Http();
 				$customerIp = $httpCoreHelper->getRemoteAddr();
+				$sessionId = $this->getDeviceId();
+
+				//if FControl js not generate the deviceId, set OrderReference in sessionId
+				if (is_null($sessionId)) {
+					$sessionId = $orderReference;
+				}
 
 				$requestData = array(
 					'IpAddress' => $customerIp,
-					'SessionId' => $this->getDeviceId()
+					'SessionId' => $sessionId
 				);
 
 				if (empty($requestData)) {
@@ -1605,7 +1611,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		return $deviceId;
 	}
 
-	private function resetDeviceId(){
+	private function resetDeviceId() {
 		$customerSession = Mage::getSingleton('customer/session');
 		$customerSession->unsetData('device_id');
 	}

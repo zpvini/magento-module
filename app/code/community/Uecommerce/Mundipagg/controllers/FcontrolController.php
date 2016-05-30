@@ -2,6 +2,33 @@
 
 class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front_Action {
 
+	public function getOrderIdAction() {
+		$quoteId = Mage::getSingleton('checkout/session')->getQuoteId();
+		$quote = Mage::getModel("sales/quote")->load($quoteId);
+
+		$quote->reserveOrderId();
+
+		$incrementId = $quote->getReservedOrderId();
+		$response['orderId'] = $incrementId;
+
+		$this->jsonResponse($response);
+		return;
+	}
+
+	public function reportErrorAction() {
+
+		try {
+			$message = $this->getRequest()->getPost('errorMessage');
+			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+			$api = new Uecommerce_Mundipagg_Model_Api();
+
+			$helperLog->error($message);
+			$api->mailError($message);
+
+		} catch (Exception $e) {
+		}
+	}
+
 	public function sessionAction() {
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$session = Mage::getSingleton('customer/session');
@@ -24,6 +51,7 @@ class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front
 			$helperLog->warning(print_r($requestServer, true));
 
 			$this->jsonResponse($response);
+
 			return;
 		}
 

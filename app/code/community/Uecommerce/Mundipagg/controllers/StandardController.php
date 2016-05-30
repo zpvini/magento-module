@@ -27,418 +27,415 @@
  * @package    Uecommerce_Mundipagg
  * @author     Uecommerce Dev Team
  */
+class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front_Action {
 
-class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front_Action
-{
-    /**
-     * Order instance
-     */
-    protected $_order;
+	public function testeIpAction() {
+		$httpCoreHelper = new Mage_Core_Helper_Http();
+		$customerIp = $httpCoreHelper->getRemoteAddr();
 
-    public function getOrder() 
-    {
-        if ($this->_order == null) {
+		var_dump($customerIp);
+	}
 
-        }
-        return $this->_order;
-    }
-    
 	/**
-     * Get block instance
-     *
-     * @return 
-     */
-    protected function _getRedirectBlock() 
-    {
-        return $this->getLayout()->createBlock('standard/redirect');
-    }
+	 * Order instance
+	 */
+	protected $_order;
 
-    public function getStandard() 
-    {
-        return Mage::getSingleton('mundipagg/standard');
-    }
+	public function getOrder() {
+		if ($this->_order == null) {
 
-    protected function _expireAjax() 
-    {
-        if (!Mage::getSingleton('checkout/session')->getQuote()->hasItems()) {
-            $this->getResponse()->setHeader('HTTP/1.1', '403 Session Expired');
-            exit;
-        }
-    }
+		}
 
-    public function getOnepage()
-    {
-        return Mage::getSingleton('checkout/type_onepage');
-    }
-    
-    /**
-    * Partial payment
-    */
-    public function partialAction() 
-    {
-        $paymentMethod = Mage::helper('payment')->getMethodInstance('mundipagg_creditcard');
-    
-        $session = Mage::getSingleton('checkout/session');
+		return $this->_order;
+	}
 
-        $approvalRequestSuccess = $session->getApprovalRequestSuccess();
-        
-        if (!$session->getLastSuccessQuoteId() && $approvalRequestSuccess != 'partial') {
-            $this->_redirect('checkout/cart');
-            return;
-        }
-        
-        $lastQuoteId = $session->getLastSuccessQuoteId();
+	/**
+	 * Get block instance
+	 *
+	 * @return
+	 */
+	protected function _getRedirectBlock() {
+		return $this->getLayout()->createBlock('standard/redirect');
+	}
 
-        $session->setQuoteId($lastQuoteId);
+	public function getStandard() {
+		return Mage::getSingleton('mundipagg/standard');
+	}
 
-        $quote = Mage::getModel('sales/quote')->load($lastQuoteId);
-        
-        $this->getOnepage()->setQuote($quote);
-        $this->getOnepage()->getQuote()->setIsActive(true);
-        $this->getOnepage()->getQuote()->save();
+	protected function _expireAjax() {
+		if (!Mage::getSingleton('checkout/session')->getQuote()->hasItems()) {
+			$this->getResponse()->setHeader('HTTP/1.1', '403 Session Expired');
+			exit;
+		}
+	}
 
-        if ($session->getLastRealOrderId()) {
-            Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('partial');
+	public function getOnepage() {
+		return Mage::getSingleton('checkout/type_onepage');
+	}
 
-            $order = Mage::getModel('sales/order')->loadByIncrementId($session->getLastRealOrderId());
-            
-            if ($order->getId()) {
-                //Render
-                $this->loadLayout();
-                $this->getLayout()->getBlock('content')->append($this->getLayout()->createBlock('mundipagg/standard_partial'));
-                $this->renderLayout();
-            } else {
-                $this->_redirect();
-            }
-        } else {
-            $this->_redirect();
-        }
-    }
+	/**
+	 * Partial payment
+	 */
+	public function partialAction() {
+		$paymentMethod = Mage::helper('payment')->getMethodInstance('mundipagg_creditcard');
 
-    /**
-    * Partial payment Post
-    */
-    public function partialPostAction()
-    {
-        $session = Mage::getSingleton('checkout/session');
+		$session = Mage::getSingleton('checkout/session');
 
-        // Post
-        if ($data = $this->getRequest()->getPost('payment', array())) {
-            try{
-                $lastQuoteId = $session->getLastSuccessQuoteId();
+		$approvalRequestSuccess = $session->getApprovalRequestSuccess();
 
-                $session->setQuoteId($lastQuoteId);
+		if (!$session->getLastSuccessQuoteId() && $approvalRequestSuccess != 'partial') {
+			$this->_redirect('checkout/cart');
 
-                $quote = Mage::getModel('sales/quote')->load($lastQuoteId);
-                
-                $this->getOnepage()->setQuote($quote);
-                $this->getOnepage()->getQuote()->setIsActive(true);
+			return;
+		}
 
-                // Get Reserved Order Id
-                if ($reservedOrderId = $this->getOnepage()->getQuote()->getReservedOrderId()) {
-                    $session->setApprovalRequestSuccess('partial');
+		$lastQuoteId = $session->getLastSuccessQuoteId();
 
-                    $order = Mage::getModel('sales/order')->loadByIncrementId($reservedOrderId);
+		$session->setQuoteId($lastQuoteId);
 
-                    if ($order->getStatus() == 'pending' OR $order->getStatus() == 'payment_review') {
-                        if (empty($data)) {
-                            return array('error' => -1, 'message' => Mage::helper('checkout')->__('Invalid data'));
-                        }
+		$quote = Mage::getModel('sales/quote')->load($lastQuoteId);
 
-                        if ($this->getOnepage()->getQuote()->isVirtual()) {
-                            $quote->getBillingAddress()->setPaymentMethod(isset($data['method']) ? $data['method'] : null);
-                        } else {
-                            $quote->getShippingAddress()->setPaymentMethod(isset($data['method']) ? $data['method'] : null);
-                        }
+		$this->getOnepage()->setQuote($quote);
+		$this->getOnepage()->getQuote()->setIsActive(true);
+		$this->getOnepage()->getQuote()->save();
 
-                        $payment = $quote->getPayment();
-                        $payment->importData($data);
+		if ($session->getLastRealOrderId()) {
+			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('partial');
 
-                        $quote->save();
+			$order = Mage::getModel('sales/order')->loadByIncrementId($session->getLastRealOrderId());
 
-                        switch ($data['method']):
-                            case 'mundipagg_creditcardoneinstallment':
-                                $onepage = Mage::getModel('mundipagg/creditcardoneinstallment');
-                                break;
-                            case 'mundipagg_creditcard':
-                                $onepage = Mage::getModel('mundipagg/creditcard');
-                                break;
-                            
-                            case 'mundipagg_twocreditcards':
-                                $onepage = Mage::getModel('mundipagg/twocreditcards');
-                                break;
+			if ($order->getId()) {
+				//Render
+				$this->loadLayout();
+				$this->getLayout()->getBlock('content')->append($this->getLayout()->createBlock('mundipagg/standard_partial'));
+				$this->renderLayout();
+			} else {
+				$this->_redirect();
+			}
+		} else {
+			$this->_redirect();
+		}
+	}
 
-                            case 'mundipagg_threecreditcards':
-                                $onepage = Mage::getModel('mundipagg/threecreditcards');
-                                break;
+	/**
+	 * Partial payment Post
+	 */
+	public function partialPostAction() {
+		$session = Mage::getSingleton('checkout/session');
 
-                            case 'mundipagg_fourcreditcards':
-                                $onepage = Mage::getModel('mundipagg/fourcreditcards');
-                                break;
+		// Post
+		if ($data = $this->getRequest()->getPost('payment', array())) {
+			try {
+				$lastQuoteId = $session->getLastSuccessQuoteId();
 
-                            case 'mundipagg_fivecreditcards':
-                                $onepage = Mage::getModel('mundipagg/fivecreditcards');
-                                break;
+				$session->setQuoteId($lastQuoteId);
 
-                            default: 
-                                $this->_redirect('mundipagg/standard/partial');
-                                break;
-                        endswitch;
-                  
-                        $resultPayment = $onepage->doPayment($payment, $order);
+				$quote = Mage::getModel('sales/quote')->load($lastQuoteId);
 
-                        // Send new order email when not in admin and payment is success
-                        if (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess() == 'success') {
-                            if (Mage::app()->getStore()->getCode() != 'admin') {
-                                $order->sendNewOrderEmail();
-                            }
-                        }
+				$this->getOnepage()->setQuote($quote);
+				$this->getOnepage()->getQuote()->setIsActive(true);
 
-                        $info = $order->getPayment();
+				// Get Reserved Order Id
+				if ($reservedOrderId = $this->getOnepage()->getQuote()->getReservedOrderId()) {
+					$session->setApprovalRequestSuccess('partial');
 
-                        // We record transaction(s)
-                        $json      = json_encode($resultPayment['result']);
-                        $dataR     = array();
-                        $dataR     = json_decode($json, true);
+					$order = Mage::getModel('sales/order')->loadByIncrementId($reservedOrderId);
 
-                        if (count($resultPayment['result']->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-                            $trans = $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
-                            
-                            $onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
-                        } else {
-                            $transactions = $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+					if ($order->getStatus() == 'pending' OR $order->getStatus() == 'payment_review') {
+						if (empty($data)) {
+							return array('error' => -1, 'message' => Mage::helper('checkout')->__('Invalid data'));
+						}
 
-                            foreach ($transactions as $key => $trans) {
-                                $onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
-                            }
+						if ($this->getOnepage()->getQuote()->isVirtual()) {
+							$quote->getBillingAddress()->setPaymentMethod(isset($data['method']) ? $data['method'] : null);
+						} else {
+							$quote->getShippingAddress()->setPaymentMethod(isset($data['method']) ? $data['method'] : null);
+						}
 
-                            // We can capture only if anti fraud is disabled and payment action is "AuthorizeAndCapture"
-                            $creditCardTransactionResultCollection = $resultPayment['result']->CreditCardTransactionResultCollection;
-                            
-                            if (
-                                count($creditCardTransactionResultCollection->CreditCardTransactionResult) > 1 && 
-                                $onepage->getAntiFraud() == 0 && 
-                                $onepage->getPaymentAction() == 'order') {
-                                $resultCapture = $onepage->captureAndcreateInvoice($info);
-                            }
-                        }
+						$payment = $quote->getPayment();
+						$payment->importData($data);
 
-                        // Redirect
-                        if (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess() == 'success') {
-                            $this->_redirect('mundipagg/standard/success');
-                        } else {
-                            $this->_redirect('mundipagg/standard/partial');
-                        }
-                    }
-                }
-            }
-            catch (Exception $e) {
-                //Log error
-                Mage::logException($e);
-            }
-        } else {
-            $this->_redirect();
-        }
-    }
-        		
-    /**
-     * Cancel page
-     */
-    public function cancelAction() 
-    {
-        $this->cancelOrder();
+						$quote->save();
 
-        //Render
-        $this->loadLayout();
-        $this->getLayout()->getBlock('content')->append($this->getLayout()->createBlock('mundipagg/standard_cancel'));
-        $this->renderLayout();
-    }
+						switch ($data['method']):
+							case 'mundipagg_creditcardoneinstallment':
+								$onepage = Mage::getModel('mundipagg/creditcardoneinstallment');
+								break;
+							case 'mundipagg_creditcard':
+								$onepage = Mage::getModel('mundipagg/creditcard');
+								break;
 
-    /**
-     * Force Cancel page
-     */
-    public function fcancelAction() 
-    {
-        $this->cancelOrder();
+							case 'mundipagg_twocreditcards':
+								$onepage = Mage::getModel('mundipagg/twocreditcards');
+								break;
 
-        //Render
-        $this->loadLayout();
-        $this->getLayout()->getBlock('content')->append($this->getLayout()->createBlock('mundipagg/standard_fcancel'));
-        $this->renderLayout();
-    }
+							case 'mundipagg_threecreditcards':
+								$onepage = Mage::getModel('mundipagg/threecreditcards');
+								break;
 
-    /*
-    * Cancel order and set quote as inactive
-    */
-    private function cancelOrder()
-    {
-        $session = Mage::getSingleton('checkout/session');
+							case 'mundipagg_fourcreditcards':
+								$onepage = Mage::getModel('mundipagg/fourcreditcards');
+								break;
 
-        if (!$session->getLastSuccessQuoteId()) {
-            $this->_redirect('checkout/cart');
-            return;
-        }
+							case 'mundipagg_fivecreditcards':
+								$onepage = Mage::getModel('mundipagg/fivecreditcards');
+								break;
 
-        // Set quote as inactive
-        Mage::getSingleton('checkout/session')
-            ->getQuote()
-            ->setIsActive(false)
-            ->setTotalsCollectedFlag(false)
-            ->setAuthorizedAmount()
-            ->save()
-            ->collectTotals();
+							default:
+								$this->_redirect('mundipagg/standard/partial');
+								break;
+						endswitch;
 
-        if ($session->getLastRealOrderId()) {
-            $order = Mage::getModel('sales/order')->loadByIncrementId($session->getLastRealOrderId());
-            
-            if ($order->getId() && $order->canCancel()) {
-                $order->cancel()->save();
-            }
-        }
+						$resultPayment = $onepage->doPayment($payment, $order);
 
-        $session->clear();
-    }
+						// Send new order email when not in admin and payment is success
+						if (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess() == 'success') {
+							if (Mage::app()->getStore()->getCode() != 'admin') {
+								$order->sendNewOrderEmail();
+							}
+						}
 
-    /**
-     * Success page (also used for Mundipagg return page for payments like "debit" and "boleto")
-     */
-    public function successAction() 
-    {
-        $session = Mage::getSingleton('checkout/session');
-        $approvalRequestSuccess = $session->getApprovalRequestSuccess();
-    
+						$info = $order->getPayment();
+
+						// We record transaction(s)
+						$json = json_encode($resultPayment['result']);
+						$dataR = array();
+						$dataR = json_decode($json, true);
+
+						if (count($resultPayment['result']->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
+							$trans = $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+
+							$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
+						} else {
+							$transactions = $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+
+							foreach ($transactions as $key => $trans) {
+								$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
+							}
+
+							// We can capture only if anti fraud is disabled and payment action is "AuthorizeAndCapture"
+							$creditCardTransactionResultCollection = $resultPayment['result']->CreditCardTransactionResultCollection;
+
+							if (
+								count($creditCardTransactionResultCollection->CreditCardTransactionResult) > 1 &&
+								$onepage->getAntiFraud() == 0 &&
+								$onepage->getPaymentAction() == 'order'
+							) {
+								$resultCapture = $onepage->captureAndcreateInvoice($info);
+							}
+						}
+
+						// Redirect
+						if (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess() == 'success') {
+							$this->_redirect('mundipagg/standard/success');
+						} else {
+							$this->_redirect('mundipagg/standard/partial');
+						}
+					}
+				}
+			} catch (Exception $e) {
+				//Log error
+				Mage::logException($e);
+			}
+		} else {
+			$this->_redirect();
+		}
+	}
+
+	/**
+	 * Cancel page
+	 */
+	public function cancelAction() {
+		$this->cancelOrder();
+
+		//Render
+		$this->loadLayout();
+		$this->getLayout()->getBlock('content')->append($this->getLayout()->createBlock('mundipagg/standard_cancel'));
+		$this->renderLayout();
+	}
+
+	/**
+	 * Force Cancel page
+	 */
+	public function fcancelAction() {
+		$this->cancelOrder();
+
+		//Render
+		$this->loadLayout();
+		$this->getLayout()->getBlock('content')->append($this->getLayout()->createBlock('mundipagg/standard_fcancel'));
+		$this->renderLayout();
+	}
+
+	/*
+	* Cancel order and set quote as inactive
+	*/
+	private function cancelOrder() {
+		$session = Mage::getSingleton('checkout/session');
+
+		if (!$session->getLastSuccessQuoteId()) {
+			$this->_redirect('checkout/cart');
+
+			return;
+		}
+
+		// Set quote as inactive
+		Mage::getSingleton('checkout/session')
+			->getQuote()
+			->setIsActive(false)
+			->setTotalsCollectedFlag(false)
+			->setAuthorizedAmount()
+			->save()
+			->collectTotals();
+
+		if ($session->getLastRealOrderId()) {
+			$order = Mage::getModel('sales/order')->loadByIncrementId($session->getLastRealOrderId());
+
+			if ($order->getId() && $order->canCancel()) {
+				$order->cancel()->save();
+			}
+		}
+
+		$session->clear();
+	}
+
+	/**
+	 * Success page (also used for Mundipagg return page for payments like "debit" and "boleto")
+	 */
+	public function successAction() {
+		$session = Mage::getSingleton('checkout/session');
+		$approvalRequestSuccess = $session->getApprovalRequestSuccess();
+
 		if (!$this->getRequest()->isPost() && ($approvalRequestSuccess == 'success' || $approvalRequestSuccess == 'debit')) {
-            if (!$session->getLastSuccessQuoteId()) {
-                $this->_redirect('checkout/cart');
-                return;
-            }
+			if (!$session->getLastSuccessQuoteId()) {
+				$this->_redirect('checkout/cart');
 
-            $session->setQuoteId($session->getMundipaggStandardQuoteId(true));
+				return;
+			}
 
-            // Last Order Id
-            $lastOrderId = Mage::getSingleton('checkout/session')->getLastOrderId();
-		
-            // Set quote as inactive
-            Mage::getSingleton('checkout/session')
-                ->getQuote()
-                ->setIsActive(false)
-                ->setTotalsCollectedFlag(false)
-                ->save()
-                ->collectTotals();
+			$session->setQuoteId($session->getMundipaggStandardQuoteId(true));
 
-            // Load order
-            $order = Mage::getModel('sales/order')->load($lastOrderId);
-            
-            if ($order->getId()) {
-                Mage::register('current_order', Mage::getModel('sales/order')->load($lastOrderId));
+			// Last Order Id
+			$lastOrderId = Mage::getSingleton('checkout/session')->getLastOrderId();
 
-                // Render
-                $this->loadLayout();
-                Mage::dispatchEvent('checkout_onepage_controller_success_action', array('order_ids' => array($lastOrderId)));
-                $this->getLayout()->getBlock('content')->append($this->getLayout()->createBlock('mundipagg/standard_success'));
-                $this->renderLayout();
+			// Set quote as inactive
+			Mage::getSingleton('checkout/session')
+				->getQuote()
+				->setIsActive(false)
+				->setTotalsCollectedFlag(false)
+				->save()
+				->collectTotals();
 
-                $session->clear();
-            } else {
-            	// Redirect to homepage
-            	$this->_redirect('');
-            } 
-        } else {
-            // Get posted data
-            $postData = $this->getRequest()->getPost();
+			// Load order
+			$order = Mage::getModel('sales/order')->load($lastOrderId);
 
-            $api = Mage::getModel('mundipagg/api');
+			if ($order->getId()) {
+				Mage::register('current_order', Mage::getModel('sales/order')->load($lastOrderId));
 
-            // Process order
-            $result = $api->processOrder($postData);
+				// Render
+				$this->loadLayout();
+				Mage::dispatchEvent('checkout_onepage_controller_success_action', array('order_ids' => array($lastOrderId)));
+				$this->getLayout()->getBlock('content')->append($this->getLayout()->createBlock('mundipagg/standard_success'));
+				$this->renderLayout();
 
-            // If result is empty we redirect to homepage
-            if ($result === false) {
-                $this->_redirect('');
-            } else {
-                $this->getResponse()->setBody($result);
-            }
-        }   
-    }
+				$session->clear();
+			} else {
+				// Redirect to homepage
+				$this->_redirect('');
+			}
+		} else {
+			// Get posted data
+			$postData = $this->getRequest()->getPost();
 
-    public function installmentsandinterestAction()
-    {
-        $post = $this->getRequest()->getPost();
-        $result = array();
-        $installmentsHelper = Mage::helper('mundipagg/installments');
-        if(isset($post['cctype'])) {
-            $total = $post['total'];
-            $cctype = $post['cctype'];
-            if(!$total) {
-                $total = null;
-            }
+			$api = Mage::getModel('mundipagg/api');
 
-            $installments = $installmentsHelper->getInstallmentForCreditCardType($cctype,$total);
+			// Process order
+			$result = $api->processOrder($postData);
 
-            $result['installments'] = $installments;
-            $result['brand'] = $cctype;
-        } else {
-            $installments = $installmentsHelper->getInstallmentForCreditCardType();
-            $result['installments'] = $installments;
-        }
+			// If result is empty we redirect to homepage
+			if ($result === false) {
+				$this->_redirect('');
+			} else {
+				$this->getResponse()->setBody($result);
+			}
+		}
+	}
 
-        $this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
-    }
+	public function installmentsandinterestAction() {
+		$post = $this->getRequest()->getPost();
+		$result = array();
+		$installmentsHelper = Mage::helper('mundipagg/installments');
+		if (isset($post['cctype'])) {
+			$total = $post['total'];
+			$cctype = $post['cctype'];
+			if (!$total) {
+				$total = null;
+			}
 
-    /**
-    * Get max number of installments for a value
-    */
-    public function installmentsAction() 
-    {
-        $val = $this->getRequest()->getParam('val');
+			$installments = $installmentsHelper->getInstallmentForCreditCardType($cctype, $total);
 
-        if (is_numeric($val)) {
-            $standard = Mage::getSingleton('mundipagg/standard');
+			$result['installments'] = $installments;
+			$result['brand'] = $cctype;
+		} else {
+			$installments = $installmentsHelper->getInstallmentForCreditCardType();
+			$result['installments'] = $installments;
+		}
 
-            $valorMinParcelamento = $standard->getConfigData('parcelamento_min');
+		$this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
+	}
 
-            // Não ter valor mínimo para parcelar OU Parcelar a partir de um valor mínimo
-            if ($valorMinParcelamento == 0) {
-                $qtdParcelasMax = $standard->getConfigData('parcelamento_max');
-            }
+	/**
+	 * Get max number of installments for a value
+	 */
+	public function installmentsAction() {
+		$val = $this->getRequest()->getParam('val');
 
-            // Parcelar a partir de um valor mínimo
-            if ($valorMinParcelamento > 0 && $val >= $valorMinParcelamento) {
-                $qtdParcelasMax = $standard->getConfigData('parcelamento_max');
-            }                                
+		if (is_numeric($val)) {
+			$standard = Mage::getSingleton('mundipagg/standard');
 
-            // Por faixa de valores
-            if ($valorMinParcelamento == '') {
-                $qtdParcelasMax = $standard->getConfigData('parcelamento_max');
-            
-                $p = 1;
+			$valorMinParcelamento = $standard->getConfigData('parcelamento_min');
 
-                for ($p = 1; $p <= $qtdParcelasMax; $p++) {
-                    if ($p == 1) {
-                        $de         = 0;
-                        $parcelaDe = 0; 
-                    } else {
-                        $de         = 'parcelamento_de'.$p;
-                        $parcelaDe = $standard->getConfigData($de);
-                    }
+			// Não ter valor mínimo para parcelar OU Parcelar a partir de um valor mínimo
+			if ($valorMinParcelamento == 0) {
+				$qtdParcelasMax = $standard->getConfigData('parcelamento_max');
+			}
 
-                    $ate = 'parcelamento_ate'.$p;
-                    $parcelaAte = $standard->getConfigData($ate);
-                    
-                    if ($parcelaDe >= 0 && $parcelaAte >= $parcelaDe) {
-                        if ($val >= $parcelaDe AND $val <= $parcelaAte) {
-                            $qtdParcelasMax = $p;
-                        }
-                    } else {
-                        $qtdParcelasMax = $p-1;
-                    }
-                }
-            }
+			// Parcelar a partir de um valor mínimo
+			if ($valorMinParcelamento > 0 && $val >= $valorMinParcelamento) {
+				$qtdParcelasMax = $standard->getConfigData('parcelamento_max');
+			}
 
-            $result['qtdParcelasMax'] = $qtdParcelasMax;
-            $result['currencySymbol'] = Mage::app()->getLocale()->currency(Mage::app()->getStore()->getCurrentCurrencyCode())->getSymbol();
+			// Por faixa de valores
+			if ($valorMinParcelamento == '') {
+				$qtdParcelasMax = $standard->getConfigData('parcelamento_max');
 
-            $this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
-        }
-    }
+				$p = 1;
+
+				for ($p = 1; $p <= $qtdParcelasMax; $p++) {
+					if ($p == 1) {
+						$de = 0;
+						$parcelaDe = 0;
+					} else {
+						$de = 'parcelamento_de' . $p;
+						$parcelaDe = $standard->getConfigData($de);
+					}
+
+					$ate = 'parcelamento_ate' . $p;
+					$parcelaAte = $standard->getConfigData($ate);
+
+					if ($parcelaDe >= 0 && $parcelaAte >= $parcelaDe) {
+						if ($val >= $parcelaDe AND $val <= $parcelaAte) {
+							$qtdParcelasMax = $p;
+						}
+					} else {
+						$qtdParcelasMax = $p - 1;
+					}
+				}
+			}
+
+			$result['qtdParcelasMax'] = $qtdParcelasMax;
+			$result['currencySymbol'] = Mage::app()->getLocale()->currency(Mage::app()->getStore()->getCurrentCurrencyCode())->getSymbol();
+
+			$this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
+		}
+	}
 }

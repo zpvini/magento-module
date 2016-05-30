@@ -6,44 +6,80 @@ if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifra
 
 	<script type="text/javascript">
 
-		try {
-			//Add calback method default
-			var fittipaldiCallback = function (deviceId) {
-				alert("deviceId: " + deviceId);
+		var customVars = new Object();
+
+		if (jQuery == 'undefined') {
+			try {
+				var jQueryObj = document.createElement('script');
+				jQueryObj.type = 'text/javascript';
+				jQueryObj.async = true;
+				jQueryObj.src = 'https://code.jquery.com/jquery-1.12.4.min.js';
+				jQueryObj.integrity = "sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=";
+				jQueryObj.crossorigin = "anonymous";
+
+				document.getElementsByTagName('body')[0].appendChild(jQueryObj);
+			} catch (err) {
+				console.log(err);
 			}
-
-			var customVars = new Object();
-			(function () {
-				var fittipaldi = document.createElement('script');
-				fittipaldi.type = 'text/javascript';
-				fittipaldi.async = true;
-				fittipaldi.id = "fittipaldi";
-				fittipaldi.src = (('https:' == document.location.protocol) ? 'https://' : 'http://') + 'df.fcontrol.com.br/js/fittipaldiJs.js';
-				customVars['ORDERID'] = 'valor123';
-
-				document.getElementsByTagName('body')[0].appendChild(fittipaldi);
-			})();
-		} catch (err) {
-			alert(err);
 		}
 
 		jQuery(document).ready(function () {
 
-			jQuery.ajax({
-				method: "POST",
-				url: "/mundipagg/fcontrol/session",
+			try {
+				(function () {
 
-				data: {
-					deviceId: 'codigoDeviceId'
-				},
-				success: function (data) {
-					console.log('success');
-					console.log(data);
-				},
-				error: function (err) {
-					console.log('error');
-				}
-			});
+					//Add calback method default
+					var fittipaldiCallback = function (deviceId) {
+						console.log('executing fittipaldi callback...');
+
+						jQuery.ajax({
+							method: "POST",
+							url: "/mundipagg/fcontrol/session",
+							data: {deviceId: deviceId},
+							success: function (data) {
+								console.log(data);
+							},
+							error: function (err) {
+								console.log('error: ' + err);
+							}
+						});
+					};
+
+					var execFittipaldi = function (orderId) {
+
+						var fittipaldi = document.createElement('script');
+						fittipaldi.type = 'text/javascript';
+						fittipaldi.async = true;
+						fittipaldi.id = "fittipaldi";
+						fittipaldi.src = (('https:' == document.location.protocol) ? 'https://' : 'http://') + 'df.fcontrol.com.br/js/fittipaldiJs.js';
+						customVars['ORDERID'] = orderId;
+
+						document.getElementsByTagName('body')[0].appendChild(fittipaldi);
+					};
+
+					var setFControlData = function () {
+						jQuery.ajax({
+							method: 'POST',
+							url: '/mundipagg/fcontrol/getOrderId',
+							dataType: 'JSON'
+						}).done(function (data) {
+							execFittipaldi(data.orderId);
+						});
+					};
+
+					setFControlData();
+
+				})();
+
+			} catch (err) {
+				jQuery.ajax({
+					method: 'POST',
+					url: '/mundipagg/fcontrol/reportError',
+					data: {
+						errorMessage: "Unable to set fittipaldi data: " + err,
+					}
+				});
+			}
 
 		});
 
