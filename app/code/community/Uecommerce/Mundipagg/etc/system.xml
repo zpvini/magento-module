@@ -39,8 +39,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <version translate="label">
                             <label>Version</label>
@@ -345,8 +344,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -426,8 +424,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -507,8 +504,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span><br/><br/><h2>Para essa forma de pagamento funcionar a Mundipagg precisa ativar na sua conta a opção que permite ter o mesmo OrderKey para um pedido com o mesmo OrderReference</h2><br/><br/>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -588,8 +584,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span><br/><br/><h2>Para essa forma de pagamento funcionar a Mundipagg precisa ativar na sua conta a opção que permite ter o mesmo OrderKey para um pedido com o mesmo OrderReference</h2><br/><br/>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -669,8 +664,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span><br/><br/><h2>Para essa forma de pagamento funcionar a Mundipagg precisa ativar na sua conta a opção que permite ter o mesmo OrderKey para um pedido com o mesmo OrderReference</h2><br/><br/>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -750,8 +744,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span><br/><br/><h2>Para essa forma de pagamento funcionar a Mundipagg precisa ativar na sua conta a opção que permite ter o mesmo OrderKey para um pedido com o mesmo OrderReference</h2><br/><br/>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -831,8 +824,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -914,8 +906,7 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.uecommerce.com.br" target="_blank"><img title="Uecommerce" alt="Uecommerce" src="http://www.uecommerce.com.br/uecommerce.php"/></a></span>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
