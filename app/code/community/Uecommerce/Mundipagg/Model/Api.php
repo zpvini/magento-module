@@ -177,7 +177,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
 			//verify FControl Config and get antifraud data
-			$fControlData = $this->getFControlConfig($_request['Order']['OrderReference']);
+//			$fControlData = $this->getFControlConfig($_request['Order']['OrderReference']);
+			$fControlData = $this->getFControlConfig();
 
 			if (is_array($fControlData)) {
 				$_request['requestData'] = $fControlData;
@@ -476,7 +477,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
 			//verify FControl Config and get antifraud data
-			$fControlData = $this->getFControlConfig($_request['Order']['OrderReference']);
+//			$fControlData = $this->getFControlConfig($_request['Order']['OrderReference']);
+			$fControlData = $this->getFControlConfig();
 
 			if (is_array($fControlData)) {
 				$_request['requestData'] = $fControlData;
@@ -1561,7 +1563,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @throws Mage_Core_Exception
 	 * @return array $requestData
 	 */
-	private function getFControlConfig($orderReference) {
+	private function getFControlConfig($orderReference = '') {
 		$antifraud = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$error = false;
