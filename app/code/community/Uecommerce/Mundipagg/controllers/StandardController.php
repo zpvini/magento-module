@@ -29,13 +29,6 @@
  */
 class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front_Action {
 
-	public function testeIpAction() {
-		$httpCoreHelper = new Mage_Core_Helper_Http();
-		$customerIp = $httpCoreHelper->getRemoteAddr();
-
-		var_dump($customerIp);
-	}
-
 	/**
 	 * Order instance
 	 */

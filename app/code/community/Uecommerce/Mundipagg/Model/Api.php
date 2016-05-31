@@ -334,7 +334,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
 			//Log error
-			Mage::logException($e);
+			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+			$helperLog->error($e, true);
 
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
@@ -533,7 +534,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
 			//Log error
-			Mage::logException($e);
+			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+			$helperLog->error($e, true);
 
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
@@ -578,6 +580,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * Debit transaction
 	 **/
 	public function debitTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard) {
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
 		try {
 			// Get Webservice URL
 			$url = $standard->getURL();
@@ -628,8 +632,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$dataToPost = json_encode($_request);
 
 			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($_request, 1), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log(print_r($_request, 1), null, 'Uecommerce_Mundipagg.log');
+				$helperLog->debug(print_r($_request, true));
 			}
 
 			// Send payment data to MundiPagg
@@ -654,15 +659,17 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_response = curl_exec($ch);
 
 			if (curl_errno($ch)) {
-				Mage::log(curl_error($ch), null, 'Uecommerce_Mundipagg.log');
+				$helperLog->info(curl_error($ch));
+//				Mage::log(curl_error($ch), null, 'Uecommerce_Mundipagg.log');
 			}
 
 			// Close connection
 			curl_close($ch);
 
 			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
+				$helperLog->debug(print_r($_response, true));
 			}
 
 			// Is there an error?
@@ -672,8 +679,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$data = json_decode($json, true);
 
 			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($data, 1), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log(print_r($data, 1), null, 'Uecommerce_Mundipagg.log');
+				$helperLog->debug(print_r($data, true));
 			}
 
 			// Error
@@ -724,7 +732,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
 			//Log error
-			Mage::logException($e);
+			$helperLog->error($e, true);
 
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
@@ -1083,6 +1091,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * Manage Order Request: capture / void / refund
 	 **/
 	public function manageOrderRequest($data, Uecommerce_Mundipagg_Model_Standard $standard) {
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		try {
 			// Get Webservice URL
 			$url = $standard->getURL() . '/' . $data['ManageOrderOperationEnum'];
@@ -1093,8 +1102,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$key = $standard->getMerchantKey();
 
 			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($data, 1), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log(print_r($data, 1), null, 'Uecommerce_Mundipagg.log');
+				$helperLog->debug(print_r($data, true));
 			}
 
 			$dataToPost = json_encode($data);
@@ -1119,8 +1129,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			curl_close($ch);
 
 			if ($standard->getDebug() == 1) {
-				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-				Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
+//				Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
+				$helperLog->debug(print_r($_response, true));
 			}
 
 			// Return
@@ -1130,10 +1141,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess(false);
 
 			//Log error
-			Mage::logException($e);
+			$helperLog->error($e, true);
 
 			//Mail error
-			$this->mailError(print_r($e->getMessage(), 1));
+			$this->mailError(print_r($e->getMessage(), true));
 
 			// Throw Exception
 			Mage::throwException(Mage::helper('mundipagg')->__('Payment Error'));
@@ -1147,10 +1158,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 */
 	public function processOrder($postData) {
 		$standard = Mage::getModel('mundipagg/standard');
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
 		if ($standard->getConfigData('debug') == 1) {
-			Mage::log('xmlStatusNotification', null, 'Uecommerce_Mundipagg.log');
-			Mage::log(print_r($postData['xmlStatusNotification'], 1), null, 'Uecommerce_Mundipagg.log');
+			if(isset($postData['xmlStatusNotification'])){
+				$helperLog->debug(print_r($postData['xmlStatusNotification'], true));
+			}
 		}
 
 		try {
@@ -1379,7 +1392,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 		} catch (Exception $e) {
 			//Log error
-			Mage::logException($e);
+			$helperLog->error($e, true);
 
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
@@ -1468,6 +1481,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @return array
 	 */
 	public function getTransactionHistory($orderKey) {
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
 		// @var $standard Uecommerce_Mundipagg_Model_Standard
 		$standard = Mage::getModel('mundipagg/standard');
 
@@ -1494,8 +1509,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_close($ch);
 
 		if ($standard->getDebug() == 1) {
-			Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion() . ' Notification (return url)', null, 'Uecommerce_Mundipagg.log');
-			Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
+//			Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion() . ' Notification (return url)', null, 'Uecommerce_Mundipagg.log');
+//			Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
+			$helperLog->debug(print_r($_response, true));
 		}
 
 		// Return
@@ -1504,25 +1520,37 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 	/**
 	 * Mail error to Mage::getStoreConfig('trans_email/ident_custom1/email')
+	 *
+	 * @author Ruan Azevedo <razevedo@mundipagg.com>
+	 * @since 31-05-2016
 	 * @param string $message
 	 */
 	public function mailError($message = '') {
+		$mail = new Zend_Mail();
+		$fromName = Mage::getStoreConfig('trans_email/ident_sales/name');
+		$fromEmail = Mage::getStoreConfig('trans_email/ident_sales/email');
+		$toEmail = Mage::getStoreConfig('trans_email/ident_custom1/email');
+		$toName = Mage::getStoreConfig('trans_email/ident_custom1/name');
+		$bcc = array('ruan.azevedo@gmail.com', 'razevedo@mundipagg.com');
+		$subject = 'Error Report - MundiPagg Magento Integration';
+		$body = "Error Report from: {$_SERVER['HTTP_HOST']}<br><br>{$message}";
+
+		$mail->setFrom($fromEmail, $fromName)
+			->addTo($toEmail, $toName)
+			->addBcc($bcc)
+			->setSubject($subject)
+			->setBodyHtml($body);
+
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
 		try {
-			//Send email
-			$mail = Mage::getModel('core/email');
-			$mail->setToName(Mage::getStoreConfig('trans_email/ident_custom1/name'));
-			$mail->setToEmail(Mage::getStoreConfig('trans_email/ident_custom1/email'));
-			$mail->setBody($message);
-			$mail->setSubject('=?utf-8?B?' . base64_encode(Mage::getStoreConfig('system/store/name') . ' - erro') . '?=');
-			$mail->setFromEmail(Mage::getStoreConfig('trans_email/ident_sales/email'));
-			$mail->setFromName(Mage::getStoreConfig('trans_email/ident_sales/name'));
-			$mail->setType('html');
 			$mail->send();
+			$helperLog->info("Error Report Sent: {$message}");
 
 		} catch (Exception $e) {
-			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 			$helperLog->error($e);
 		}
+		
 	}
 
 	/**
