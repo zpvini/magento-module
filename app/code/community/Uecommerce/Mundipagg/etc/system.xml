@@ -39,7 +39,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <version translate="label">
                             <label>Version</label>
@@ -148,11 +149,37 @@
                             <show_in_store>1</show_in_store>
                         </antifraud_provider>
 
+                        <clearsale_entityid translate="label">
+                            <label>Entity ID</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>10</sort_order>
+                            <depends>
+                                <antifraud_provider>1</antifraud_provider>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Chave informada pela Clearsale</comment>
+                        </clearsale_entityid>
+
+                        <clearsale_app translate="label">
+                            <label>App</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>11</sort_order>
+                            <depends>
+                                <antifraud_provider>1</antifraud_provider>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>codigo informado pela Clearsale</comment>
+                        </clearsale_app>
+
                         <cc_types translate="label">
                             <label>Credit Card Issuers</label>
                             <frontend_type>multiselect</frontend_type>
                             <source_model>Uecommerce_Mundipagg_Model_Source_Cctypes</source_model>
-                            <sort_order>10</sort_order>
+                            <sort_order>12</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -162,7 +189,7 @@
                         <heading_installments translate="label">
                             <label>Installments and Interest</label>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-                            <sort_order>11</sort_order>
+                            <sort_order>13</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -172,7 +199,7 @@
                             <label>Ativar parcelamento?</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>12</sort_order>
+                            <sort_order>14</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -182,7 +209,7 @@
                             <label>Exibir total com juros ao lado das parcelas?</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>13</sort_order>
+                            <sort_order>15</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -192,7 +219,7 @@
                             <label>Qual parcelamento exibir na página do produto?</label>
                             <frontend_type>select</frontend_type>
                             <source_model>Uecommerce_Mundipagg_Model_Source_CctypeProductInstallments</source_model>
-                            <sort_order>14</sort_order>
+                            <sort_order>16</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -200,7 +227,7 @@
 
                         <setoldsettings translate="label comment tooltip">
                             <label>Set old settings</label>
-                            <sort_order>15</sort_order>
+                            <sort_order>17</sort_order>
                             <frontend_type>button</frontend_type>
                             <frontend_model>mundipagg/adminhtml_system_config_form_button</frontend_model>
                             <show_in_default>1</show_in_default>
@@ -218,7 +245,7 @@
                             <label>Installments default</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>16</sort_order>
+                            <sort_order>18</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -229,7 +256,7 @@
                             <label>Installments for Visa</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>17</sort_order>
+                            <sort_order>19</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -240,7 +267,7 @@
                             <label>Installments for Mastercard</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>18</sort_order>
+                            <sort_order>20</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -251,7 +278,7 @@
                             <label>Installments for Amex</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>19</sort_order>
+                            <sort_order>21</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -262,7 +289,7 @@
                             <label>Installments for Diners</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>20</sort_order>
+                            <sort_order>22</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -274,7 +301,7 @@
                             <label>Installments for Elo</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>21</sort_order>
+                            <sort_order>23</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -285,7 +312,7 @@
                             <label>Installments for Hipercard</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>22</sort_order>
+                            <sort_order>24</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -294,42 +321,46 @@
                         <heading_extras translate="label">
                             <label>Extras</label>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-                            <sort_order>23</sort_order>
+                            <sort_order>25</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </heading_extras>
+
                         <shipping_company>
                             <label>Frete Padrão</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>24</sort_order>
+                            <sort_order>26</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_website>1</show_website>
                             <show_in_store>1</show_in_store>
                             <comment><![CDATA[Empresa que realiza as entregas]]></comment>
                         </shipping_company>
+
                         <delivery_deadline translate="label">
                             <label>Média de prazo de entrega</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>25</sort_order>
+                            <sort_order>27</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <comment><![CDATA[Quantidade de dias em média para entrega de seus produtos.]]></comment>
                         </delivery_deadline>
+
                         <save_cardonfile translate="label">
                             <label>Enable feature (use the card for future purchases)</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>26</sort_order>
+                            <sort_order>28</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                         </save_cardonfile>
+
                         <cielo_sku translate="label">
                             <label>SKU produto de teste de R$1,00 da Cielo</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>27</sort_order>
+                            <sort_order>29</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -337,14 +368,17 @@
                                 <![CDATA[SKU do produto de teste da Cielo para forçar o pagamento pela Cielo durante a homologação]]></comment>
                         </cielo_sku>
                     </fields>
+
                 </mundipagg_standard>
+
                 <mundipagg_creditcardoneinstallment type="group" translate="label">
                     <label><![CDATA[MundiPagg - Cartão de Crédito à vista]]></label>
                     <sort_order>430</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -424,7 +458,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -504,7 +539,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -584,7 +620,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -664,7 +701,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -744,7 +782,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -824,7 +863,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -906,7 +946,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>

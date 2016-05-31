@@ -30,17 +30,15 @@ if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifra
 
 					//Add calback method default
 					var fittipaldiCallback = function (deviceId) {
-						console.log('executing fittipaldi callback...');
-
 						jQuery.ajax({
 							method: "POST",
 							url: "/mundipagg/fcontrol/session",
 							data: {deviceId: deviceId},
 							success: function (data) {
-								console.log(data);
+//								console.log(data);
 							},
 							error: function (err) {
-								console.log('error: ' + err);
+//								console.log('error: ' + err);
 							}
 						});
 					};

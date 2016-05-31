@@ -53,6 +53,9 @@
             <reference name="before_body_end">
                 <block type="core/template" name="fcontrol" template="mundipagg/fcontrol/fcontrol.phtml"/>
             </reference>
+            <reference name="before_body_end">
+                <block type="core/template" name="clearsale" template="mundipagg/clearsale/clearsale.phtml"/>
+            </reference>
         </reference>
     </checkout_onepage_index>
     <onepagecheckout_index_index translate="label">

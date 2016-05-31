@@ -8,7 +8,7 @@ class Uecommerce_Mundipagg_Model_Source_Antifraud {
 
 	public function toOptionArray() {
 		return array(
-			array('value' => 0, 'label' => 'Selecione...'),
+			array('value' => self::ANTIFRAUD_NONE, 'label' => 'Selecione...'),
 			array('value' => self::ANTIFRAUD_CLEARSALE, 'label' => 'Clearsale'),
 			array('value' => self::ANTIFRAUD_FCONTROL, 'label' => 'FControl'),
 		);
