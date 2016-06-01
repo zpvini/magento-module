@@ -25,15 +25,4 @@ class Uecommerce_Mundipagg_ClearsaleController extends Uecommerce_Mundipagg_Cont
 		}
 	}
 
-	private function getSessionId() {
-		$sessionId = Uecommerce_Mundipagg_Model_Customer_Session::getSessionId();
-
-		if (is_null($sessionId) || $sessionId == false || empty($sessionId)) {
-			$sessionId = uniqid('mund19-');
-			Uecommerce_Mundipagg_Model_Customer_Session::setSessionId($sessionId);
-		}
-
-		return $sessionId;
-	}
-
 }

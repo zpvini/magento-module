@@ -53,4 +53,15 @@ class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Fron
 		}
 	}
 
+	protected function getSessionId() {
+		$sessionId = Uecommerce_Mundipagg_Model_Customer_Session::getSessionId();
+		
+		if (is_null($sessionId) || $sessionId == false || empty($sessionId)) {
+			$sessionId = uniqid('mund19-');
+			Uecommerce_Mundipagg_Model_Customer_Session::setSessionId($sessionId);
+		}
+
+		return $sessionId;
+	}
+
 }

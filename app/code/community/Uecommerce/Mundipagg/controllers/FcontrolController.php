@@ -6,6 +6,7 @@ class Uecommerce_Mundipagg_FcontrolController extends Uecommerce_Mundipagg_Contr
 
 		if ($this->requestIsValid() == false) {
 			echo $this->getResponseForInvalidRequest();
+
 			return false;
 		}
 
@@ -20,48 +21,42 @@ class Uecommerce_Mundipagg_FcontrolController extends Uecommerce_Mundipagg_Contr
 		return $this->jsonResponse($response);
 	}
 
-	public function sessionAction() {
+	public function getConfigAction() {
 
+		if ($this->requestIsValid() == false) {
+			echo $this->getResponseForInvalidRequest();
+
+			return false;
+		}
+
+		$response = array();
+		$response['sessionId'] = $this->getSessionId();
+		$response['key'] = Mage::getStoreConfig('payment/mundipagg_standard/fcontrol_key');
+
+		try {
+			return $this->jsonResponse($response);
+		} catch (Exception $e) {
+		}
+
+	}
+
+	public function reportErrorAction() {
 		if ($this->requestIsValid() == false) {
 			echo $this->getResponseForInvalidRequest();
 			return false;
 		}
 
+		$api = new Uecommerce_Mundipagg_Model_Api();
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-		$deviceId = $this->getRequest()->getPost('deviceId');
-
-		if (is_null($deviceId) || empty($deviceId)) {
-			$message = 'deviceId not informed';
-			$response = array(
-				'sucess'  => false,
-				'message' => $message
-			);
-
-			$helperLog->error($message);
-			return $this->jsonResponse($response);
-		}
+		$message = $this->getRequest()->getPost('message');
 
 		try {
-			$message = 'deviceId saved';
-			$response = array(
-				'success' => true,
-				'message' => $message
-			);
-
-			$helperLog->info($message);
-			Uecommerce_Mundipagg_Model_Customer_Session::setSessionId($deviceId);
-
+			$helperLog->error($message, true);
+			$api->mailError($message);
+			
 		} catch (Exception $e) {
-			$errMsg = "Impossible to save sessionId in customer session.";
-			$response = array(
-				'success' => false,
-				'message' => $errMsg
-			);
-
-			$helperLog->error("{$errMsg} Error: {$e->getMessage()}");
+			
 		}
-
-		return $this->jsonResponse($response);
 	}
 
 }

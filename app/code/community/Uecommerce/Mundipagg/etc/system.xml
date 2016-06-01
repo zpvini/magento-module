@@ -39,7 +39,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment>
+                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
 
                     <fields>
                         <version translate="label">
@@ -148,6 +149,19 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                         </antifraud_provider>
+
+                        <fcontrol_key translate="label">
+                            <label>Chave FControl</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>10</sort_order>
+                            <depends>
+                                <antifraud_provider>2</antifraud_provider>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Chave informada pela FControl</comment>
+                        </fcontrol_key>
 
                         <clearsale_entitycode translate="label">
                             <label>EntityCode</label>
@@ -367,6 +381,7 @@
                             <comment>
                                 <![CDATA[SKU do produto de teste da Cielo para forçar o pagamento pela Cielo durante a homologação]]></comment>
                         </cielo_sku>
+
                     </fields>
 
                 </mundipagg_standard>

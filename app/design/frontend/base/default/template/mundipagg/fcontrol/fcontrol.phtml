@@ -4,11 +4,13 @@ $antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_
 
 if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL): ?>
 
+	<!--	<script type="text/javascript" src="https://static.fcontrol.com.br/fingerprint/fcontrol.min-ed.js"></script>-->
 	<script type="text/javascript">
 
 		var customVars = new Object();
 
-		if (jQuery == 'undefined') {
+		if (typeof jQuery == 'undefined') {
+
 			try {
 				var jQueryObj = document.createElement('script');
 				jQueryObj.type = 'text/javascript';
@@ -25,58 +27,50 @@ if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifra
 
 		jQuery(document).ready(function () {
 
-			try {
-				(function () {
+			var execFp = function () {
+				jQuery.ajax({
+					method: 'POST',
+					url: '/mundipagg/fcontrol/getConfig',
+					success: function (data) {
+						sendFp(data.key, data.sessionId);
+					},
+					error: function (err) {
+					}
+				});
+			};
 
-					//Add calback method default
-					var fittipaldiCallback = function (deviceId) {
-						jQuery.ajax({
-							method: "POST",
-							url: "/mundipagg/fcontrol/session",
-							data: {deviceId: deviceId},
-							success: function (data) {
-//								console.log(data);
-							},
-							error: function (err) {
-//								console.log('error: ' + err);
-							}
-						});
-					};
+			var sendFp = function (key, sessionId) {
+				try {
 
-					var execFittipaldi = function (orderId) {
+					var fp = new FcontrolFingerprint();
+					fp.send(key, sessionId);
 
-						var fittipaldi = document.createElement('script');
-						fittipaldi.type = 'text/javascript';
-						fittipaldi.async = true;
-						fittipaldi.id = "fittipaldi";
-						fittipaldi.src = (('https:' == document.location.protocol) ? 'https://' : 'http://') + 'df.fcontrol.com.br/js/fittipaldiJs.js';
-						customVars['ORDERID'] = orderId;
+				} catch (err) {
+					console.log(err);
+				}
+			};
 
-						document.getElementsByTagName('body')[0].appendChild(fittipaldi);
-					};
-
-					var setFControlData = function () {
-						jQuery.ajax({
-							method: 'POST',
-							url: '/mundipagg/fcontrol/getOrderId',
-							dataType: 'JSON'
-						}).done(function (data) {
-							execFittipaldi(data.orderId);
-						});
-					};
-
-					setFControlData();
-
-				})();
-
-			} catch (err) {
+			var reportError = function (message) {
 				jQuery.ajax({
 					method: 'POST',
 					url: '/mundipagg/fcontrol/reportError',
-					data: {
-						errorMessage: "Unable to set fittipaldi data: " + err,
-					}
+					dataType: 'JSON',
+					data: {message: message}
 				});
+			};
+
+			if (typeof FcontrolFingerprint == 'undefined') {
+				var fpObj = document.createElement('script');
+				fpObj.type = 'text/javascript';
+				fpObj.async = true;
+				document.getElementsByTagName('body')[0].appendChild(fpObj);
+
+				if (typeof FcontrolFingerprint == 'undefined') {
+					reportError('Unable to import FControl fingerprint script');
+					return;
+				}
+
+				execFp();
 			}
 
 		});
