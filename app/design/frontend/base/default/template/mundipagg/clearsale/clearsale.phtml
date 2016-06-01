@@ -20,7 +20,7 @@ if ($antifraud && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifr
 				document.getElementsByTagName('body')[0].appendChild(jQueryObj);
 
 			} catch (err) {
-				console.log(err);
+				
 			}
 		}
 
@@ -30,11 +30,9 @@ if ($antifraud && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifr
 				metho: 'POST',
 				url: '/mundipagg/clearsale/getConfig',
 				success: function(data){
-					console.log(data);
-					setCsdp(data.entityId, data.app, data.sessionId);
+					setCsdp(data.entityCode, data.app, data.sessionId);
 				},
 				error: function(err){
-					console.log(err);
 				}
 			});
 			
@@ -42,8 +40,6 @@ if ($antifraud && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifr
 				_csdp.push(['Key', merchantKeyOnAntiFraud]);
 				_csdp.push(['App', App]);
 				_csdp.push(['SessionID', sessionId]);
-
-				console.log(_csdp);
 
 				(function () {
 					var csd = document.createElement('script');

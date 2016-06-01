@@ -39,8 +39,8 @@
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                    <comment><![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+
                     <fields>
                         <version translate="label">
                             <label>Version</label>
@@ -149,8 +149,8 @@
                             <show_in_store>1</show_in_store>
                         </antifraud_provider>
 
-                        <clearsale_entityid translate="label">
-                            <label>Entity ID</label>
+                        <clearsale_entitycode translate="label">
+                            <label>EntityCode</label>
                             <frontend_type>text</frontend_type>
                             <sort_order>10</sort_order>
                             <depends>
@@ -160,10 +160,10 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <comment>Chave informada pela Clearsale</comment>
-                        </clearsale_entityid>
+                        </clearsale_entitycode>
 
                         <clearsale_app translate="label">
-                            <label>App</label>
+                            <label>AppKey</label>
                             <frontend_type>text</frontend_type>
                             <sort_order>11</sort_order>
                             <depends>

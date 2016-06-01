@@ -9,10 +9,10 @@ class Uecommerce_Mundipagg_ClearsaleController extends Uecommerce_Mundipagg_Cont
 			return false;
 		}
 
-		$entityId = Mage::getStoreConfig('payment/mundipagg_standard/clearsale_entityid');
+		$entityCode = Mage::getStoreConfig('payment/mundipagg_standard/clearsale_entitycode');
 		$app = Mage::getStoreConfig('payment/mundipagg_standard/clearsale_app');
 		$response = array(
-			'entityId'  => $entityId,
+			'entityCode'  => $entityCode,
 			'app'       => $app,
 			'sessionId' => $this->getSessionId()
 		);
