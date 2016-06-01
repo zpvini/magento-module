@@ -12,13 +12,14 @@ class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Fron
 	protected function requestIsValid() {
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$serverHost = $_SERVER['HTTP_HOST'];
+		$request = $this->getRequest();
 
 		//getting request origin
-		$requestServer = $this->getRequest()->getServer();
+		$requestServer = $request->getServer();
 		$requestServerName = $requestServer['SERVER_NAME'];
 
-		//validating if the request is from the store
-		if ($requestServerName == $serverHost) {
+		//validating if the request is from the store and is ajax
+		if ($requestServerName == $serverHost && $request->isXmlHttpRequest()) {
 			return true;
 
 		} else {
@@ -32,13 +33,10 @@ class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Fron
 	}
 
 	/**
-	 * @return array
+	 * @return string
 	 */
 	protected function getResponseForInvalidRequest() {
-		return array(
-			'success' => false,
-			'message' => "Bad guy... Go away, we have data about you."
-		);
+		return "Bad guy... Go away, we have data about you now.";
 	}
 
 	public function reportErrorAction() {
