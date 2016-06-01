@@ -27,7 +27,7 @@ if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifra
 
 		jQuery(document).ready(function () {
 
-			var execFp = function () {
+			var getFcontrolConfig = function () {
 				jQuery.ajax({
 					method: 'POST',
 					url: '/mundipagg/fcontrol/getConfig',
@@ -40,6 +40,12 @@ if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifra
 			};
 
 			var sendFp = function (key, sessionId) {
+
+				if (typeof FcontrolFingerprint == 'undefined') {
+					reportError('Unable to import FControl fingerprint script');
+					return;
+				}
+
 				try {
 
 					var fp = new FcontrolFingerprint();
@@ -65,12 +71,7 @@ if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifra
 				fpObj.async = true;
 				document.getElementsByTagName('body')[0].appendChild(fpObj);
 
-				if (typeof FcontrolFingerprint == 'undefined') {
-					reportError('Unable to import FControl fingerprint script');
-					return;
-				}
-
-				execFp();
+				getFcontrolConfig();
 			}
 
 		});
