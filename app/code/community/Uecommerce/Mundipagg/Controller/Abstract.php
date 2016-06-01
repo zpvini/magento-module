@@ -17,8 +17,6 @@ class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Fron
 		$requestServer = $this->getRequest()->getServer();
 		$requestServerName = $requestServer['SERVER_NAME'];
 
-		$helperLog->info("Checking request origin '{$requestServerName}'");
-
 		//validating if the request is from the store
 		if ($requestServerName == $serverHost) {
 			return true;
