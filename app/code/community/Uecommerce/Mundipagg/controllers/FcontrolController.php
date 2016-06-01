@@ -1,8 +1,14 @@
 <?php
 
-class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front_Action {
+class Uecommerce_Mundipagg_FcontrolController extends Uecommerce_Mundipagg_Controller_Abstract {
 
 	public function getOrderIdAction() {
+
+		if ($this->requestIsValid() == false) {
+			echo $this->getResponseForInvalidRequest();
+			return false;
+		}
+
 		$quoteId = Mage::getSingleton('checkout/session')->getQuoteId();
 		$quote = Mage::getModel("sales/quote")->load($quoteId);
 
@@ -11,39 +17,20 @@ class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front
 		$incrementId = $quote->getReservedOrderId();
 		$response['orderId'] = $incrementId;
 
-		$this->jsonResponse($response);
-		return;
+		return $this->jsonResponse($response);
 	}
 
 	public function sessionAction() {
-		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-		$session = Mage::getSingleton('customer/session');
-		$param = $this->getRequest()->getPost('deviceId');
-		$serverHost = $_SERVER['HTTP_HOST'];
 
-		//getting request origin
-		$requestServer = $this->getRequest()->getServer();
-		$requestServerName = $requestServer['SERVER_NAME'];
-
-		$helperLog->info("Checking request origin '{$requestServerName}'");
-
-		//validating if the request is from the store
-		if ($requestServerName != $serverHost) {
-			$message = "Bad guy... Go away, we have data about you.";
-			$response['success'] = false;
-			$response['message'] = $message;
-
-			$helperLog->warning("[SecurityAlert] Someone have tried to forge a deviceId for a session. Request origin data:");
-			$helperLog->warning(print_r($requestServer, true));
-
-			$this->jsonResponse($response);
-
-			return;
+		if ($this->requestIsValid() == false) {
+			echo $this->getResponseForInvalidRequest();
+			return false;
 		}
 
-		$helperLog->info("Request origin is valid.");
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$deviceId = $this->getRequest()->getPost('deviceId');
 
-		if (is_null($param) || empty($param)) {
+		if (is_null($deviceId) || empty($deviceId)) {
 			$message = 'deviceId not informed';
 			$response = array(
 				'sucess'  => false,
@@ -51,9 +38,7 @@ class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front
 			);
 
 			$helperLog->error($message);
-			$this->jsonResponse($response);
-
-			return;
+			return $this->jsonResponse($response);
 		}
 
 		try {
@@ -64,10 +49,10 @@ class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front
 			);
 
 			$helperLog->info($message);
-			$session->setData('device_id', $param);
+			Uecommerce_Mundipagg_Model_Customer_Session::setSessionId($deviceId);
 
 		} catch (Exception $e) {
-			$errMsg = "Impossible to save deviceId in customer session.";
+			$errMsg = "Impossible to save sessionId in customer session.";
 			$response = array(
 				'success' => false,
 				'message' => $errMsg
@@ -76,14 +61,7 @@ class Uecommerce_Mundipagg_FcontrolController extends Mage_Core_Controller_Front
 			$helperLog->error("{$errMsg} Error: {$e->getMessage()}");
 		}
 
-		$this->jsonResponse($response);
-	}
-
-	private function jsonResponse($responseArray) {
-		$json = json_encode($responseArray);
-
-		$this->getResponse()->setHeader('Content-type', 'application/json');
-		$this->getResponse()->setBody($json);
+		return $this->jsonResponse($response);
 	}
 
 }

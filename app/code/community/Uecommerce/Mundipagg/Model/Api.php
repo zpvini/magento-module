@@ -1599,12 +1599,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_CLEARSALE:
 				$outputMsg = "Antifraud provider: Clearsale";
-				$sessionId = $this->getCustomerSessionId();
+				$sessionId = Uecommerce_Mundipagg_Model_Customer_Session::getSessionId();
 				break;
 
 			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL:
 				$outputMsg = "Antifraud provider: FControl";
-				$sessionId = $this->getCustomerSessionId();
+				$sessionId = Uecommerce_Mundipagg_Model_Customer_Session::getSessionId();
 				break;
 		}
 
@@ -1622,13 +1622,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$helperLog->info($outputMsg);
 
 		return $requestData;
-	}
-
-	public function getCustomerSessionId() {
-		$customerSession = Mage::getSingleton('customer/session');
-		$deviceId = $customerSession->getData(Uecommerce_Mundipagg_Model_Customer_Session::SESSION_ID);
-
-		return $deviceId;
 	}
 
 	private function clearAntifraudDataFromSession() {

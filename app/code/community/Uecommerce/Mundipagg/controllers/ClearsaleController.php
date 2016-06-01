@@ -5,8 +5,7 @@ class Uecommerce_Mundipagg_ClearsaleController extends Uecommerce_Mundipagg_Cont
 	public function getConfigAction() {
 
 		if ($this->requestIsValid() == false) {
-			$this->jsonResponse($this->getResponseForInvalidRequest());
-
+			echo $this->getResponseForInvalidRequest();
 			return false;
 		}
 
@@ -27,12 +26,11 @@ class Uecommerce_Mundipagg_ClearsaleController extends Uecommerce_Mundipagg_Cont
 	}
 
 	private function getSessionId() {
-		$session = Mage::getSingleton('customer/session');
-		$sessionId = $session->getData(Uecommerce_Mundipagg_Model_Customer_Session::SESSION_ID);
+		$sessionId = Uecommerce_Mundipagg_Model_Customer_Session::getSessionId();
 
 		if (is_null($sessionId) || $sessionId == false || empty($sessionId)) {
 			$sessionId = uniqid('mund19-');
-			$session->setData(Uecommerce_Mundipagg_Model_Customer_Session::SESSION_ID, $sessionId);
+			Uecommerce_Mundipagg_Model_Customer_Session::setSessionId($sessionId);
 		}
 
 		return $sessionId;
