@@ -176,11 +176,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = array();
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
-			//verify anti-fraud provider Config and get antifraud data
-			$fControlData = $this->getAntiFraudData();
+			//verify anti-fraud config and mount the node 'requestData'
+			$nodeRequestData = $this->getRequestDataNode();
 
-			if (is_array($fControlData)) {
-				$_request['requestData'] = $fControlData;
+			if (is_array($nodeRequestData)) {
+				$_request['requestData'] = $nodeRequestData;
 			}
 
 			if ($standard->getDebug() == 1) {
@@ -475,12 +475,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = array();
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
-			//verify FControl Config and get antifraud data
-//			$fControlData = $this->getFControlConfig($_request['Order']['OrderReference']);
-			$fControlData = $this->getFControlConfig();
+			//verify anti-fraud config and mount the node 'requestData'
+			$nodeRequestData = $this->getRequestDataNode();
 
-			if (is_array($fControlData)) {
-				$_request['requestData'] = $fControlData;
+			if (is_array($nodeRequestData)) {
+				$_request['requestData'] = $nodeRequestData;
 			}
 
 			// Data
@@ -1555,20 +1554,22 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	}
 
 	/**
-	 * Get 'requestData' node for the One v2 request if antifraud FControl is enabled
+	 * Get 'requestData' node for the One v2 request if antifraud is enabled
 	 *
 	 * @author Ruan Azevedo <razvedo@mundipagg.com>
-	 * @since 05-19-2016
+	 * @since 06-01-2016
 	 * @throws Mage_Core_Exception
 	 * @return array $requestData
 	 */
-	private function getAntiFraudData() {
+	private function getRequestDataNode() {
 		$antifraud = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
 		$antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider');
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$helperHttpCore = new Mage_Core_Helper_Http();
 		$customerIp = $helperHttpCore->getRemoteAddr();
 		$outputMsg = "";
+		$sessionId = '';
+		$error = false;
 
 		$requestData = array(
 			'IpAddress' => $customerIp,
@@ -1587,54 +1588,43 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 
 		if ($this->debugEnabled) {
-			$helperLog->debug("Antifraud enabled.");
-
-			if ($error) {
-				$helperLog->error($outputMsg);
-				Mage::throwException($outputMsg);
-			}
-
-			$helperLog->debug($outputMsg);
-		}
-
-		if ($antifraud == false) {
-			return false;
+			$helperLog->debug("Antifraud enabled...");
 		}
 
 		switch ($antifraudProvider) {
 			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_NONE:
-				$outputMsg = "Antifraud enabled and none antifraud provider selected.";
-				$errMsg = __METHOD__ . "Exception: node 'requestData' could not be empty when FControl anti-fraud is enabled.";
+				$outputMsg = "Antifraud enabled and none antifraud provider selected at module configuration.";
+				$error = true;
 				break;
 
 			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_CLEARSALE:
 				$outputMsg = "Antifraud provider: Clearsale";
-				$antiFraudData['SessionId'] = $this->getCustomerSessionId();
+				$sessionId = $this->getCustomerSessionId();
 				break;
 
 			case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL:
 				$outputMsg = "Antifraud provider: FControl";
 				$sessionId = $this->getCustomerSessionId();
-
-				//if FControl js not generate the deviceId, set OrderReference in sessionId
-				if (is_null($sessionId)) {
-					$sessionId = '';
-				}
-
-				$antiFraudData['SessionId'] = $sessionId;
 				break;
 		}
 
-		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		if ($error) {
+			$helperLog->error($outputMsg, true);
+//			Mage::throwException($outputMsg);
+		}
+
+		if (is_null($sessionId)) {
+			$sessionId = '';
+		}
+
+		$requestData['SessionId'] = $sessionId;
+
 		$helperLog->info($outputMsg);
 
-		return $antiFraudData;
-
-//		$errMsg = __METHOD__ . "Exception: node 'requestData' could not be empty when FControl anti-fraud is enabled.";
-
+		return $requestData;
 	}
 
-	private function getCustomerSessionId() {
+	public function getCustomerSessionId() {
 		$customerSession = Mage::getSingleton('customer/session');
 		$deviceId = $customerSession->getData(Uecommerce_Mundipagg_Model_Customer_Session::SESSION_ID);
 
