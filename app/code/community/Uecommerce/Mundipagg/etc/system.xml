@@ -155,6 +155,7 @@
                             <frontend_type>text</frontend_type>
                             <sort_order>10</sort_order>
                             <depends>
+                                <antifraud>1</antifraud>
                                 <antifraud_provider>2</antifraud_provider>
                             </depends>
                             <show_in_default>1</show_in_default>
@@ -168,6 +169,7 @@
                             <frontend_type>text</frontend_type>
                             <sort_order>10</sort_order>
                             <depends>
+                                <antifraud>1</antifraud>
                                 <antifraud_provider>1</antifraud_provider>
                             </depends>
                             <show_in_default>1</show_in_default>
@@ -181,6 +183,7 @@
                             <frontend_type>text</frontend_type>
                             <sort_order>11</sort_order>
                             <depends>
+                                <antifraud>1</antifraud>
                                 <antifraud_provider>1</antifraud_provider>
                             </depends>
                             <show_in_default>1</show_in_default>
