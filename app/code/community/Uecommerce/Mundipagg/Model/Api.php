@@ -176,11 +176,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = array();
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
-			//verify anti-fraud config and mount the node 'requestData'
+			//verify anti-fraud config and mount the node 'RequestData'
 			$nodeRequestData = $this->getRequestDataNode();
 
 			if (is_array($nodeRequestData)) {
-				$_request['requestData'] = $nodeRequestData;
+				$_request['RequestData'] = $nodeRequestData;
 			}
 
 			if ($standard->getDebug() == 1) {
@@ -475,11 +475,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["ShoppingCartCollection"] = array();
 			$_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
 
-			//verify anti-fraud config and mount the node 'requestData'
+			//verify anti-fraud config and mount the node 'RequestData'
 			$nodeRequestData = $this->getRequestDataNode();
 
 			if (is_array($nodeRequestData)) {
-				$_request['requestData'] = $nodeRequestData;
+				$_request['RequestData'] = $nodeRequestData;
 			}
 
 			// Data
@@ -1554,7 +1554,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	}
 
 	/**
-	 * Get 'requestData' node for the One v2 request if antifraud is enabled
+	 * Get 'RequestData' node for the One v2 request if antifraud is enabled
 	 *
 	 * @author Ruan Azevedo <razvedo@mundipagg.com>
 	 * @since 06-01-2016
