@@ -31,11 +31,12 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract {
 	}
 
 	public function error($msg, $logExceptionFile = false) {
+		$exception = new Exception($msg);
 		$this->level = Zend_Log::ERR;
 		$this->write($msg);
 
 		if ($logExceptionFile) {
-			Mage::logException($msg);
+			Mage::logException($exception);
 		}
 	}
 
