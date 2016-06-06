@@ -61,9 +61,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["Order"] = array();
 			$_request["Order"]["OrderReference"] = $order->getIncrementId();
 
-			if ($standard->getEnvironment() != 'production') {
-				$_request["Order"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
-			}
+//			if ($standard->getEnvironment() != 'production') {
+//				$_request["Order"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
+//			}
 
 			/*
 			* Append transaction (multi credit card payments)
@@ -1092,6 +1092,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 **/
 	public function manageOrderRequest($data, Uecommerce_Mundipagg_Model_Standard $standard) {
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
 		try {
 			// Get Webservice URL
 			$url = $standard->getURL() . '/' . $data['ManageOrderOperationEnum'];
@@ -1101,13 +1102,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// Get store key
 			$key = $standard->getMerchantKey();
 
-			if ($standard->getDebug() == 1) {
-//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-//				Mage::log(print_r($data, 1), null, 'Uecommerce_Mundipagg.log');
-				$helperLog->debug(print_r($data, true));
-			}
-
 			$dataToPost = json_encode($data);
+
+			if ($standard->getDebug() == 1) {
+				$helperUtil = new Uecommerce_Mundipagg_Helper_Util();
+
+				$helperLog->debug("Request:\n{$helperUtil->jsonEncodePretty($data)}\n");
+			}
 
 			// Send payment data to MundiPagg
 			$ch = curl_init();
@@ -1129,13 +1130,20 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			curl_close($ch);
 
 			if ($standard->getDebug() == 1) {
-//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-//				Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
-				$helperLog->debug(print_r($_response, true));
+				$xml = simplexml_load_string($_response);
+				$domXml = new DOMDocument('1.0');
+
+				$domXml->formatOutput = true;
+				$domXml->loadXML($xml->asXML());
+
+				$xml = $domXml->saveXML();
+
+				$helperLog->debug("Response:\n{$xml}\n");
 			}
 
 			// Return
 			return array('result' => simplexml_load_string($_response));
+
 		} catch (Exception $e) {
 			//Redirect to Cancel page
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess(false);
@@ -1160,18 +1168,27 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$standard = Mage::getModel('mundipagg/standard');
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
-		if ($standard->getConfigData('debug') == 1) {
-			if (isset($postData['xmlStatusNotification'])) {
-				$helperLog->debug(print_r($postData['xmlStatusNotification'], true));
-			}
-		}
-
 		try {
 			if (isset($postData['xmlStatusNotification'])) {
 				$xmlStatusNotificationString = htmlspecialchars_decode($postData['xmlStatusNotification']);
 				$xml = simplexml_load_string($xmlStatusNotificationString);
 				$json = json_encode($xml);
 				$data = json_decode($json, true);
+
+				if ($standard->getConfigData('debug') == 1) {
+					if (isset($postData['xmlStatusNotification'])) {
+						$orderReference = isset($xml->OrderReference) ? $xml->OrderReference : null;
+
+						if (is_null($orderReference)) {
+							$logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
+
+						} else {
+							$logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
+						}
+
+						$helperLog->debug($logMessage);
+					}
+				}
 
 				$orderReference = $data['OrderReference'];
 
@@ -1584,6 +1601,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			if ($this->debugEnabled) {
 				$helperLog->debug("Antifraud disabled.");
 			}
+
 			return false;
 		}
 

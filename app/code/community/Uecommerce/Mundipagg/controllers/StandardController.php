@@ -357,6 +357,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 		$post = $this->getRequest()->getPost();
 		$result = array();
 		$installmentsHelper = Mage::helper('mundipagg/installments');
+
 		if (isset($post['cctype'])) {
 			$total = $post['total'];
 			$cctype = $post['cctype'];
@@ -368,6 +369,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 
 			$result['installments'] = $installments;
 			$result['brand'] = $cctype;
+
 		} else {
 			$installments = $installmentsHelper->getInstallmentForCreditCardType();
 			$result['installments'] = $installments;
