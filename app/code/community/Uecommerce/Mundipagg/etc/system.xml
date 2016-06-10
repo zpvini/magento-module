@@ -192,6 +192,34 @@
                             <comment>codigo informado pela Clearsale</comment>
                         </clearsale_app>
 
+                        <stone_entitycode translate="label">
+                            <label>EntityCode</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>10</sort_order>
+                            <depends>
+                                <antifraud>1</antifraud>
+                                <antifraud_provider>3</antifraud_provider>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Chave informada pela Stone</comment>
+                        </stone_entitycode>
+
+                        <stone_app translate="label">
+                            <label>AppKey</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>11</sort_order>
+                            <depends>
+                                <antifraud>1</antifraud>
+                                <antifraud_provider>3</antifraud_provider>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>codigo informado pela Stone</comment>
+                        </stone_app>
+
                         <cc_types translate="label">
                             <label>Credit Card Issuers</label>
                             <frontend_type>multiselect</frontend_type>

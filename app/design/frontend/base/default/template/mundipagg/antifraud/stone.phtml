@@ -1,0 +1,61 @@
+<?php
+$antifraud = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
+$antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider');
+
+if ($antifraud && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_STONE): ?>
+
+	<script type="text/javascript">
+
+		var _csdp = _csdp || [];
+
+		if (jQuery == 'undefined') {
+			try {
+				var jQueryObj = document.createElement('script');
+				jQueryObj.type = 'text/javascript';
+				jQueryObj.async = true;
+				jQueryObj.src = 'https://code.jquery.com/jquery-1.12.4.min.js';
+				jQueryObj.integrity = "sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=";
+				jQueryObj.crossorigin = "anonymous";
+
+				document.getElementsByTagName('body')[0].appendChild(jQueryObj);
+
+			} catch (err) {
+				
+			}
+		}
+
+		jQuery(document).ready(function () {
+
+			jQuery.ajax({
+				metho: 'POST',
+				url: '/mundipagg/stone/getConfig',
+				success: function(data){
+					setCsdp(data.entityCode, data.app, data.sessionId);
+				},
+				error: function(err){
+				}
+			});
+			
+			var setCsdp = function(merchantKeyOnAntiFraud, App, sessionId){
+				_csdp.push(['Key', merchantKeyOnAntiFraud]);
+				_csdp.push(['App', App]);
+				_csdp.push(['SessionID', sessionId]);
+
+				(function () {
+					var csd = document.createElement('script');
+
+					csd.type = 'text/javascript';
+					csd.async = true;
+					csd.src = 'https://device.clearsale.com.br/profiler/fp.js';
+
+					var sc = document.getElementsByTagName('script')[0];
+					sc.parentNode.insertBefore(csd, sc);
+				})();
+					
+			};
+
+		});
+
+	</script>
+
+<?php endif; ?>

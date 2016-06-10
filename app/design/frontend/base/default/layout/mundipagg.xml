@@ -30,12 +30,6 @@
  */
 -->
 <layout version="0.1.0">
-    <!--<default>-->
-    <!--<reference name="before_body_end">-->
-    <!--<block type="core/template" name="fcontrol" template="mundipagg/fcontrol/fcontrol.phtml"/>-->
-    <!--</reference>-->
-    <!--</default>-->
-
     <checkout_onepage_index>
         <reference name="head">
             <action method="addItem">
@@ -51,10 +45,13 @@
                 </action>
             </block>
             <reference name="before_body_end">
-                <block type="core/template" name="fcontrol" template="mundipagg/fcontrol/fcontrol.phtml"/>
+                <block type="core/template" name="fcontrol" template="mundipagg/antifraud/fcontrol.phtml"/>
             </reference>
             <reference name="before_body_end">
-                <block type="core/template" name="clearsale" template="mundipagg/clearsale/clearsale.phtml"/>
+                <block type="core/template" name="clearsale" template="mundipagg/antifraud/clearsale.phtml"/>
+            </reference>
+            <reference name="before_body_end">
+                <block type="core/template" name="stone" template="mundipagg/antifraud/stone.phtml"/>
             </reference>
         </reference>
     </checkout_onepage_index>
