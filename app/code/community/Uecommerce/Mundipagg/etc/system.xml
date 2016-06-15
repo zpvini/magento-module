@@ -150,19 +150,49 @@
                             <show_in_store>1</show_in_store>
                         </antifraud_provider>
 
-                        <fcontrol_key translate="label">
-                            <label>Chave FControl</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>10</sort_order>
+                        <environment_fcontrol translate="label">
+                            <label>Environment FControl</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>Uecommerce_Mundipagg_Model_Source_FControlEnvironment</source_model>
                             <depends>
                                 <antifraud>1</antifraud>
                                 <antifraud_provider>2</antifraud_provider>
+                            </depends>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </environment_fcontrol>
+
+                        <fcontrol_key_sandbox translate="label">
+                            <label>FControl sandbox key</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>11</sort_order>
+                            <depends>
+                                <antifraud>1</antifraud>
+                                <antifraud_provider>2</antifraud_provider>
+                                <environment_fcontrol>1</environment_fcontrol>
                             </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <comment>Chave informada pela FControl</comment>
-                        </fcontrol_key>
+                        </fcontrol_key_sandbox>
+
+                        <fcontrol_key_production translate="label">
+                            <label>FControl production key</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>11</sort_order>
+                            <depends>
+                                <antifraud>1</antifraud>
+                                <antifraud_provider>2</antifraud_provider>
+                                <environment_fcontrol>2</environment_fcontrol>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Chave informada pela FControl</comment>
+                        </fcontrol_key_production>
 
                         <clearsale_entitycode translate="label">
                             <label>EntityCode</label>

@@ -2,6 +2,19 @@
 
 class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Front_Action {
 
+	public function _construct() {
+		parent::_construct();
+
+		$environment = Mage::getStoreConfig('payment/mundipagg_standard/environment');
+
+		if ($environment == 'production') {
+			if ($this->requestIsValid() == false) {
+				echo $this->getResponseForInvalidRequest();
+				die();
+			}
+		}
+	}
+
 	protected function jsonResponse($responseArray) {
 		$json = json_encode($responseArray);
 
@@ -55,7 +68,7 @@ class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Fron
 
 	protected function getSessionId() {
 		$sessionId = Uecommerce_Mundipagg_Model_Customer_Session::getSessionId();
-		
+
 		if (is_null($sessionId) || $sessionId == false || empty($sessionId)) {
 			$sessionId = uniqid('mund19-');
 			Uecommerce_Mundipagg_Model_Customer_Session::setSessionId($sessionId);

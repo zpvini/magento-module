@@ -190,3 +190,7 @@
 "Set old settings","Resetar configurações antigas"
 "If you just update the module and its old version is below 2.0.0, you can click this button to generate the installments as were set in the old version of the module.","Se você acabou de atualizar o módulo e sua versão antiga está abaixo 2.0.0, você pode clicar neste botão para gerar as parcelas como foram definidas na versão antiga do módulo."
 "If you have already set manually, CAUTION! This function will reset all installments.","Se você já tiver configurado manualmente, CUIDADO! Esta função irá repor todas as parcelas."
+"Environment FControl","Ambiente FControl"
+"FControl sandbox key","Chave FControl sandbox"
+"FControl production key","Chave FControl produção"
+"Production","Produção"
