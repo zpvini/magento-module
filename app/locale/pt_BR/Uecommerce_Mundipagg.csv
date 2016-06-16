@@ -194,3 +194,6 @@
 "FControl sandbox key","Chave FControl sandbox"
 "FControl production key","Chave FControl produção"
 "Production","Produção"
+"Offline Retry","Retentativa Offline"
+"Max time to retry in minutes","Tempo máximo para retentativa em minutos"
+"Max time to wait for an authorization. After this, the order will be cancelled.","Tempo máximo para esperar por uma autorização. Após este prazo, pedido será cancelado."
