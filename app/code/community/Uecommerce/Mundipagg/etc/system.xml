@@ -151,7 +151,7 @@
                         </antifraud_provider>
 
                         <environment_fcontrol translate="label">
-                            <label>Environment FControl</label>
+                            <label>Fingerprint environment</label>
                             <frontend_type>select</frontend_type>
                             <source_model>Uecommerce_Mundipagg_Model_Source_FControlEnvironment</source_model>
                             <depends>
