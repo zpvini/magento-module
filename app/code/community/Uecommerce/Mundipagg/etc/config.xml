@@ -285,6 +285,7 @@
                 <save_cardonfile>1</save_cardonfile>
                 <delivery_deadline>5</delivery_deadline>
                 <shipping_company>Correios</shipping_company>
+                <environment_fcontrol>1</environment_fcontrol>
             </mundipagg_standard>
             <mundipagg_creditcardoneinstallment>
                 <model>mundipagg/creditcardoneinstallment</model>

@@ -16,17 +16,13 @@ if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifra
 		//jQuery.jQuery.noConflict();
 
 		jQuery(document).ready(function ($) {
-			var scriptUrl = null;
-
+			
 			$.ajax({
 				method: 'POST',
 				url: '/mundipagg/fcontrol/getConfig',
 				dataType: 'JSON'
 
 			}).done(function (data) {
-				var key = data.key;
-				var sessionId = data.sessionId;
-
 				var fp = new FcontrolFingerprint();
 				fp.send(data.key, data.sessionId);
 			});
@@ -34,23 +30,18 @@ if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifra
 			$(document).ajaxComplete(function (event, request, settings) {
 				if (typeof settings.url != 'undefined') {
 					if (settings.url.match(/\/fcontrol\/fingerprint\//)) {
-						logFp('request', settings.data);
-						logFp('response', request.responseText);
+
+						var logRequest = settings.data;
+						var logResponse = request.responseText;
+						var url = '/mundipagg/fcontrol/logFp';
+
+						$.post(url, {event: 'request', data: logRequest}, function () {
+							$.post(url, {event: 'response', data: logResponse});
+						});
 					}
 				}
 
 			});
-
-			var logFp = function (event, data) {
-				$.ajax({
-					method: 'POST',
-					url: '/mundipagg/fcontrol/logFp',
-					data: {
-						event: event,
-						data: data
-					}
-				});
-			};
 
 			var reportError = function (message) {
 				jQuery.ajax({
