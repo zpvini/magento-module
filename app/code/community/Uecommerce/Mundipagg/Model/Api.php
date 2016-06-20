@@ -1715,4 +1715,45 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		return $responseData;
 	}
 
+	/**
+	 * @return boolean
+	 */
+	public static function getOfflineRetryConf() {
+		return Mage::getStoreConfig('payment/mundipagg_standard/offline_retry_enabled');
+	}
+
+	/**
+	 * Check if order is in offline retry time and return an array with
+	 * a string 'isInRetryTime' and DateTime 'deadline'
+	 * 
+	 * @author Ruan Azevedo <razevedo@mundipagg.com>
+	 * @since 2016-06-20
+	 * @param Mage_Sales_Model_Order $order
+	 * @return array
+	 */
+	public function orderIsInOfflineRetry(Mage_Sales_Model_Order $order) {
+		$offlineRetryTime = Mage::getStoreConfig('payment/mundipagg_standard/delayed_retry_max_time');
+		$deadline = new DateTime($order->getCreatedAt());
+		$interval = new DateInterval('PT' . $offlineRetryTime . 'M');
+		$now = new DateTime();
+
+		$deadline->add($interval);
+
+		if ($now < $deadline) {
+			// in offline retry yet
+			return array(
+				'isInRetryTime' => true,
+				'deadline'      => $deadline
+			);
+
+		} else {
+			// offline retry time is over
+			return array(
+				'isInRetryTime' => false,
+				'deadline'      => $deadline
+			);
+		}
+
+	}
+
 }
