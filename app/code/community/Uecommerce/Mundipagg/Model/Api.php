@@ -210,6 +210,38 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$xml = $_response['xmlData'];
 			$dataR = $_response['arrayData'];
 
+			// is offline retry is enabled, save statements
+			if (Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled()) {
+				$offlineRetryTime = Mage::getStoreConfig('payment/mundipagg_standard/delayed_retry_max_time');
+				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
+				$orderResult = $dataR['OrderResult'];
+				$orderIncrementId = $orderResult['OrderReference'];
+				$createDate = $orderResult['CreateDate'];
+
+				$interval = new DateInterval('PT' . $offlineRetryTime . 'M');
+				$deadline = new DateTime($createDate);
+
+				$offlineRetryLogLabel = "Order #{$orderIncrementId} | offline retry statements";
+
+				try {
+					$offlineRetry = new Uecommerce_Mundipagg_Model_Offlineretry();
+					$offlineRetry->setOrderIncrementId($orderIncrementId)
+						->setCreateDate($createDate);
+
+					$deadline->add($interval);
+
+					$offlineRetry->setDeadline($deadline->getTimestamp())
+						->save();
+
+					$helperLog->info("{$offlineRetryLogLabel} saved successfully.");
+
+				} catch (Exception $e) {
+					$helperLog->error("{$offlineRetryLogLabel} cannot be saved: {$e}");
+				}
+
+			}
+
 			if (isset($dataR['ErrorReport']) && !empty($dataR['ErrorReport'])) {
 				$_errorItemCollection = $dataR['ErrorReport']['ErrorItemCollection'];
 
@@ -331,6 +363,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 		} catch (Exception $e) {
 			//Redirect to Cancel page
+
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
 			//Log error
@@ -1716,28 +1749,20 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	}
 
 	/**
-	 * @return boolean
-	 */
-	public static function getOfflineRetryConf() {
-		return Mage::getStoreConfig('payment/mundipagg_standard/offline_retry_enabled');
-	}
-
-	/**
 	 * Check if order is in offline retry time and return an array with
 	 * a string 'isInRetryTime' and DateTime 'deadline'
-	 * 
+	 *
 	 * @author Ruan Azevedo <razevedo@mundipagg.com>
 	 * @since 2016-06-20
 	 * @param Mage_Sales_Model_Order $order
 	 * @return array
 	 */
-	public function orderIsInOfflineRetry(Mage_Sales_Model_Order $order) {
-		$offlineRetryTime = Mage::getStoreConfig('payment/mundipagg_standard/delayed_retry_max_time');
-		$deadline = new DateTime($order->getCreatedAt());
-		$interval = new DateInterval('PT' . $offlineRetryTime . 'M');
+	public function checkOrderOfflineRetry(Mage_Sales_Model_Order $order) {
+		$model = Mage::getModel('mundipagg/offlineretry');
+		$offlineRetry = $model->loadByIncrementId($order->getIncrementId());
+		$deadline = $offlineRetry->getDeadline();
 		$now = new DateTime();
-
-		$deadline->add($interval);
+		$deadline = new DateTime($deadline);
 
 		if ($now < $deadline) {
 			// in offline retry yet
@@ -1753,7 +1778,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				'deadline'      => $deadline
 			);
 		}
-
 	}
 
 }

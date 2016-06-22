@@ -32,7 +32,7 @@
 <config>
     <modules>
         <Uecommerce_Mundipagg>
-            <version>2.5.8</version>
+            <version>2.6.0</version>
         </Uecommerce_Mundipagg>
     </modules>
 
@@ -51,6 +51,9 @@
                     <mundipagg_card_on_file>
                         <table>mundipagg_card_on_file</table>
                     </mundipagg_card_on_file>
+                    <mundipagg_offline_retry>
+                        <table>mundipagg_offline_retry</table>
+                    </mundipagg_offline_retry>
                 </entities>
             </mundipagg_resource>
         </models>
