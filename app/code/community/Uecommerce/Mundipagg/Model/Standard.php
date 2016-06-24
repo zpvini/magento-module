@@ -1188,7 +1188,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					// If authorized amount is the same as order grand total we can show success page
 					$epsilon = 0.1;
 
-
 					if ($authorizedAmount != 0) {
 						if (($orderGrandTotal - $authorizedAmount) <= $epsilon) {
 							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
@@ -1203,7 +1202,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 					}
 				} else {
-					$this->offlineRetryCancelOrSuccessOrder($order);
+					$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
 				}
 			} else {
 				switch ($approvalRequest['message']) {
@@ -1292,8 +1291,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 									}
 								}
 							} else {
-//								Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
-								$this->offlineRetryCancelOrSuccessOrder($order);
+								$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
 							}
 						}
 
@@ -1842,9 +1840,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 *
 	 * @author Ruan Azevedo <razevedo@mundipagg.com>
 	 * @since 2016-06-21
-	 * @param Mage_Sales_Model_Order $order
+	 * @param string $orderIncrementId
 	 */
-	private function offlineRetryCancelOrSuccessOrder(Mage_Sales_Model_Order $order) {
+	private function offlineRetryCancelOrSuccessOrder($orderIncrementId) {
 		$offlineRetryIsEnabled = Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled();
 
 		if($offlineRetryIsEnabled == false){
@@ -1853,12 +1851,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 
 		$api = new Uecommerce_Mundipagg_Model_Api();
-		$offlineRetryCheck = $api->checkOrderOfflineRetry($order);
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-		$orderIncrementId = $order->getIncrementId();
 		$logLabel = "Order #{$orderIncrementId}";
 
-		if ($offlineRetryCheck['isInRetryTime']) {
+		if ($api->orderIsInOfflineRetry($orderIncrementId)) {
 			$message = "{$logLabel} | payment not authorized but order is in offline retry yet, not cancel.";
 
 			$helperLog->info($message);

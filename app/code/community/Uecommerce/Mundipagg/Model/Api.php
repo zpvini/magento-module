@@ -120,6 +120,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$creditcardTransactionData->InstallmentCount = $paymentData['InstallmentCount']; // Nº de parcelas
 						$creditcardTransactionData->Options->CurrencyIso = "BRL"; //Moeda do pedido
 					}
+
 				} else { // Credit Card
 					$creditcardTransactionData->CreditCard->CreditCardNumber = $paymentData['CreditCardNumber']; // Número do cartão 
 					$creditcardTransactionData->CreditCard->HolderName = $paymentData['HolderName']; // Nome do cartão
@@ -210,38 +211,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$xml = $_response['xmlData'];
 			$dataR = $_response['arrayData'];
 
-			// is offline retry is enabled, save statements
-			if (Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled()) {
-				$offlineRetryTime = Mage::getStoreConfig('payment/mundipagg_standard/delayed_retry_max_time');
-				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-
-				$orderResult = $dataR['OrderResult'];
-				$orderIncrementId = $orderResult['OrderReference'];
-				$createDate = $orderResult['CreateDate'];
-
-				$interval = new DateInterval('PT' . $offlineRetryTime . 'M');
-				$deadline = new DateTime($createDate);
-
-				$offlineRetryLogLabel = "Order #{$orderIncrementId} | offline retry statements";
-
-				try {
-					$offlineRetry = new Uecommerce_Mundipagg_Model_Offlineretry();
-					$offlineRetry->setOrderIncrementId($orderIncrementId)
-						->setCreateDate($createDate);
-
-					$deadline->add($interval);
-
-					$offlineRetry->setDeadline($deadline->getTimestamp())
-						->save();
-
-					$helperLog->info("{$offlineRetryLogLabel} saved successfully.");
-
-				} catch (Exception $e) {
-					$helperLog->error("{$offlineRetryLogLabel} cannot be saved: {$e}");
-				}
-
-			}
-
+			// if some error ocurred ex.: http 500 internal server error
 			if (isset($dataR['ErrorReport']) && !empty($dataR['ErrorReport'])) {
 				$_errorItemCollection = $dataR['ErrorReport']['ErrorItemCollection'];
 
@@ -262,6 +232,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			// Only 1 transaction
 			if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
+				//and transaction success is true
 				if ((string)$creditCardTransactionResultCollection['CreditCardTransactionResult']['Success'] == 'true') {
 					$trans = $creditCardTransactionResultCollection['CreditCardTransactionResult'];
 
@@ -295,7 +266,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					}
 
 					return $result;
+
 				} else {
+					// CreditCardTransactionResult success == false, not authorized
 					$result = array(
 						'error'            => 1,
 						'ErrorCode'        => $creditCardTransactionResultCollection['CreditCardTransactionResult']['AcquirerReturnCode'],
@@ -308,6 +281,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					if (isset($dataR['OrderResult']['CreateDate'])) {
 						$result['CreateDate'] = $dataR['OrderResult']['CreateDate'];
 					}
+
+					/**
+					 * @TODO precisa refatorar isto, pois deste jeito esta gravando offlineretry pra que qualquer pedido
+					 * com mais de 1 cartao
+					 */
+					// save offline retry statements if this feature is enabled
+					$orderResult = $dataR['OrderResult'];
+					$this->saveOfflineRetryStatements($orderResult['OrderReference'], new DateTime($orderResult['CreateDate']));
 
 					return $result;
 				}
@@ -328,8 +309,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$allTransactions = array_values($allTransactions);
 				}
 
-				// We save Cards On File for current transaction(s)
+				$needSaveOfflineRetry = true;
+
 				foreach ($allTransactions as $key => $trans) {
+
+					// We save Cards On File for current transaction(s)
 					if ($data['customer_id'] != 0 && isset($data['payment'][$key + 1]['token']) && $data['payment'][$key + 1]['token'] == 'new') {
 						$cardonfile = Mage::getModel('mundipagg/cardonfile');
 
@@ -343,6 +327,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 						$cardonfile->save();
 					}
+
+//					//some transaction not authorized, save offline retry if necessary
+//					if (isset($trans['Success']) && $trans['Success'] == 'false' && $needSaveOfflineRetry) {
+//						$needSaveOfflineRetry = false;
+//						$orderResult = $dataR['OrderResult'];
+//
+//						$this->saveOfflineRetryStatements($orderResult['OrderReference'], new DateTime($orderResult['CreateDate']));
+//					}
+
 				}
 
 				// Result
@@ -1749,34 +1742,67 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	}
 
 	/**
-	 * Check if order is in offline retry time and return an array with
-	 * a string 'isInRetryTime' and DateTime 'deadline'
+	 * Check if order is in offline retry time
 	 *
 	 * @author Ruan Azevedo <razevedo@mundipagg.com>
 	 * @since 2016-06-20
-	 * @param Mage_Sales_Model_Order $order
-	 * @return array
+	 * @param string $orderIncrementId
+	 * @return boolean
 	 */
-	public function checkOrderOfflineRetry(Mage_Sales_Model_Order $order) {
+	public function orderIsInOfflineRetry($orderIncrementId) {
 		$model = Mage::getModel('mundipagg/offlineretry');
-		$offlineRetry = $model->loadByIncrementId($order->getIncrementId());
+		$offlineRetry = $model->loadByIncrementId($orderIncrementId);
 		$deadline = $offlineRetry->getDeadline();
 		$now = new DateTime();
 		$deadline = new DateTime($deadline);
 
 		if ($now < $deadline) {
 			// in offline retry yet
-			return array(
-				'isInRetryTime' => true,
-				'deadline'      => $deadline
-			);
+			return true;
 
 		} else {
 			// offline retry time is over
-			return array(
-				'isInRetryTime' => false,
-				'deadline'      => $deadline
-			);
+			return false;
+		}
+	}
+
+	/**
+	 * If the Offline Retry feature is enabled, save order offline retry statements
+	 *
+	 * @author Ruan Azevedo <razevedo@mundipagg.com>
+	 * @since 2016-06-23
+	 * @param string   $orderIncrementId
+	 * @param DateTime $createDate
+	 */
+	private function saveOfflineRetryStatements($orderIncrementId, DateTime $createDate) {
+		// is offline retry is enabled, save statements
+		if (Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled()) {
+			$offlineRetryTime = Mage::getStoreConfig('payment/mundipagg_standard/delayed_retry_max_time');
+			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+			$offlineRetryLogLabel = "Order #{$orderIncrementId} | offline retry statements";
+
+			$model = new Uecommerce_Mundipagg_Model_Offlineretry();
+			$offlineRetry = $model->loadByIncrementId($orderIncrementId);
+
+			try {
+				$offlineRetry->setOrderIncrementId($orderIncrementId);
+				$offlineRetry->setCreateDate($createDate->getTimestamp());
+
+				$deadline = new DateTime();
+				$interval = new DateInterval('PT' . $offlineRetryTime . 'M');
+
+				$deadline->setTimestamp($createDate->getTimestamp());
+				$deadline->add($interval);
+
+				$offlineRetry->setDeadline($deadline->getTimestamp());
+				$offlineRetry->save();
+
+				$helperLog->info("{$offlineRetryLogLabel} saved successfully.");
+
+			} catch (Exception $e) {
+				$helperLog->error("{$offlineRetryLogLabel} cannot be saved: {$e}");
+			}
+
 		}
 	}
 
