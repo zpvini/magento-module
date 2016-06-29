@@ -1192,11 +1192,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						if (($orderGrandTotal - $authorizedAmount) <= $epsilon) {
 							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
 							Mage::getSingleton('checkout/session')->setAuthorizedAmount();
-						} else {
 
+						} else {
 							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('partial');
 							Mage::getSingleton('checkout/session')->setAuthorizedAmount($authorizedAmount);
-
 						}
 					} else {
 						Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
@@ -1241,6 +1240,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						if (($orderGrandTotal - $authorizedAmount) <= $epsilon) {
 							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
 							Mage::getSingleton('checkout/session')->setAuthorizedAmount();
+
 							if ($orderGrandTotal < $authorizedAmount) {
 								$interestInformation = $payment->getAdditionalInformation('mundipagg_interest_information');
 								$newInterestInformation = array();
