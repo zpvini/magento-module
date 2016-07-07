@@ -11,10 +11,6 @@ CREATE TABLE IF NOT EXISTS {$prefix}mundipagg_offline_retry (
   create_date DATETIME NOT NULL COMMENT 'MundiPagg returned create date',
   deadline DATETIME NOT NULL COMMENT 'MundiPagg time to retry the authorization'
 )  ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-
-CREATE UNIQUE INDEX mundipagg_offline_retry_order_increment_id_uindex
-ON {$prefix}mundipagg_offline_retry (order_increment_id);
-
 ");
 
 $installer->endSetup();
