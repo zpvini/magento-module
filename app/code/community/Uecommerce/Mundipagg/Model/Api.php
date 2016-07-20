@@ -447,9 +447,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["Order"] = array();
 			$_request["Order"]["OrderReference"] = $order->getIncrementId();
 
-			if ($standard->getEnvironment() != 'production') {
-				$_request["Order"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
-			}
+//			if ($standard->getEnvironment() != 'production') {
+//				$_request["Order"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
+//			}
 
 			$_request["BoletoTransactionCollection"] = array();
 
@@ -1208,21 +1208,51 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$data = json_decode($json, true);
 
 			if ($standard->getConfigData('debug') == 1) {
-				if (isset($postData['xmlStatusNotification'])) {
-					$orderReference = isset($xml->OrderReference) ? $xml->OrderReference : null;
+				$orderReference = isset($xml->OrderReference) ? $xml->OrderReference : null;
 
-					if (is_null($orderReference)) {
-						$logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
+				if (is_null($orderReference)) {
+					$logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
 
-					} else {
-						$logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
-					}
-
-					$helperLog->debug($logMessage);
+				} else {
+					$logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
 				}
+
+				$helperLog->debug($logMessage);
 			}
 
 			$orderReference = $data['OrderReference'];
+			$order = Mage::getModel('sales/order');
+
+			$order->loadByIncrementId($orderReference);
+
+			if (!$order->getId()) {
+				$responseToMundiPagg = "OrderReference don't correspond to a store order.";
+
+				$helperLog->info("OrderReference: {$orderReference} | {$responseToMundiPagg}");
+
+				return "NOK | {$responseToMundiPagg}";
+			}
+
+			if (isset($data['OrderStatus'])) {
+				$orderStatus = $data['OrderStatus'];
+				$responseToMundiPagg = '';
+
+				if ($orderStatus == Uecommerce_Mundipagg_Model_Enum_OrderStatusEnum::CANCELED) {
+
+					try {
+						$this->tryCancelOrder($order);
+						$responseToMundiPagg = "OK | Order canceled successfully.";
+						$helperLog->info($responseToMundiPagg);
+
+					} catch (Exception $e) {
+						$responseToMundiPagg = "NOK {$e->getMessage()}";
+						$helperLog->error($responseToMundiPagg);
+					}
+				}
+
+				return $responseToMundiPagg;
+
+			}
 
 			if (!empty($data['BoletoTransaction'])) {
 				$status = $data['BoletoTransaction']['BoletoTransactionStatus'];
@@ -1231,26 +1261,17 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 
 			if (!empty($data['CreditCardTransaction'])) {
+				$transactionType = Uecommerce_Mundipagg_Model_Enum_TransactionTypeEnum::CREDIT_CARD;
 				$status = $data['CreditCardTransaction']['CreditCardTransactionStatus'];
 				$transactionKey = $data['CreditCardTransaction']['TransactionKey'];
 				$capturedAmountInCents = $data['CreditCardTransaction']['CapturedAmountInCents'];
 			}
 
 			if (!empty($data['OnlineDebitTransaction'])) {
+				$transactionType = Uecommerce_Mundipagg_Model_Enum_TransactionTypeEnum::DEBITO;
 				$status = $data['OnlineDebitTransaction']['OnlineDebitTransactionStatus'];
 				$transactionKey = $data['OnlineDebitTransaction']['TransactionKey'];
 				$capturedAmountInCents = $data['OnlineDebitTransaction']['AmountPaidInCents'];
-			}
-
-			$order = Mage::getModel('sales/order');
-			$order->loadByIncrementId($orderReference);
-
-			if (!$order->getId()) {
-				$responseToMundiPagg = "OrderReference don't correspond to a store order.";
-
-				$helperLog->info("OrderReference: {$orderReference} | {$responseToMundiPagg}");
-
-				return "KO | {$responseToMundiPagg}";
 			}
 
 			// We check if transactionKey exists in database
@@ -1445,7 +1466,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$order->save();
 
 						$helperLog->info($responseToMundiPagg);
-						
+
 						return "KO | {$responseToMundiPagg}";
 				}
 			} else {
@@ -1466,6 +1487,108 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$this->mailError(print_r($e->getMessage(), 1));
 
 			return "KO | {$responseToMundiPagg}";
+		}
+	}
+
+	private function tryCancelOrder($order) {
+		if ($order->canCancel()) {
+			try {
+				$order->cancel()->save();
+
+				return true;
+
+			} catch (Exception $e) {
+				throw new RuntimeException("Order cannot be canceled. Error reason: {$e->getMessage()}");
+			}
+
+		} else {
+			throw new RuntimeException("Order cannot be canceled.");
+		}
+	}
+
+	/**
+	 * @author Ruan Azevedo
+	 * @since 2016-07-20
+	 * $
+	 * Status reference:
+	 * http://docs.mundipagg.com/docs/enumera%C3%A7%C3%B5es
+	 *
+	 * @param array $postData
+	 */
+	private function processCreditCardTransactionNotification($postData) {
+		$status = $postData['CreditCardTransaction']['CreditCardTransactionStatus'];
+		$transactionKey = $postData['CreditCardTransaction']['TransactionKey'];
+		$capturedAmountInCents = $postData['CreditCardTransaction']['CapturedAmountInCents'];
+		$ccTransactionEnum = new Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum();
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
+		switch ($status) {
+			case $ccTransactionEnum::AUTHORIZED_PENDING_CAPTURE:
+				break;
+
+			case $ccTransactionEnum::CAPTURED:
+				break;
+
+			case $ccTransactionEnum::PARTIAL_CAPTURE:
+				break;
+
+			case $ccTransactionEnum::NOT_AUTHORIZED:
+				break;
+
+			case $ccTransactionEnum::VOIDED:
+				break;
+
+			case $ccTransactionEnum::PENDING_VOID:
+				break;
+
+			case $ccTransactionEnum::PARTIAL_VOID:
+				break;
+
+			case $ccTransactionEnum::REFUNDED:
+				break;
+
+			case $ccTransactionEnum::PENDING_REFUND:
+				break;
+
+			case $ccTransactionEnum::PARTIAL_REFUNDED:
+				break;
+
+			case $ccTransactionEnum::WITH_ERROR:
+				break;
+
+			case $ccTransactionEnum::NOT_FOUND_ACQUIRER:
+				break;
+
+			case $ccTransactionEnum::PENDING_AUTHORIZE:
+				break;
+
+			case $ccTransactionEnum::INVALID:
+				break;
+		}
+	}
+
+	/**
+	 * @author Ruan Azevedo
+	 * @since 2016-07-20
+	 * Status reference:
+	 * http://docs.mundipagg.com/docs/enumera%C3%A7%C3%B5es
+	 */
+	private function processBoletoTransactionNotification() {
+		$status = '';
+		$boletoTransactionEnum = new Uecommerce_Mundipagg_Model_Enum_BoletoTransactionStatusEnum();
+
+		switch ($status) {
+			case $boletoTransactionEnum::GENERATED:
+				break;
+
+			case $boletoTransactionEnum::PAID:
+				break;
+
+			case $boletoTransactionEnum::UNDERPAID:
+				break;
+
+			case $boletoTransactionEnum::OVERPAID:
+				break;
 		}
 	}
 
