@@ -1193,6 +1193,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	public function processOrder($postData) {
 		$standard = Mage::getModel('mundipagg/standard');
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$returnMessage = '';
 
 		try {
 
@@ -1226,32 +1227,40 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$order->loadByIncrementId($orderReference);
 
 			if (!$order->getId()) {
-				$responseToMundiPagg = "OrderReference don't correspond to a store order.";
+				$returnMessage = "OrderReference don't correspond to a store order.";
 
-				$helperLog->info("OrderReference: {$orderReference} | {$responseToMundiPagg}");
+				$helperLog->info("OrderReference: {$orderReference} | {$returnMessage}");
 
-				return "NOK | {$responseToMundiPagg}";
+				return "Error | {$returnMessage}";
 			}
 
 			if (isset($data['OrderStatus'])) {
 				$orderStatus = $data['OrderStatus'];
-				$responseToMundiPagg = '';
 
+				//if MundiPagg order status is canceled, cancel the order on Magento
 				if ($orderStatus == Uecommerce_Mundipagg_Model_Enum_OrderStatusEnum::CANCELED) {
+					$returnMessageLabel = "Order #{$order->getIncrementId()}";
+
+					if ($order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) {
+						$returnMessage = "OK | {$returnMessageLabel} | Order already canceled.";
+
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+					}
 
 					try {
-						$this->tryCancelOrder($order);
-						$responseToMundiPagg = "OK | Order canceled successfully.";
-						$helperLog->info($responseToMundiPagg);
+						$this->tryCancelOrder($order, "Canceled after MundiPagg notification post.");
+						$returnMessage = "OK | {$returnMessageLabel} | Canceled successfully";
+						$helperLog->info($returnMessage);
 
 					} catch (Exception $e) {
-						$responseToMundiPagg = "NOK {$e->getMessage()}";
-						$helperLog->error($responseToMundiPagg);
+						$returnMessage = "Error | {$returnMessageLabel} | {$e->getMessage()}";
+						$helperLog->error($returnMessage);
 					}
 				}
 
-				return $responseToMundiPagg;
-
+				return $returnMessage;
 			}
 
 			if (!empty($data['BoletoTransaction'])) {
@@ -1350,9 +1359,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 							return $result;
 						}
 
-						$responseToMundiPagg = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
+						$returnMessage = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
 
-						return "KO | {$responseToMundiPagg}";
+						$helperLog->error($returnMessage);
+						return "KO | {$returnMessage}";
 
 						break;
 
@@ -1490,10 +1500,22 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 	}
 
-	private function tryCancelOrder($order) {
+	/**
+	 * @param Mage_Sales_Model_Order $order
+	 * @param string                 $comment
+	 * @return bool
+	 * @throws RuntimeException
+	 */
+	public function tryCancelOrder(Mage_Sales_Model_Order $order, $comment = null) {
 		if ($order->canCancel()) {
 			try {
-				$order->cancel()->save();
+				$order->cancel();
+
+				if (!is_null($comment) && is_string($comment)) {
+					$order->addStatusHistoryComment($comment);
+				}
+
+				$order->save();
 
 				return true;
 
