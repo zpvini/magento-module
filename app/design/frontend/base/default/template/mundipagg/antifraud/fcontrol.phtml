@@ -4,7 +4,7 @@ $antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_
 $environment = Mage::getStoreConfig('payment/mundipagg_standard/environment_fcontrol');
 
 if ($environment == Uecommerce_Mundipagg_Model_Source_FControlEnvironment::SANDBOX) {
-	$scriptUrl = '/js/uecommerce/fcontrol/hmlg-fcontrol-ed.min.js';
+	$scriptUrl = 'https://static.fcontrol.com.br/fingerprint/hmlg-fcontrol-ed.min.js';
 } else {
 	$scriptUrl = 'https://static.fcontrol.com.br/fingerprint/fcontrol-min-ed.js';
 }
