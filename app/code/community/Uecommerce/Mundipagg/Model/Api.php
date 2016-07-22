@@ -447,9 +447,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$_request["Order"] = array();
 			$_request["Order"]["OrderReference"] = $order->getIncrementId();
 
-			if ($standard->getEnvironment() != 'production') {
-				$_request["Order"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
-			}
+//			if ($standard->getEnvironment() != 'production') {
+//				$_request["Order"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
+//			}
 
 			$_request["BoletoTransactionCollection"] = array();
 
@@ -1193,268 +1193,468 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	public function processOrder($postData) {
 		$standard = Mage::getModel('mundipagg/standard');
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$returnMessage = '';
 
 		try {
-			if (isset($postData['xmlStatusNotification'])) {
-				$xmlStatusNotificationString = htmlspecialchars_decode($postData['xmlStatusNotification']);
-				$xml = simplexml_load_string($xmlStatusNotificationString);
-				$json = json_encode($xml);
-				$data = json_decode($json, true);
 
-				if ($standard->getConfigData('debug') == 1) {
-					if (isset($postData['xmlStatusNotification'])) {
-						$orderReference = isset($xml->OrderReference) ? $xml->OrderReference : null;
+			if (!isset($postData['xmlStatusNotification'])) {
+				$helperLog->info("Index xmlStatusNotification not found");
 
-						if (is_null($orderReference)) {
-							$logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
+				return 'KO | Internal error.';
+			}
 
-						} else {
-							$logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
+			$xmlStatusNotificationString = htmlspecialchars_decode($postData['xmlStatusNotification']);
+			$xml = simplexml_load_string($xmlStatusNotificationString);
+			$json = json_encode($xml);
+			$data = json_decode($json, true);
+
+			if ($standard->getConfigData('debug') == 1) {
+				$orderReference = isset($xml->OrderReference) ? $xml->OrderReference : null;
+
+				if (is_null($orderReference)) {
+					$logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
+
+				} else {
+					$logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
+				}
+
+				$helperLog->debug($logMessage);
+			}
+
+			$orderReference = $data['OrderReference'];
+			$order = Mage::getModel('sales/order');
+
+			$order->loadByIncrementId($orderReference);
+
+			if (!$order->getId()) {
+				$returnMessage = "OrderReference don't correspond to a store order.";
+
+				$helperLog->info("OrderReference: {$orderReference} | {$returnMessage}");
+
+				return "KO | {$returnMessage}";
+			}
+
+			$returnMessageLabel = "Order #{$order->getIncrementId()}";
+
+			if (isset($data['OrderStatus'])) {
+				$orderStatus = $data['OrderStatus'];
+
+				//if MundiPagg order status is canceled, cancel the order on Magento
+				if ($orderStatus == Uecommerce_Mundipagg_Model_Enum_OrderStatusEnum::CANCELED) {
+
+					if ($order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) {
+						$returnMessage = "OK | {$returnMessageLabel} | Order already canceled.";
+
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+					}
+
+					try {
+						$this->tryCancelOrder($order, "Canceled after MundiPagg notification post.");
+						$returnMessage = "OK | {$returnMessageLabel} | Canceled successfully";
+						$helperLog->info($returnMessage);
+
+					} catch (Exception $e) {
+						$returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
+						$helperLog->error($returnMessage);
+					}
+				}
+
+				return $returnMessage;
+			}
+
+			if (!empty($data['BoletoTransaction'])) {
+				$status = $data['BoletoTransaction']['BoletoTransactionStatus'];
+				$transactionKey = $data['BoletoTransaction']['TransactionKey'];
+				$capturedAmountInCents = $data['BoletoTransaction']['AmountPaidInCents'];
+			}
+
+			if (!empty($data['CreditCardTransaction'])) {
+				$status = $data['CreditCardTransaction']['CreditCardTransactionStatus'];
+				$transactionKey = $data['CreditCardTransaction']['TransactionKey'];
+				$capturedAmountInCents = $data['CreditCardTransaction']['CapturedAmountInCents'];
+			}
+
+			if (!empty($data['OnlineDebitTransaction'])) {
+				$status = $data['OnlineDebitTransaction']['OnlineDebitTransactionStatus'];
+				$transactionKey = $data['OnlineDebitTransaction']['TransactionKey'];
+				$capturedAmountInCents = $data['OnlineDebitTransaction']['AmountPaidInCents'];
+			}
+
+			// We check if transactionKey exists in database
+			$t = 0;
+
+			$transactions = Mage::getModel('sales/order_payment_transaction')
+				->getCollection()
+				->addAttributeToFilter('order_id', array('eq' => $order->getEntityId()));
+
+			foreach ($transactions as $key => $transaction) {
+				$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
+
+				// transactionKey found
+				if ($orderTransactionKey == $transactionKey) {
+					$t++;
+					continue;
+				}
+			}
+
+			// transactionKey has been found so we can proceed
+			if ($t > 0) {
+				/**
+				 * @var $recurrence Uecommerce_Mundiapgg_Model_Recurrency
+				 */
+				$recurrence = Mage::getModel('mundipagg/recurrency');
+				$recurrence->checkRecurrencesByOrder($order);
+
+				$status = strtolower($status);
+
+				switch ($status) {
+					case 'captured':
+					case 'paid':
+					case 'overpaid':
+						if ($order->canUnhold()) {
+							$order->unhold();
+							$helperLog->info("{$returnMessageLabel} | unholded.");
 						}
 
-						$helperLog->debug($logMessage);
-					}
-				}
+						if (!$order->canInvoice()) {
+							$returnMessage = "OK | {$returnMessageLabel} | Can't create invoice. Transaction status '{$status}' processed.";
 
-				$orderReference = $data['OrderReference'];
+							$helperLog->info($returnMessage);
 
-				if (!empty($data['BoletoTransaction'])) {
-					$status = $data['BoletoTransaction']['BoletoTransactionStatus'];
-					$transactionKey = $data['BoletoTransaction']['TransactionKey'];
-					$capturedAmountInCents = $data['BoletoTransaction']['AmountPaidInCents'];
-				}
+							return $returnMessage;
+						}
 
-				if (!empty($data['CreditCardTransaction'])) {
-					$status = $data['CreditCardTransaction']['CreditCardTransactionStatus'];
-					$transactionKey = $data['CreditCardTransaction']['TransactionKey'];
-					$capturedAmountInCents = $data['CreditCardTransaction']['CapturedAmountInCents'];
-				}
+						// Partial invoice
+						$epsilon = 0.00001;
 
-				if (!empty($data['OnlineDebitTransaction'])) {
-					$status = $data['OnlineDebitTransaction']['OnlineDebitTransactionStatus'];
-					$transactionKey = $data['OnlineDebitTransaction']['TransactionKey'];
-					$capturedAmountInCents = $data['OnlineDebitTransaction']['AmountPaidInCents'];
-				}
+						if ($order->canInvoice() && abs($order->getGrandTotal() - $capturedAmountInCents * 0.01) > $epsilon) {
+							$baseTotalPaid = $order->getTotalPaid();
 
-				$order = Mage::getModel('sales/order');
-				$order->loadByIncrementId($orderReference);
+							// If there is already a positive baseTotalPaid value it's not the first transaction
+							if ($baseTotalPaid > 0) {
+								$baseTotalPaid += $capturedAmountInCents * 0.01;
 
-				if (!$order->getId()) {
-					return 'KO';
-				}
+								$order->setTotalPaid(0);
+							} else {
+								$baseTotalPaid = $capturedAmountInCents * 0.01;
 
-				// We check if transactionKey exists in database
-				$t = 0;
-
-				$transactions = Mage::getModel('sales/order_payment_transaction')
-					->getCollection()
-					->addAttributeToFilter('order_id', array('eq' => $order->getEntityId()));
-
-				foreach ($transactions as $key => $transaction) {
-					$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
-
-					// transactionKey found
-					if ($orderTransactionKey == $transactionKey) {
-						$t++;
-						continue;
-					}
-				}
-
-				// transactionKey has been found so we can proceed
-				if ($t > 0) {
-					/**
-					 * @var $recurrence Uecommerce_Mundiapgg_Model_Recurrency
-					 */
-					$recurrence = Mage::getModel('mundipagg/recurrency');
-					$recurrence->checkRecurrencesByOrder($order);
-
-					switch ($status) {
-						case 'Captured':
-						case 'Paid':
-						case 'OverPaid':
-						case 'Overpaid':
-
-							if ($order->canUnhold()) {
-								$order->unhold();
+								$order->setTotalPaid($baseTotalPaid);
 							}
 
-							if (!$order->canInvoice()) {
-								return 'OK';
-							}
-
-							// Partial invoice
-							$epsilon = 0.00001;
-
-							if ($order->canInvoice() && abs($order->getGrandTotal() - $capturedAmountInCents * 0.01) > $epsilon) {
-								$baseTotalPaid = $order->getTotalPaid();
-
-								// If there is already a positive baseTotalPaid value it's not the first transaction
-								if ($baseTotalPaid > 0) {
-									$baseTotalPaid += $capturedAmountInCents * 0.01;
-
-									$order->setTotalPaid(0);
-								} else {
-									$baseTotalPaid = $capturedAmountInCents * 0.01;
-
-									$order->setTotalPaid($baseTotalPaid);
-								}
-
-								// Can invoice only if total captured amount is equal to GrandTotal
-								if (abs($order->getGrandTotal() - $baseTotalPaid) < $epsilon) {
-									$result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
-
-									return $result;
-								} else {
-									$order->save();
-
-									return 'OK';
-								}
-							}
-
-							// Create invoice
-							if ($order->canInvoice() && abs($capturedAmountInCents * 0.01 - $order->getGrandTotal()) < $epsilon) {
-								$result = $this->createInvoice($order, $data, $order->getGrandTotal(), $status);
+							// Can invoice only if total captured amount is equal to GrandTotal
+							if (abs($order->getGrandTotal() - $baseTotalPaid) < $epsilon) {
+								$result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
 
 								return $result;
-							}
 
-							return 'KO';
-
-							break;
-
-						case 'UnderPaid':
-						case 'Underpaid':
-							if ($order->canUnhold()) {
-								$order->unhold();
-							}
-
-							$order->addStatusHistoryComment('Captured offline amount of R$' . $capturedAmountInCents * 0.01, false);
-							$order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, 'underpaid');
-							$order->setBaseTotalPaid($capturedAmountInCents * 0.01);
-							$order->setTotalPaid($capturedAmountInCents * 0.01);
-							$order->save();
-
-							return 'OK';
-							break;
-
-						case 'NotAuthorized':
-							return 'OK';
-							break;
-
-						case 'Canceled':
-						case 'Refunded':
-						case 'Voided':
-							if ($order->canUnhold()) {
-								$order->unhold();
-							}
-
-							$ok = 0;
-							$invoices = array();
-							$canceledInvoices = array();
-
-							foreach ($order->getInvoiceCollection() as $invoice) {
-								// We check if invoice can be refunded
-								if ($invoice->canRefund()) {
-									$invoices[] = $invoice;
-								}
-
-								// We check if invoice has already been canceled
-								if ($invoice->isCanceled()) {
-									$canceledInvoices[] = $invoice;
-								}
-							}
-
-							// Refund invoices and Credit Memo
-							if (!empty($invoices)) {
-								$service = Mage::getModel('sales/service_order', $order);
-
-								foreach ($invoices as $invoice) {
-									$invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_CANCELED);
-									$invoice->save();
-
-									$creditmemo = $service->prepareInvoiceCreditmemo($invoice);
-									$creditmemo->setOfflineRequested(true);
-									$creditmemo->register()->save();
-								}
-
-								// Close order
-								$order->setData('state', 'closed');
-								$order->setStatus('closed');
-								$order->save();
-
-								// Return
-								$ok++;
-							}
-
-							// Credit Memo
-							if (!empty($canceledInvoices)) {
-								$service = Mage::getModel('sales/service_order', $order);
-
-								foreach ($invoices as $invoice) {
-									$creditmemo = $service->prepareInvoiceCreditmemo($invoice);
-									$creditmemo->setOfflineRequested(true);
-									$creditmemo->register()->save();
-								}
-
-								// Close order
-								$order->setData('state', Mage_Sales_Model_Order::STATE_CLOSED);
-								$order->setStatus(Mage_Sales_Model_Order::STATE_CLOSED);
-								$order->save();
-
-								// Return
-								$ok++;
-							}
-
-							if (empty($invoices) && empty($canceledInvoices)) {
-								// Cancel order
-								$order->cancel()->save();
-
-								// Return
-								$ok++;
-							}
-
-							if ($ok > 0) {
-								return 'OK';
 							} else {
-								return 'KO';
-							}
-							break;
+								$order->save();
 
-						// For other status we add comment to history
-						default:
-							$order->addStatusHistoryComment($status, false);
+								$returnMessage = "OK | {$returnMessageLabel} | Captured amount isn't equal to grand total, invoice not created. Transaction status '{$status}' processed.";
+
+								return $returnMessage;
+							}
+						}
+
+						// Create invoice
+						if ($order->canInvoice() && abs($capturedAmountInCents * 0.01 - $order->getGrandTotal()) < $epsilon) {
+							$result = $this->createInvoice($order, $data, $order->getGrandTotal(), $status);
+
+							return $result;
+						}
+
+						$returnMessage = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
+
+						$helperLog->error($returnMessage);
+
+						return "KO | {$returnMessage}";
+
+						break;
+
+					case 'underpaid':
+						if ($order->canUnhold()) {
+							$helperLog->info("{$returnMessageLabel} | unholded.");
+							$order->unhold();
+						}
+
+						$order->addStatusHistoryComment('Captured offline amount of R$' . $capturedAmountInCents * 0.01, false);
+						$order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, 'underpaid');
+						$order->setBaseTotalPaid($capturedAmountInCents * 0.01);
+						$order->setTotalPaid($capturedAmountInCents * 0.01);
+						$order->save();
+
+						$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' processed. Order status updated.";
+
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+
+						break;
+
+					case 'notauthorized':
+						$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' received.";
+
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+
+						break;
+
+					case 'canceled':
+					case 'refunded':
+					case 'voided':
+						if ($order->canUnhold()) {
+							$helperLog->info("{$returnMessageLabel} unholded.");
+							$order->unhold();
+						}
+
+						$ok = 0;
+						$invoices = array();
+						$canceledInvoices = array();
+
+						foreach ($order->getInvoiceCollection() as $invoice) {
+							// We check if invoice can be refunded
+							if ($invoice->canRefund()) {
+								$invoices[] = $invoice;
+							}
+
+							// We check if invoice has already been canceled
+							if ($invoice->isCanceled()) {
+								$canceledInvoices[] = $invoice;
+							}
+						}
+
+						// Refund invoices and Credit Memo
+						if (!empty($invoices)) {
+							$service = Mage::getModel('sales/service_order', $order);
+
+							foreach ($invoices as $invoice) {
+								$invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_CANCELED);
+								$invoice->save();
+
+								$creditmemo = $service->prepareInvoiceCreditmemo($invoice);
+								$creditmemo->setOfflineRequested(true);
+								$creditmemo->register()->save();
+							}
+
+							// Close order
+							$order->setData('state', 'closed');
+							$order->setStatus('closed');
 							$order->save();
 
-							return 'KO';
-					}
-				} else {
-					return 'KO';
+							// Return
+							$ok++;
+						}
+
+						// Credit Memo
+						if (!empty($canceledInvoices)) {
+							$service = Mage::getModel('sales/service_order', $order);
+
+							foreach ($invoices as $invoice) {
+								$creditmemo = $service->prepareInvoiceCreditmemo($invoice);
+								$creditmemo->setOfflineRequested(true);
+								$creditmemo->register()->save();
+							}
+
+							// Close order
+							$order->setData('state', Mage_Sales_Model_Order::STATE_CLOSED);
+							$order->setStatus(Mage_Sales_Model_Order::STATE_CLOSED);
+							$order->save();
+
+							// Return
+							$ok++;
+						}
+
+						if (empty($invoices) && empty($canceledInvoices)) {
+							// Cancel order
+							$order->cancel()->save();
+							$helperLog->info("{$returnMessageLabel} | Order canceled.");
+
+							// Return
+							$ok++;
+						}
+
+						if ($ok > 0) {
+							$returnMessage = "{$returnMessageLabel} | Order status '{$status}' processed.";
+							$helperLog->info($returnMessage);
+
+							return "OK | {$returnMessage}";
+
+						} else {
+							$returnMessage = "{$returnMessageLabel} | Unable to process transaction status '{$status}'.";
+
+							$helperLog->info($returnMessage);
+
+							return "KO | {$returnMessage}";
+						}
+
+						break;
+
+					// For other status we add comment to history
+					default:
+						$returnMessage = "Order #{$order->getIncrementId()} | unexpected order status.";
+
+						$order->addStatusHistoryComment($status, false);
+						$order->save();
+
+						$helperLog->info($returnMessage);
+
+						return "KO | {$returnMessage}";
 				}
 			} else {
-				return 'KO';
+				$returnMessage = "TransactionKey {$transactionKey} not found on database.";
+
+				$helperLog->info($returnMessage);
+
+				return "KO | {$returnMessage}";
 			}
+
 		} catch (Exception $e) {
+			$returnMessage = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
+
 			//Log error
 			$helperLog->error($e, true);
 
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
 
-			return 'KO';
+			return "KO | {$returnMessage}";
+		}
+	}
+
+	/**
+	 * @param Mage_Sales_Model_Order $order
+	 * @param string                 $comment
+	 * @return bool
+	 * @throws RuntimeException
+	 */
+	public function tryCancelOrder(Mage_Sales_Model_Order $order, $comment = null) {
+		if ($order->canCancel()) {
+			try {
+				$order->cancel();
+
+				if (!is_null($comment) && is_string($comment)) {
+					$order->addStatusHistoryComment($comment);
+				}
+
+				$order->save();
+
+				return true;
+
+			} catch (Exception $e) {
+				throw new RuntimeException("Order cannot be canceled. Error reason: {$e->getMessage()}");
+			}
+
+		} else {
+			throw new RuntimeException("Order cannot be canceled.");
+		}
+	}
+
+	/**
+	 * Status reference:
+	 * http://docs.mundipagg.com/docs/enumera%C3%A7%C3%B5es
+	 *
+	 * @param array $postData
+	 * @TODO refatorar o tratamento das transacoes com este metodo
+	 */
+	private function processCreditCardTransactionNotification($postData) {
+		$status = $postData['CreditCardTransaction']['CreditCardTransactionStatus'];
+		$transactionKey = $postData['CreditCardTransaction']['TransactionKey'];
+		$capturedAmountInCents = $postData['CreditCardTransaction']['CapturedAmountInCents'];
+		$ccTransactionEnum = new Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum();
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
+		switch ($status) {
+			case $ccTransactionEnum::AUTHORIZED_PENDING_CAPTURE:
+				break;
+
+			case $ccTransactionEnum::CAPTURED:
+				break;
+
+			case $ccTransactionEnum::PARTIAL_CAPTURE:
+				break;
+
+			case $ccTransactionEnum::NOT_AUTHORIZED:
+				break;
+
+			case $ccTransactionEnum::VOIDED:
+				break;
+
+			case $ccTransactionEnum::PENDING_VOID:
+				break;
+
+			case $ccTransactionEnum::PARTIAL_VOID:
+				break;
+
+			case $ccTransactionEnum::REFUNDED:
+				break;
+
+			case $ccTransactionEnum::PENDING_REFUND:
+				break;
+
+			case $ccTransactionEnum::PARTIAL_REFUNDED:
+				break;
+
+			case $ccTransactionEnum::WITH_ERROR:
+				break;
+
+			case $ccTransactionEnum::NOT_FOUND_ACQUIRER:
+				break;
+
+			case $ccTransactionEnum::PENDING_AUTHORIZE:
+				break;
+
+			case $ccTransactionEnum::INVALID:
+				break;
+		}
+	}
+
+	/**
+	 * @author Ruan Azevedo
+	 * @since 2016-07-20
+	 * Status reference:
+	 * http://docs.mundipagg.com/docs/enumera%C3%A7%C3%B5es
+	 * @TODO refatorar o tratamento das transacoes de boleto com este metodo
+	 */
+	private function processBoletoTransactionNotification() {
+		$status = '';
+		$boletoTransactionEnum = new Uecommerce_Mundipagg_Model_Enum_BoletoTransactionStatusEnum();
+
+		switch ($status) {
+			case $boletoTransactionEnum::GENERATED:
+				break;
+
+			case $boletoTransactionEnum::PAID:
+				break;
+
+			case $boletoTransactionEnum::UNDERPAID:
+				break;
+
+			case $boletoTransactionEnum::OVERPAID:
+				break;
 		}
 	}
 
 	/**
 	 * Create invoice
+	 * @return string OK|KO
 	 */
 	private function createInvoice($order, $data, $totalPaid, $status) {
 		$invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$returnMessageLabel = "Order #{$order->getIncrementId()}";
 
 		if (!$invoice->getTotalQty()) {
-			$order->addStatusHistoryComment('Cannot create an invoice without products.', false);
+			$returnMessage = 'Cannot create an invoice without products.';
+
+			$order->addStatusHistoryComment($returnMessage, false);
 			$order->save();
 
-			return 'KO';
+			$helperLog->info("{$returnMessageLabel} | {$returnMessage}");
+
+			return $returnMessage;
 		}
 
 		$invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE);
@@ -1507,7 +1707,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$payment->save();
 
-		if ($status == 'OverPaid' || $status == 'Overpaid') {
+		if (strtolower($status) == 'overpaid') {
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, 'overpaid');
 		} else {
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
@@ -1515,7 +1715,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$order->save();
 
-		return 'OK';
+		$returnMessage = "OK | {$returnMessageLabel} | invoice created and order status changed to processing.";
+
+		$helperLog->info($returnMessage);
+
+		return $returnMessage;
 	}
 
 	/**
