@@ -1231,15 +1231,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 				$helperLog->info("OrderReference: {$orderReference} | {$returnMessage}");
 
-				return "Error | {$returnMessage}";
+				return "KO | {$returnMessage}";
 			}
+
+			$returnMessageLabel = "Order #{$order->getIncrementId()}";
 
 			if (isset($data['OrderStatus'])) {
 				$orderStatus = $data['OrderStatus'];
 
 				//if MundiPagg order status is canceled, cancel the order on Magento
 				if ($orderStatus == Uecommerce_Mundipagg_Model_Enum_OrderStatusEnum::CANCELED) {
-					$returnMessageLabel = "Order #{$order->getIncrementId()}";
 
 					if ($order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) {
 						$returnMessage = "OK | {$returnMessageLabel} | Order already canceled.";
@@ -1255,7 +1256,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$helperLog->info($returnMessage);
 
 					} catch (Exception $e) {
-						$returnMessage = "Error | {$returnMessageLabel} | {$e->getMessage()}";
+						$returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
 						$helperLog->error($returnMessage);
 					}
 				}
@@ -1270,14 +1271,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 
 			if (!empty($data['CreditCardTransaction'])) {
-				$transactionType = Uecommerce_Mundipagg_Model_Enum_TransactionTypeEnum::CREDIT_CARD;
 				$status = $data['CreditCardTransaction']['CreditCardTransactionStatus'];
 				$transactionKey = $data['CreditCardTransaction']['TransactionKey'];
 				$capturedAmountInCents = $data['CreditCardTransaction']['CapturedAmountInCents'];
 			}
 
 			if (!empty($data['OnlineDebitTransaction'])) {
-				$transactionType = Uecommerce_Mundipagg_Model_Enum_TransactionTypeEnum::DEBITO;
 				$status = $data['OnlineDebitTransaction']['OnlineDebitTransactionStatus'];
 				$transactionKey = $data['OnlineDebitTransaction']['TransactionKey'];
 				$capturedAmountInCents = $data['OnlineDebitTransaction']['AmountPaidInCents'];
@@ -1316,10 +1315,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					case 'overpaid':
 						if ($order->canUnhold()) {
 							$order->unhold();
+							$helperLog->info("{$returnMessageLabel} | unholded.");
 						}
 
 						if (!$order->canInvoice()) {
-							return 'OK';
+							$returnMessage = "OK | {$returnMessageLabel} | Can't create invoice. Transaction status '{$status}' processed.";
+
+							$helperLog->info($returnMessage);
+
+							return $returnMessage;
 						}
 
 						// Partial invoice
@@ -1348,7 +1352,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 							} else {
 								$order->save();
 
-								return 'OK';
+								$returnMessage = "OK | {$returnMessageLabel} | Captured amount isn't equal to grand total, invoice not created. Transaction status '{$status}' processed.";
+
+								return $returnMessage;
 							}
 						}
 
@@ -1362,12 +1368,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$returnMessage = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
 
 						$helperLog->error($returnMessage);
+
 						return "KO | {$returnMessage}";
 
 						break;
 
 					case 'underpaid':
 						if ($order->canUnhold()) {
+							$helperLog->info("{$returnMessageLabel} | unholded.");
 							$order->unhold();
 						}
 
@@ -1377,17 +1385,28 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$order->setTotalPaid($capturedAmountInCents * 0.01);
 						$order->save();
 
-						return 'OK';
+						$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' processed. Order status updated.";
+
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+
 						break;
 
 					case 'notauthorized':
-						return 'OK';
+						$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' received.";
+
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+
 						break;
 
 					case 'canceled':
 					case 'refunded':
 					case 'voided':
 						if ($order->canUnhold()) {
+							$helperLog->info("{$returnMessageLabel} unholded.");
 							$order->unhold();
 						}
 
@@ -1451,44 +1470,49 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						if (empty($invoices) && empty($canceledInvoices)) {
 							// Cancel order
 							$order->cancel()->save();
+							$helperLog->info("{$returnMessageLabel} | Order canceled.");
 
 							// Return
 							$ok++;
 						}
 
 						if ($ok > 0) {
-							return 'OK';
+							$returnMessage = "{$returnMessageLabel} | Order status '{$status}' processed.";
+							$helperLog->info($returnMessage);
+
+							return "OK | {$returnMessage}";
+
 						} else {
-							$responseToMundiPagg = "Order #{$order->getIncrementId()} | Unable to cancel the order.";
+							$returnMessage = "{$returnMessageLabel} | Unable to process transaction status '{$status}'.";
 
-							$helperLog->info($responseToMundiPagg);
+							$helperLog->info($returnMessage);
 
-							return "KO | {$responseToMundiPagg}";
+							return "KO | {$returnMessage}";
 						}
 
 						break;
 
 					// For other status we add comment to history
 					default:
-						$responseToMundiPagg = "Order #{$order->getIncrementId()} | unexpected order status.";
+						$returnMessage = "Order #{$order->getIncrementId()} | unexpected order status.";
 
 						$order->addStatusHistoryComment($status, false);
 						$order->save();
 
-						$helperLog->info($responseToMundiPagg);
+						$helperLog->info($returnMessage);
 
-						return "KO | {$responseToMundiPagg}";
+						return "KO | {$returnMessage}";
 				}
 			} else {
-				$responseToMundiPagg = "TransactionKey {$transactionKey} not found on database.";
+				$returnMessage = "TransactionKey {$transactionKey} not found on database.";
 
-				$helperLog->info($responseToMundiPagg);
+				$helperLog->info($returnMessage);
 
-				return "KO | {$responseToMundiPagg}";
+				return "KO | {$returnMessage}";
 			}
 
 		} catch (Exception $e) {
-			$responseToMundiPagg = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
+			$returnMessage = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
 
 			//Log error
 			$helperLog->error($e, true);
@@ -1496,7 +1520,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
 
-			return "KO | {$responseToMundiPagg}";
+			return "KO | {$returnMessage}";
 		}
 	}
 
@@ -1529,13 +1553,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	}
 
 	/**
-	 * @author Ruan Azevedo
-	 * @since 2016-07-20
-	 * $
 	 * Status reference:
 	 * http://docs.mundipagg.com/docs/enumera%C3%A7%C3%B5es
 	 *
 	 * @param array $postData
+	 * @TODO refatorar o tratamento das transacoes com este metodo
 	 */
 	private function processCreditCardTransactionNotification($postData) {
 		$status = $postData['CreditCardTransaction']['CreditCardTransactionStatus'];
@@ -1594,6 +1616,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @since 2016-07-20
 	 * Status reference:
 	 * http://docs.mundipagg.com/docs/enumera%C3%A7%C3%B5es
+	 * @TODO refatorar o tratamento das transacoes de boleto com este metodo
 	 */
 	private function processBoletoTransactionNotification() {
 		$status = '';
@@ -1616,15 +1639,22 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 	/**
 	 * Create invoice
+	 * @return string OK|KO
 	 */
 	private function createInvoice($order, $data, $totalPaid, $status) {
 		$invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$returnMessageLabel = "Order #{$order->getIncrementId()}";
 
 		if (!$invoice->getTotalQty()) {
-			$order->addStatusHistoryComment('Cannot create an invoice without products.', false);
+			$returnMessage = 'Cannot create an invoice without products.';
+
+			$order->addStatusHistoryComment($returnMessage, false);
 			$order->save();
 
-			return 'KO';
+			$helperLog->info("{$returnMessageLabel} | {$returnMessage}");
+
+			return $returnMessage;
 		}
 
 		$invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE);
@@ -1677,7 +1707,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$payment->save();
 
-		if ($status == 'OverPaid' || $status == 'Overpaid') {
+		if (strtolower($status) == 'overpaid') {
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, 'overpaid');
 		} else {
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
@@ -1685,7 +1715,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$order->save();
 
-		return 'OK';
+		$returnMessage = "OK | {$returnMessageLabel} | invoice created and order status changed to processing.";
+
+		$helperLog->info($returnMessage);
+
+		return $returnMessage;
 	}
 
 	/**
