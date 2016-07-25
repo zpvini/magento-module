@@ -29,48 +29,52 @@
  */
 ?>
 <div class="page-title">
-    <h1><?php echo $this->__('Your order has been received') ?></h1>
+	<h1><?php echo $this->__('Your order has been received') ?></h1>
 </div>
 <?php echo $this->getMessagesBlock()->getGroupedHtml() ?>
 <h2 class="sub-title"><?php echo $this->__('Thank you for your purchase!') ?></h2>
 
-<?php if ($this->getOrderId()):?>
-<?php if ($this->getCanViewOrder()) :?>
-    <p><?php echo $this->__('Your order # is: %s.', sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getViewOrderUrl()), $this->escapeHtml($this->getOrderId()))) ?></p>
-<?php  else :?>
-    <p><?php echo $this->__('Your order # is: %s.', $this->escapeHtml($this->getOrderId())) ?></p>
-<?php endif;?>
-    <p><?php echo $this->__('You will receive an order confirmation email with details of your order and a link to track its progress.') ?></p>
-<?php if ($this->getCanViewOrder() && $this->getCanPrintOrder()) :?>
-    <p>
-        <?php echo $this->__('<a href="%s" target="_blank">Click here to print</a> a copy of your order confirmation.', $this->getPrintUrl()) ?>
-        <?php echo $this->getChildHtml() ?>
-    </p>
-<?php endif;?>
-<?php endif;?>
+<?php if ($this->getOrderId()): ?>
+	<?php if ($this->getCanViewOrder()) : ?>
+		<p><?php echo $this->__('Your order # is: %s.', sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getViewOrderUrl()), $this->escapeHtml($this->getOrderId()))) ?></p>
+	<?php else : ?>
+		<p><?php echo $this->__('Your order # is: %s.', $this->escapeHtml($this->getOrderId())) ?></p>
+	<?php endif; ?>
+	<p><?php echo $this->__('You will receive an order confirmation email with details of your order and a link to track its progress.') ?></p>
+	<?php if ($this->getCanViewOrder() && $this->getCanPrintOrder()) : ?>
+		<p>
+			<?php echo $this->__('<a href="%s" target="_blank">Click here to print</a> a copy of your order confirmation.', $this->getPrintUrl()) ?>
+			<?php echo $this->getChildHtml() ?>
+		</p>
+	<?php endif; ?>
+<?php endif; ?>
 
 <?php if ($this->getAgreementRefId()): ?>
-    <p><?php echo $this->__('Your billing agreement # is: %s.', sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getAgreementUrl()), $this->escapeHtml($this->getAgreementRefId())))?></p>
-<?php endif;?>
+	<p><?php echo $this->__('Your billing agreement # is: %s.', sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getAgreementUrl()), $this->escapeHtml($this->getAgreementRefId()))) ?></p>
+<?php endif; ?>
 
-<?php if ($profiles = $this->getRecurringProfiles()):?>
-<p><?php echo $this->__('Your recurring payment profiles:'); ?></p>
-<ul class="disc">
-<?php foreach($profiles as $profile):?>
-<?php $profileIdHtml = ($this->getCanViewProfiles() ? sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getProfileUrl($profile)), $this->escapeHtml($this->getObjectData($profile, 'reference_id'))) : $this->escapeHtml($this->getObjectData($profile, 'reference_id')));?>
-    <li><?php echo $this->__('Payment profile # %s: "%s".', $profileIdHtml, $this->escapeHtml($this->getObjectData($profile, 'schedule_description')))?></li>
-<?php endforeach;?>
-</ul>
-<?php endif;?>
+<?php if ($profiles = $this->getRecurringProfiles()): ?>
+	<p><?php echo $this->__('Your recurring payment profiles:'); ?></p>
+	<ul class="disc">
+		<?php foreach ($profiles as $profile): ?>
+			<?php $profileIdHtml = ($this->getCanViewProfiles() ? sprintf('<a href="%s">%s</a>', $this->escapeHtml($this->getProfileUrl($profile)), $this->escapeHtml($this->getObjectData($profile, 'reference_id'))) : $this->escapeHtml($this->getObjectData($profile, 'reference_id'))); ?>
+			<li><?php echo $this->__('Payment profile # %s: "%s".', $profileIdHtml, $this->escapeHtml($this->getObjectData($profile, 'schedule_description'))) ?></li>
+		<?php endforeach; ?>
+	</ul>
+<?php endif; ?>
 
 <?php
-switch($this->getPaymentMethod()):
-    case 'mundipagg_boleto':
-?>
-        <p class="pagSucess"><?php echo $this->__('Your order has not been paid yet. <a href="%s" target="_blank">Click here to print</a> your Boleto Bancário.', $this->getBoletoUrl()) ?></p>
-<?php endswitch; ?>
+switch ($this->getPaymentMethod()):
+	case 'mundipagg_boleto':
+		$boletoUrl = $this->getBoletoUrl();
+
+		if ($boletoUrl):?>
+			<p class="pagSucess"><?php echo $this->__('Your order has not been paid yet. <a href="%s" target="_blank">Click here to print</a> your Boleto Bancário.', $boletoUrl) ?></p>
+		<?php endif; ?>
+
+	<?php endswitch; ?>
 <!--
-<?php 
+<?php
 $helper = Mage::helper('core');
 
 $_order = Mage::getModel('sales/order')->loadByIncrementId($this->getOrderId());
@@ -106,7 +110,7 @@ if ($_order): ?>
                 <?php echo $this->__('Subtotal') ?>                
             </td>
             <td class="last a-right">
-                <span class="price"><?php echo $helper->currency($_order->getSubtotal(), true, false) ?></span>                    
+                <span class="price"><?php echo $helper->currency($_order->getSubtotal(), true, false) ?></span>
             </td>
         </tr>
         <tr class="shipping">
@@ -114,7 +118,7 @@ if ($_order): ?>
                 <?php echo $this->__('Shipping & Handling') ?>             
             </td>
             <td class="last a-right">
-                <span class="price"><?php echo $helper->currency($_order->getShippingAmount(), true, false) ?></span>                    
+                <span class="price"><?php echo $helper->currency($_order->getShippingAmount(), true, false) ?></span>
             </td>
         </tr>
 
@@ -124,7 +128,7 @@ if ($_order): ?>
                 <?php echo $this->__('Discount') ?>  
             </td>
             <td class="last a-right">
-                <span class="price"><?php echo $helper->currency($_order->getBaseDiscountAmount(), true, false) ?></span>                  
+                <span class="price"><?php echo $helper->currency($_order->getBaseDiscountAmount(), true, false) ?></span>
             </td>
         </tr>
         <?php endif; ?>
@@ -150,8 +154,8 @@ if ($_order): ?>
             <td><?php echo $_item->getName() ?></td>
             <td><?php echo $_item->getSku() ?></td>
             <td><?php echo $helper->currency($_item->getBaseRowTotal(), true, false) ?></td>
-            <td><?php echo $_item->getQtyOrdered()*1 ?></td>
-            <td class="last"><?php echo $helper->currency($_item->getBaseRowTotal()*$_item->getQtyOrdered(), true, false) ?></td>
+            <td><?php echo $_item->getQtyOrdered() * 1 ?></td>
+            <td class="last"><?php echo $helper->currency($_item->getBaseRowTotal() * $_item->getQtyOrdered(), true, false) ?></td>
         </tr>
     </tbody>
     <?php endforeach; ?>
@@ -206,10 +210,10 @@ if ($_order): ?>
             </div>
             <div class="box-content">
                 <?php echo Mage::helper('mundipagg')->__($paymentMethod) ?>
-                <?php if(($paymentMethod == 'BoletoBancario' || $paymentMethod == 'mundipagg_boleto') && $boletoUrl = $_order->getPayment()->getAdditionalInformation('BoletoUrl')):
-                ?> 
+                <?php if (($paymentMethod == 'BoletoBancario' || $paymentMethod == 'mundipagg_boleto') && $boletoUrl = $_order->getPayment()->getAdditionalInformation('BoletoUrl')):
+	?>
                     <p>
-                        <a href="<?php echo $boletoUrl;?>" target="_blank"><?php echo Mage::helper('mundipagg')->__('Print boleto');?></a>
+                        <a href="<?php echo $boletoUrl; ?>" target="_blank"><?php echo Mage::helper('mundipagg')->__('Print boleto'); ?></a>
                     </p>
                 <?php endif; ?>
             </div>
@@ -220,5 +224,7 @@ if ($_order): ?>
 -->
 
 <div class="buttons-set">
-    <button type="button" class="button" title="<?php echo $this->__('Continue Shopping') ?>" onclick="window.location='<?php echo $this->getUrl() ?>'"><span><span><?php echo $this->__('Continue Shopping') ?></span></span></button>
+	<button type="button" class="button" title="<?php echo $this->__('Continue Shopping') ?>"
+	        onclick="window.location='<?php echo $this->getUrl() ?>'">
+		<span><span><?php echo $this->__('Continue Shopping') ?></span></span></button>
 </div>
