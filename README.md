@@ -15,13 +15,11 @@ modman clone https://github.com/mundipagg/Magento.Integracao
 ## Simulator rules by amount ##
 
 ### Authorization ###
-<= $ 1.050,00 -> Authorized
->= $ 1.050,01 && < $ 1.051,71 -> Timeout
->= $ 1.500,00 -> Not Authorized
+Authorized: <= $ 1.050,00
 
-### Capture ###
-<= $ 1.050,00 -> Captured
->= $ 1.050,01 -> Not Captured
+Timeout: >= $ 1.050,01 && < $ 1.051,71
+
+Not Authorized: >= $ 1.500,00
 
 ## Documentation ##
 
