@@ -4,8 +4,8 @@
 
 modman: https://github.com/sitewards/modman-php
 
-`cd $PROJECT`
-
-`modman init`
-
-`modman clone https://github.com/mundipagg/Magento.Integracao`
+```
+cd $PROJECT
+modman init
+modman clone https://github.com/mundipagg/Magento.Integracao
+```
