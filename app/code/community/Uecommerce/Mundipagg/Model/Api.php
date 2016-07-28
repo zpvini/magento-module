@@ -1259,9 +1259,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
 						$helperLog->error($returnMessage);
 					}
-				}
 
-				return $returnMessage;
+					return $returnMessage;
+				}
 			}
 
 			if (!empty($data['BoletoTransaction'])) {
