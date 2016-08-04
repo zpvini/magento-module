@@ -6,7 +6,7 @@ $environment = Mage::getStoreConfig('payment/mundipagg_standard/environment_fcon
 if ($environment == Uecommerce_Mundipagg_Model_Source_FControlEnvironment::SANDBOX) {
 	$scriptUrl = 'https://static.fcontrol.com.br/fingerprint/hmlg-fcontrol-ed.min.js';
 } else {
-	$scriptUrl = 'https://static.fcontrol.com.br/fingerprint/fcontrol-min-ed.js';
+	$scriptUrl = 'https://static.fcontrol.com.br/fingerprint/fcontrol-ed.min.js';
 }
 
 if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL): ?>
