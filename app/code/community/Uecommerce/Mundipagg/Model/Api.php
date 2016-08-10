@@ -1900,7 +1900,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @param array  $_logRequest
 	 * @return array $_response
 	 */
-	private function sendRequest($dataToPost, $url, $_logRequest = array()) {
+	public function sendRequest($dataToPost, $url, $_logRequest = array()) {
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
 		if (empty($dataToPost) || empty($url)) {

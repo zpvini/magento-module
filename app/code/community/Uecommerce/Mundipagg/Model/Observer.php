@@ -51,20 +51,20 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 			$api->mailError(print_r($e->getMessage(), 1));
 		}
 	}
-	
-	public function canceledOrder($event){
+
+	public function canceledOrder($event) {
 		$order = $event->getOrder();
 		$state = $order->getState();
-		
-		// if a order is canceled successfuly, offline retry data must be deleted if exists
+
 		if ($state == Mage_Sales_Model_Order::STATE_CANCELED) {
 
+			// if a order is canceled successfuly, offline retry data must be deleted if exists
 			if (Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled()) {
 				$model = Mage::getModel('mundipagg/offlineretry');
 				$incrementId = $order->getIncrementId();
 				$offlineRetry = $model->loadByIncrementId($incrementId);
 
-				if(empty($offlineRetry->getData())){
+				if (empty($offlineRetry->getData())) {
 					return;
 				}
 
@@ -80,7 +80,37 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 				}
 			}
 
+			$this->cancelOrderViaApi($order);
+
 		}
+	}
+
+	private function cancelOrderViaApi(Mage_Sales_Model_Order $order) {
+		$payment = $order->getPayment();
+		$paymentMethod = $payment->getAdditionalInformation('PaymentMethod');
+		$allowedPaymentMethods = array(
+			'mundipagg_creditcardoneinstallment',
+			'mundipagg_creditcard',
+			'mundipagg_twocreditcards',
+			'mundipagg_threecreditcards',
+			'mundipagg_fourcreditcards',
+			'mundipagg_fivecreditcards'
+		);
+
+		if (!in_array($paymentMethod, $allowedPaymentMethods)) {
+			return;
+		}
+
+		$logHelper = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$api = new Uecommerce_Mundipagg_Model_Api();
+		$url = "{$this->getUrl()}/Cancel";
+
+		$incrementId = $order->getIncrementId();
+		$orderKey = $payment->getAdditionalInformation('OrderKey');
+		$data = array('OrderKey' => $orderKey);
+
+		$logHelper->info("Order #{$incrementId} | Order canceled. Cancel via MundiPagg Api...");
+		$api->sendRequest($data, $url);
 	}
 
 	/**
