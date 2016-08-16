@@ -1121,18 +1121,18 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		try {
 			// Get Webservice URL
-			$url = $standard->getURL() . '/' . $data['ManageOrderOperationEnum'];
+			$url = "{$standard->getURL()}{$data['ManageOrderOperationEnum']}";
 
 			unset($data['ManageOrderOperationEnum']);
 
 			// Get store key
 			$key = $standard->getMerchantKey();
-
 			$dataToPost = json_encode($data);
 
 			if ($standard->getDebug() == 1) {
 				$helperUtil = new Uecommerce_Mundipagg_Helper_Util();
 
+				$helperLog->debug("Url: {$url}");
 				$helperLog->debug("Request:\n{$helperUtil->jsonEncodePretty($data)}\n");
 			}
 
@@ -1144,9 +1144,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			// Set the url, number of POST vars, POST data
 			curl_setopt($ch, CURLOPT_URL, $url);
-
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
-
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 			// Execute post
@@ -1267,6 +1265,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$returnMessage = "OK | {$returnMessageLabel} | Order already canceled.";
 
 						$helperLog->info($returnMessage);
+
 						return $returnMessage;
 					}
 
