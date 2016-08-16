@@ -1622,7 +1622,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 		$info = $this->getInfoInstance();
 
-		$errorMsg = false;
+		$errorMsg = array();
 
 		// Check if we are dealing with a new Credit Card
 		$isToken = $info->getAdditionalInformation('mundipagg_creditcard_token_1_1');
@@ -1632,33 +1632,43 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			$ccNumber = $info->getCcNumber();
 
+			// refresh quote to remove promotions from others payment methods
+			try {
+				$this->getQuote()->save();
+
+			} catch (Exception $e) {
+				$errorMsg[] = $e->getMessage();
+
+			}
+
 			// remove credit card number delimiters such as "-" and space
 			$ccNumber = preg_replace('/[\-\s]+/', '', $ccNumber);
 			$info->setCcNumber($ccNumber);
 
 			if (in_array($info->getCcType(), $availableTypes)) {
 				if (!Mage::helper('mundipagg')->validateCcNum($ccNumber) && $info->getCcType() != 'HI') {
-					$errorMsg = Mage::helper('payment')->__('Invalid Credit Card Number');
+					$errorMsg[] = Mage::helper('payment')->__('Invalid Credit Card Number');
 				}
 			} else {
-				$errorMsg = Mage::helper('payment')->__('Credit card type is not allowed for this payment method.');
+				$errorMsg[] = Mage::helper('payment')->__('Credit card type is not allowed for this payment method.');
 			}
 
 			if (!$info->getCcType()) {
-				$errorMsg = Mage::helper('payment')->__('Please select your credit card type.');
+				$errorMsg[] = Mage::helper('payment')->__('Please select your credit card type.');
 			}
 
 			if (!$info->getCcOwner()) {
-				$errorMsg = Mage::helper('payment')->__('Please enter your credit card holder name.');
+				$errorMsg[] = Mage::helper('payment')->__('Please enter your credit card holder name.');
 			}
 
 			if ($info->getCcType() && $info->getCcType() != 'SS' && !Mage::helper('mundipagg')->validateExpDate('20' . $info->getCcExpYear(), $info->getCcExpMonth())) {
-				$errorMsg = Mage::helper('payment')->__('Incorrect credit card expiration date.');
+				$errorMsg[] = Mage::helper('payment')->__('Incorrect credit card expiration date.');
 			}
 		}
 
 		if ($errorMsg) {
-			Mage::throwException($errorMsg);
+			$json = json_encode($errorMsg);
+			Mage::throwException($json);
 		}
 
 		return $this;
@@ -1845,8 +1855,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	private function offlineRetryCancelOrSuccessOrder($orderIncrementId) {
 		$offlineRetryIsEnabled = Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled();
 
-		if($offlineRetryIsEnabled == false){
+		if ($offlineRetryIsEnabled == false) {
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
+
 			return;
 		}
 
