@@ -695,48 +695,61 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				$TransactionReference = $transaction->getAdditionalInformation('TransactionReference');
 			}
 
-			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
-			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
-			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
-			$data['OrderKey'] = $payment->getAdditionalInformation('OrderKey');
-			$data['ManageOrderOperationEnum'] = 'Capture';
+//			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
+//			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
+//			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
+			$orderkeys = $payment->getAdditionalInformation('OrderKey');
 
-			//Call Gateway Api
-			$api = Mage::getModel('mundipagg/api');
+			if (!is_array($orderkeys)) {
+//				$errMsg = "Impossible to capture: orderkeys must be an array";
+//				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+//
+//				$helperLog->error($errMsg);
+//				Mage::throwException($errMsg);
+				$orderkeys = array($orderkeys);
+			}
 
-			$capture = $api->manageOrderRequest($data, $this);
+			foreach ($orderkeys as $orderkey) {
+				$data['OrderKey'] = $orderkey;
+				$data['ManageOrderOperationEnum'] = 'Capture';
 
-			// Xml
-			$xml = $capture['result'];
-			$json = json_encode($xml);
+				//Call Gateway Api
+				$api = Mage::getModel('mundipagg/api');
 
-			$capture['result'] = array();
-			$capture['result'] = json_decode($json, true);
+				$capture = $api->manageOrderRequest($data, $this);
 
-			// Save transactions
-			if (isset($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
-				if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-					$trans = $capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+				// Xml
+				$xml = $capture['result'];
+				$json = json_encode($xml);
 
-					$this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
-				} else {
-					$CapturedAmountInCents = 0;
+				$capture['result'] = array();
+				$capture['result'] = json_decode($json, true);
 
-					foreach ($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
-						$TransactionKey = $trans['TransactionKey'];
-						$CapturedAmountInCents += $trans['CapturedAmountInCents'];
+				// Save transactions
+				if (isset($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
+					if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
+						$trans = $capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+
+						$this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
+					} else {
+						$CapturedAmountInCents = 0;
+
+						foreach ($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
+							$TransactionKey = $trans['TransactionKey'];
+							$CapturedAmountInCents += $trans['CapturedAmountInCents'];
+						}
+
+						$trans = array();
+						$trans['CapturedAmountInCents'] = $CapturedAmountInCents;
+						$trans['Success'] = true;
+
+						$this->_addTransaction($payment, $TransactionKey, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
 					}
+				} else {
+					Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
-					$trans = array();
-					$trans['CapturedAmountInCents'] = $CapturedAmountInCents;
-					$trans['Success'] = true;
-
-					$this->_addTransaction($payment, $TransactionKey, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
+					return false;
 				}
-			} else {
-				Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
-
-				return false;
 			}
 		} else {
 			Mage::throwException(Mage::helper('mundipagg')->__('No OrderKey found.'));
@@ -1363,7 +1376,18 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 
 		if (isset($approvalRequest['OrderKey'])) {
-			$payment->setAdditionalInformation('OrderKey', $approvalRequest['OrderKey']);
+			$orderKey1 = $payment->getAdditionalInformation('OrderKey');
+			$orderKey2 = $approvalRequest['OrderKey'];
+			$orderKeys = array();
+
+			if (!is_null($orderKey1) && $orderKey1 != $orderKey2) {
+				$orderKeys[] = $orderKey1;
+				$orderKeys[] = $orderKey2;
+			} else {
+				$orderKeys[] = $orderKey2;
+			}
+
+			$payment->setAdditionalInformation('OrderKey', $orderKeys);
 		}
 
 		if (isset($approvalRequest['OrderReference'])) {
@@ -1452,62 +1476,76 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				$TransactionReference = $transaction->getAdditionalInformation('TransactionReference');
 			}
 
-			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
-			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
-			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
-			$data['OrderKey'] = $payment->getAdditionalInformation('OrderKey');
-			$data['ManageOrderOperationEnum'] = 'Cancel';
+//			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
+//			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
+//			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
+//			$data['OrderKey'] = $payment->getAdditionalInformation('OrderKey');
+			$orderkeys = $payment->getAdditionalInformation('OrderKey');
 
-			//Call Gateway Api
-			$api = Mage::getModel('mundipagg/api');
-
-			$void = $api->manageOrderRequest($data, $this);
-
-			// Xml
-			$xml = $void['result'];
-			$json = json_encode($xml);
-
-			$void['result'] = array();
-			$void['result'] = json_decode($json, true);
-
-			// We record transaction(s)
-			if (count($void['result']['CreditCardTransactionResultCollection']) > 0) {
-				if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-					$trans = $void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
-
-					$this->_addTransaction($payment, $trans['TransactionKey'], 'void', $trans);
-				} else {
-					foreach ($void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
-						$this->_addTransaction($payment, $trans['TransactionKey'], 'void', $trans, $key);
-					}
-				}
+			if (!is_array($orderkeys)) {
+//				$errMsg = "Impossible to capture: orderkeys must be an array";
+//				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+//
+//				$helperLog->error($errMsg);
+//				Mage::throwException($errMsg);
+				$orderkeys = array($orderkeys);
 			}
 
-			if (isset($void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
-				$order = $payment->getOrder();
-				$order->setBaseDiscountRefunded($order->getBaseDiscountInvoiced());
-				$order->setBaseShippingRefunded($order->getBaseShippingAmount());
-				$order->setBaseShippingTaxRefunded($order->getBaseShippingTaxInvoiced());
-				$order->setBaseSubtotalRefunded($order->getBaseSubtotalInvoiced());
-				$order->setBaseTaxRefunded($order->getBaseTaxInvoiced());
-				$order->setBaseTotalOnlineRefunded($order->getBaseGrandTotal());
-				$order->setDiscountRefunded($order->getDiscountInvoiced());
-				$order->setShippinRefunded($order->getShippingInvoiced());
-				$order->setShippinTaxRefunded($order->getShippingTaxAmount());
-				$order->setSubtotalRefunded($order->getSubtotalInvoiced());
-				$order->setTaxRefunded($order->getTaxInvoiced());
-				$order->setTotalOnlineRefunded($order->getBaseGrandTotal());
-				$order->setTotalRefunded($order->getBaseGrandTotal());
-				$order->save();
+			foreach ($orderkeys as $orderkey) {
+				$data['ManageOrderOperationEnum'] = 'Cancel';
+				$data['OrderKey'] = $orderkey;
 
-				return $this;
-			} else {
-				$error = Mage::helper('mundipagg')->__('Unable to void order.');
+				//Call Gateway Api
+				$api = Mage::getModel('mundipagg/api');
 
-				//Log error
-				Mage::log($error, null, 'Uecommerce_Mundipagg.log');
+				$void = $api->manageOrderRequest($data, $this);
 
-				Mage::throwException($error);
+				// Xml
+				$xml = $void['result'];
+				$json = json_encode($xml);
+
+				$void['result'] = array();
+				$void['result'] = json_decode($json, true);
+
+				// We record transaction(s)
+				if (count($void['result']['CreditCardTransactionResultCollection']) > 0) {
+					if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
+						$trans = $void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+
+						$this->_addTransaction($payment, $trans['TransactionKey'], 'void', $trans);
+					} else {
+						foreach ($void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
+							$this->_addTransaction($payment, $trans['TransactionKey'], 'void', $trans, $key);
+						}
+					}
+				}
+
+				if (isset($void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
+					$order = $payment->getOrder();
+					$order->setBaseDiscountRefunded($order->getBaseDiscountInvoiced());
+					$order->setBaseShippingRefunded($order->getBaseShippingAmount());
+					$order->setBaseShippingTaxRefunded($order->getBaseShippingTaxInvoiced());
+					$order->setBaseSubtotalRefunded($order->getBaseSubtotalInvoiced());
+					$order->setBaseTaxRefunded($order->getBaseTaxInvoiced());
+					$order->setBaseTotalOnlineRefunded($order->getBaseGrandTotal());
+					$order->setDiscountRefunded($order->getDiscountInvoiced());
+					$order->setShippinRefunded($order->getShippingInvoiced());
+					$order->setShippinTaxRefunded($order->getShippingTaxAmount());
+					$order->setSubtotalRefunded($order->getSubtotalInvoiced());
+					$order->setTaxRefunded($order->getTaxInvoiced());
+					$order->setTotalOnlineRefunded($order->getBaseGrandTotal());
+					$order->setTotalRefunded($order->getBaseGrandTotal());
+					$order->save();
+
+					return $this;
+				} else {
+					$error = Mage::helper('mundipagg')->__('Unable to void order.');
+
+					//Log error
+					Mage::log($error, null, 'Uecommerce_Mundipagg.log');
+
+					Mage::throwException($error);
+				}
 			}
 		} else {
 			Mage::throwException(Mage::helper('mundipagg')->__('No OrderKey found.'));

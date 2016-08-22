@@ -220,7 +220,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 							}
 						}
 
-						switch ($approvalRequestSuccess){
+						switch ($approvalRequestSuccess) {
 							case 'success':
 								$this->_redirect('mundipagg/standard/success');
 								break;
