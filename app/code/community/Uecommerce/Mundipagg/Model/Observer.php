@@ -106,11 +106,15 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$url = "{$this->getUrl()}/Cancel";
 
 		$incrementId = $order->getIncrementId();
-		$orderKey = $payment->getAdditionalInformation('OrderKey');
-		$data = array('OrderKey' => $orderKey);
+		$orderKeys = $payment->getAdditionalInformation('OrderKey');
 
-		$logHelper->info("Order #{$incrementId} | Order canceled. Cancel via MundiPagg Api...");
-		$api->sendRequest($data, $url);
+		foreach ($orderKeys as $orderKey) {
+			$data = array('OrderKey' => $orderKey);
+
+			$logHelper->info("Order #{$incrementId} | Order canceled. Cancel via MundiPagg Api...");
+			$api->sendRequest($data, $url);
+		}
+
 	}
 
 	/**

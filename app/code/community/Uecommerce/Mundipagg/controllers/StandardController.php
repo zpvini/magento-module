@@ -317,6 +317,9 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 		$session = Mage::getSingleton('checkout/session');
 		$approvalRequestSuccess = $session->getApprovalRequestSuccess();
 
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$log->info("teste: {$approvalRequestSuccess}");
+
 		if (!$this->getRequest()->isPost() && ($approvalRequestSuccess == 'success' || $approvalRequestSuccess == 'debit')) {
 			if (!$session->getLastSuccessQuoteId()) {
 				$this->_redirect('checkout/cart');
