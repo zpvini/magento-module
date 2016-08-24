@@ -67,24 +67,20 @@ if ($paymentAction == 'authorize') {
 		$orderKeysQty = count($orderKeys);
 
 		if ($orderKeysQty > 0):
-			echo '<br>';
-
 			if ($orderKeysQty == 1):
-				echo "{$helper->__('OrderKey')}:<br>";
+				echo "{$helper->__('OrderKey')}: {$orderKeys[0]}<br>";
 			else:
 				echo "{$helper->__('OrderKeys')}:<br>";
+
+				foreach ($orderKeys as $orderKey):
+					echo "$orderKey<br>";
+				endforeach;
+
 			endif;
-
-			foreach ($orderKeys as $orderKey):
-				echo "$orderKey<br>";
-			endforeach;
-
-			echo '<br>';
 
 			if ($OrderReference = $_order->getPayment()->getAdditionalInformation('OrderReference')):
 				echo $helper->__('OrderReference') . ': ' . $OrderReference . '<br/>';
 			endif;
-
 		endif;
 
 		// Informations about transaction

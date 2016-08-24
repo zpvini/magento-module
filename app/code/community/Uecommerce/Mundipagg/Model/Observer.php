@@ -64,24 +64,22 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 				$incrementId = $order->getIncrementId();
 				$offlineRetry = $model->loadByIncrementId($incrementId);
 
-				if (empty($offlineRetry->getData())) {
-					return;
-				}
+				if (!empty($offlineRetry->getData())) {
+					$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+					$helperLog->setLogLabel("Order #{$incrementId} canceled");
 
-				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-				$helperLog->setLogLabel("Order #{$incrementId} canceled");
+					try {
+						$offlineRetry->delete();
+						$helperLog->info("Offline retry data deleted successfully.");
 
-				try {
-					$offlineRetry->delete();
-					$helperLog->info("Offline retry data deleted successfully.");
-
-				} catch (Exception $e) {
-					$helperLog->info("Offline retry data cannot be deleted: {$e}");
+					} catch (Exception $e) {
+						$helperLog->info("Offline retry data cannot be deleted: {$e}");
+					}
 				}
 			}
 
+			//cancel Mundi transactions via API
 			$this->cancelOrderViaApi($order);
-
 		}
 	}
 
@@ -98,7 +96,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		);
 
 		if (!in_array($paymentMethod, $allowedPaymentMethods)) {
-			Mage::log("teste1", Zend_Log::DEBUG, "teste.log");
 			return;
 		}
 
@@ -107,9 +104,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$url = "{$this->getUrl()}/Cancel";
 
 		$incrementId = $order->getIncrementId();
-		$orderKeys = (array) $payment->getAdditionalInformation('OrderKey');
-
-		Mage::log("count: ".count($orderKeys), Zend_Log::DEBUG, "teste.log");
+		$orderKeys = (array)$payment->getAdditionalInformation('OrderKey');
 
 		foreach ($orderKeys as $orderKey) {
 			$data = array('OrderKey' => $orderKey);
