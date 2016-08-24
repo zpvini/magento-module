@@ -8,7 +8,7 @@ class Uecommerce_Mundipagg_Model_Urlvalidation extends Mage_Core_Model_Config_Da
 		$path = null;
 
 		if (isset($parsedUrl['path'])) {
-			$path = substr_replace('/', $parsedUrl['path']);
+			$path = str_replace("/","", $parsedUrl['path']);
 		}
 
 		if (is_null($path) || strtolower($path) != 'sale') {

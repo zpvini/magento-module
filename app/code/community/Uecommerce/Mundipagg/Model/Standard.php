@@ -634,7 +634,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					if (
 						count($creditCardTransactionResultCollection) > 1 &&
 						$this->getAntiFraud() == 0 &&
-						$this->getPaymentAction() == 'order'
+						$this->getPaymentAction() == 'order' &&
+						$order->getPaymentAuthorizationAmount() == $order->getGrandTotal()
 					) {
 						$this->captureAndcreateInvoice($payment);
 					}
@@ -642,6 +643,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			}
 
 			return $this;
+
 		} catch (Exception $e) {
 			Mage::logException($e);
 		}
@@ -690,16 +692,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 //			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
 //			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
 //			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
-			$orderkeys = $payment->getAdditionalInformation('OrderKey');
-
-			if (!is_array($orderkeys)) {
-//				$errMsg = "Impossible to capture: orderkeys must be an array";
-//				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-//
-//				$helperLog->error($errMsg);
-//				Mage::throwException($errMsg);
-				$orderkeys = array($orderkeys);
-			}
+			$orderkeys = (array) $payment->getAdditionalInformation('OrderKey');
 
 			foreach ($orderkeys as $orderkey) {
 				$data['OrderKey'] = $orderkey;
@@ -1366,9 +1359,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			$order->setPaymentAuthorizationAmount($authorizedAmount);
 			$order->save();
-
-			$helperLog->info("autorizado: {$authorizedAmount}");
-			$helperLog->info("total: {$order->getGrandTotal()}");
 
 			if ($authorizedAmount == $order->getGrandTotal()) {
 				Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');

@@ -216,6 +216,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 								$onepage->getAntiFraud() == 0 &&
 								$onepage->getPaymentAction() == 'order'
 							) {
+								Mage::log("teste1", Zend_Log::INFO,"teste.log");
 								$resultCapture = $onepage->captureAndcreateInvoice($info);
 							}
 						}
@@ -317,9 +318,6 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 		$session = Mage::getSingleton('checkout/session');
 		$approvalRequestSuccess = $session->getApprovalRequestSuccess();
 
-		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-		$log->info("teste: {$approvalRequestSuccess}");
-
 		if (!$this->getRequest()->isPost() && ($approvalRequestSuccess == 'success' || $approvalRequestSuccess == 'debit')) {
 			if (!$session->getLastSuccessQuoteId()) {
 				$this->_redirect('checkout/cart');
@@ -357,6 +355,9 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 				// Redirect to homepage
 				$this->_redirect('');
 			}
+		} else if ($approvalRequestSuccess == 'cancel') {
+			$this->_redirect('mundipagg/standard/cancel');
+
 		} else {
 			// Get posted data
 			$postData = $this->getRequest()->getPost();

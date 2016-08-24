@@ -98,6 +98,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		);
 
 		if (!in_array($paymentMethod, $allowedPaymentMethods)) {
+			Mage::log("teste1", Zend_Log::DEBUG, "teste.log");
 			return;
 		}
 
@@ -106,7 +107,9 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$url = "{$this->getUrl()}/Cancel";
 
 		$incrementId = $order->getIncrementId();
-		$orderKeys = $payment->getAdditionalInformation('OrderKey');
+		$orderKeys = (array) $payment->getAdditionalInformation('OrderKey');
+
+		Mage::log("count: ".count($orderKeys), Zend_Log::DEBUG, "teste.log");
 
 		foreach ($orderKeys as $orderKey) {
 			$data = array('OrderKey' => $orderKey);
