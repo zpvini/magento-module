@@ -64,24 +64,22 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 				$incrementId = $order->getIncrementId();
 				$offlineRetry = $model->loadByIncrementId($incrementId);
 
-				if (empty($offlineRetry->getData())) {
-					return;
-				}
+				if (!empty($offlineRetry->getData())) {
+					$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+					$helperLog->setLogLabel("Order #{$incrementId} canceled");
 
-				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-				$helperLog->setLogLabel("Order #{$incrementId} canceled");
+					try {
+						$offlineRetry->delete();
+						$helperLog->info("Offline retry data deleted successfully.");
 
-				try {
-					$offlineRetry->delete();
-					$helperLog->info("Offline retry data deleted successfully.");
-
-				} catch (Exception $e) {
-					$helperLog->info("Offline retry data cannot be deleted: {$e}");
+					} catch (Exception $e) {
+						$helperLog->info("Offline retry data cannot be deleted: {$e}");
+					}
 				}
 			}
 
+			//cancel Mundi transactions via API
 			$this->cancelOrderViaApi($order);
-
 		}
 	}
 
@@ -106,11 +104,15 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$url = "{$this->getUrl()}/Cancel";
 
 		$incrementId = $order->getIncrementId();
-		$orderKey = $payment->getAdditionalInformation('OrderKey');
-		$data = array('OrderKey' => $orderKey);
+		$orderKeys = (array)$payment->getAdditionalInformation('OrderKey');
 
-		$logHelper->info("Order #{$incrementId} | Order canceled. Cancel via MundiPagg Api...");
-		$api->sendRequest($data, $url);
+		foreach ($orderKeys as $orderKey) {
+			$data = array('OrderKey' => $orderKey);
+
+			$logHelper->info("Order #{$incrementId} | Order canceled. Cancel via MundiPagg Api...");
+			$api->sendRequest($data, $url);
+		}
+
 	}
 
 	/**

@@ -180,9 +180,10 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 						endswitch;
 
 						$resultPayment = $onepage->doPayment($payment, $order);
+						$approvalRequestSuccess = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
 
 						// Send new order email when not in admin and payment is success
-						if (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess() == 'success') {
+						if ($approvalRequestSuccess == 'success') {
 							if (Mage::app()->getStore()->getCode() != 'admin') {
 								$order->sendNewOrderEmail();
 							}
@@ -199,6 +200,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 							$trans = $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
 
 							$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
+
 						} else {
 							$transactions = $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
 
@@ -214,16 +216,34 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 								$onepage->getAntiFraud() == 0 &&
 								$onepage->getPaymentAction() == 'order'
 							) {
+								Mage::log("teste1", Zend_Log::INFO,"teste.log");
 								$resultCapture = $onepage->captureAndcreateInvoice($info);
 							}
 						}
 
-						// Redirect
-						if (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess() == 'success') {
-							$this->_redirect('mundipagg/standard/success');
-						} else {
-							$this->_redirect('mundipagg/standard/partial');
+						switch ($approvalRequestSuccess) {
+							case 'success':
+								$this->_redirect('mundipagg/standard/success');
+								break;
+
+							case 'partial':
+								$this->_redirect('mundipagg/standard/partial');
+								break;
+
+							case 'cancel':
+								$this->_redirect('mundipagg/standard/cancel');
+								break;
+
+							default:
+								Mage::throwException("Unexpected approvalRequestSuccess: {$approvalRequestSuccess}");
 						}
+
+//						// Redirect
+//						if ($approvalRequestSuccess == 'success') {
+//							$this->_redirect('mundipagg/standard/success');
+//						} else {
+//							$this->_redirect('mundipagg/standard/partial');
+//						}
 					}
 				}
 			} catch (Exception $e) {
@@ -335,10 +355,12 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 				// Redirect to homepage
 				$this->_redirect('');
 			}
+		} else if ($approvalRequestSuccess == 'cancel') {
+			$this->_redirect('mundipagg/standard/cancel');
+
 		} else {
 			// Get posted data
 			$postData = $this->getRequest()->getPost();
-
 			$api = Mage::getModel('mundipagg/api');
 
 			// Process order

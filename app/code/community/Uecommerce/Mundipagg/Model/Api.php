@@ -1121,18 +1121,17 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		try {
 			// Get Webservice URL
-			$url = $standard->getURL() . '/' . $data['ManageOrderOperationEnum'];
+			$url = "{$standard->getURL()}{$data['ManageOrderOperationEnum']}";
 
 			unset($data['ManageOrderOperationEnum']);
 
 			// Get store key
 			$key = $standard->getMerchantKey();
-
 			$dataToPost = json_encode($data);
+			$helperUtil = new Uecommerce_Mundipagg_Helper_Util();
 
 			if ($standard->getDebug() == 1) {
-				$helperUtil = new Uecommerce_Mundipagg_Helper_Util();
-
+				$helperLog->debug("Url: {$url}");
 				$helperLog->debug("Request:\n{$helperUtil->jsonEncodePretty($data)}\n");
 			}
 
@@ -1144,27 +1143,19 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			// Set the url, number of POST vars, POST data
 			curl_setopt($ch, CURLOPT_URL, $url);
-
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
-
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 			// Execute post
 			$_response = curl_exec($ch);
+			$xml = simplexml_load_string($_response);
+			$json = $helperUtil->jsonEncodePretty($xml);
 
 			// Close connection
 			curl_close($ch);
 
 			if ($standard->getDebug() == 1) {
-				$xml = simplexml_load_string($_response);
-				$domXml = new DOMDocument('1.0');
-
-				$domXml->formatOutput = true;
-				$domXml->loadXML($xml->asXML());
-
-				$xml = $domXml->saveXML();
-
-				$helperLog->debug("Response:\n{$xml}\n");
+				$helperLog->debug("Response:\n{$json}\n");
 			}
 
 			// Return
@@ -1267,6 +1258,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$returnMessage = "OK | {$returnMessageLabel} | Order already canceled.";
 
 						$helperLog->info($returnMessage);
+
 						return $returnMessage;
 					}
 
@@ -1921,7 +1913,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$requestRawJson = json_encode($dataToPost);
 			$requestJSON = $this->helperUtil->jsonEncodePretty($_logRequest);
 
-			$helperLog->debug("Request: {$requestJSON}\n");
+			$helperLog->debug("Request:\n{$requestJSON}\n");
 		}
 
 		$ch = curl_init();
@@ -1945,7 +1937,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$responseArray = json_decode($responseJSON, true);
 
 		if ($debug) {
-			$helperLog->debug("Response: {$responseJSON} \n");
+			$helperLog->debug("Response:\n{$responseJSON} \n");
 		}
 
 		$responseData = array(
