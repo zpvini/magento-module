@@ -383,4 +383,33 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 			}
 		}
 	}
+
+	public function catalogProductSaveBefore($event) {
+		$product = $event->getProduct();
+		$recurrentOption = (boolean)$product->getMundipaggRecurrent();
+
+		if ($recurrentOption) {
+			$isRequired = true;
+		} else {
+			$isRequired = false;
+		}
+
+		try {
+			$attribute = new Mage_Eav_Model_Entity_Attribute();
+			$attribute->loadByCode(Mage_Catalog_Model_Product::ENTITY, 'mundipagg_recurrences');
+			$attribute->setIsRequired($isRequired);
+			$attribute->save();
+
+		} catch (Mage_Adminhtml_Exception $e) {
+			$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+			$helper = Mage::helper('mundipagg');
+
+			$errMsg = "{$helper->__("Internal error")}: {$e->getMessage()}";
+			$log->error($helper->__("Unable to save product configuration: {$e}"));
+
+			throw new Mage_Adminhtml_Exception($errMsg);
+		}
+
+	}
+
 }

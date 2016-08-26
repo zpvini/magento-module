@@ -31,6 +31,8 @@ app/design/adminhtml/default/default/template/mundipagg/payment/info/mundipagg.p
 app/design/adminhtml/default/default/template/mundipagg/system/config/button.phtml            app/design/adminhtml/default/default/template/mundipagg/system/config/button.phtml
 app/design/adminhtml/default/default/template/mundipagg/boleto.phtml            app/design/adminhtml/default/default/template/mundipagg/boleto.phtml
 # js
+js/uecommerce/recurrency.js            js/uecommerce/recurrency.js
+js/uecommerce/jquery-1.12.4.min.js            js/uecommerce/jquery-1.12.4.min.js
 js/uecommerce/fcontrol/hmlg-fcontrol-ed.min.js            js/uecommerce/fcontrol/hmlg-fcontrol-ed.min.js
 js/uecommerce/mundipagg.js            js/uecommerce/mundipagg.js
 # skin

@@ -197,3 +197,5 @@
 "Max time to retry in minutes","Tempo máximo para retentativa em minutos"
 "Max time to wait for an authorization. After this, the order will be cancelled.","Tempo máximo para esperar por uma autorização. Após este prazo, pedido será cancelado."
 "Fingerprint environment","Ambiente fingerprint"
+"Unable to save product configuration","Não foi possível salvar a configuração do produto"
+"Internal error","Erro interno"
