@@ -1317,6 +1317,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			switch ($lowerStatus) {
 				case 'captured':
+					$helperLog->debug("Status captured, capturing transaction amount: {$capturedAmountInCents}");
+					$amountToCapture = $capturedAmountInCents * 0.01;
+
+					return $this->captureTransaction($order, $amountToCapture, $transactionKey);
+					break;
+
 				case 'paid':
 				case 'overpaid':
 					if ($order->canUnhold()) {
@@ -1555,6 +1561,82 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		} else {
 			throw new RuntimeException("Order cannot be canceled.");
 		}
+	}
+
+	private function captureTransaction(Mage_Sales_Model_Order $order, $amountToCapture, $transactionKey) {
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$log->setLogLabel("#{$order->getIncrementId()}");
+
+		$totalPaid = $order->getTotalPaid();
+		$grandTotal = $order->getGrandTotal();
+		$orderIncrementId = $order->getIncrementId();
+		$transaction = null;
+
+		if (is_null($totalPaid)) {
+			$totalPaid = 0;
+		}
+
+		$log->debug("total paid to update: {$totalPaid}");
+
+		$totalPaid += $amountToCapture;
+
+		$transactions = Mage::getModel('sales/order_payment_transaction')
+			->getCollection()
+			->addAttributeToFilter('order_id', array('eq' => $order->getEntityId()))
+			->addAttributeToFilter('is_closed', array('eq' => false));
+
+		foreach ($transactions as $i) {
+			$orderTransactionKey = $i->getAdditionalInformation('TransactionKey');
+
+			// transactionKey found
+			if ($orderTransactionKey == $transactionKey) {
+				$log->debug("transaction found...");
+				$transaction = $i;
+				break;
+			}
+		}
+
+		if (is_null($transaction)) {
+			return "KO | #{$order->getIncrementId()} | Unexpected error: transaction {$transactionKey} not found";
+
+		} else {
+
+			if ($transaction->getIsClosed() == '0') {
+				try {
+					$resource = Mage::getSingleton('core/resource');
+					$conn = $resource->getConnection('core_write');
+					$query = "UPDATE sales_payment_transaction SET is_closed = TRUE WHERE transaction_id={$transaction->getId()}";
+
+					$conn->query($query);
+					$log->info("Transaction {$transactionKey} closed");
+
+				} catch (Exception $e) {
+					$log->error("Unable to close transaction {$transactionKey}");
+					throw new RuntimeException($e);
+				}
+			}
+		}
+
+		if ($totalPaid < $grandTotal) {
+			$order->setStatus('underpaid');
+
+		} elseif ($totalPaid > $grandTotal) {
+			$order->setStatus('overpaid');
+		}
+
+		$order->setTotalPaid($totalPaid);
+
+		try {
+			$log->info("#{$orderIncrementId} | total paid updated: {$totalPaid}");
+			$order->save();
+
+		} catch (Exception $e) {
+			$log->error("#{$orderIncrementId} | Unable to update total paid.");
+			throw new RuntimeException($e);
+		}
+
+		return "OK | Order {$orderIncrementId} | Captured amount: {$capturedAmountInCents}";
+
 	}
 
 	/**
