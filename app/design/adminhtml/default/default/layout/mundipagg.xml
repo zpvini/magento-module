@@ -42,7 +42,7 @@
     <adminhtml_catalog_product_edit>
         <reference name="head">
             <action method="addJs">
-                <file>uecommerce/jquery-1.12.4.min.js</file>
+                <file>uecommerce/jquery-3.1.0.min.js</file>
             </action>
             <action method="addJs">
                 <file>uecommerce/recurrency.js</file>

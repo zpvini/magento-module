@@ -32,9 +32,9 @@ app/design/adminhtml/default/default/template/mundipagg/system/config/button.pht
 app/design/adminhtml/default/default/template/mundipagg/boleto.phtml            app/design/adminhtml/default/default/template/mundipagg/boleto.phtml
 # js
 js/uecommerce/recurrency.js            js/uecommerce/recurrency.js
-js/uecommerce/jquery-1.12.4.min.js            js/uecommerce/jquery-1.12.4.min.js
 js/uecommerce/fcontrol/hmlg-fcontrol-ed.min.js            js/uecommerce/fcontrol/hmlg-fcontrol-ed.min.js
 js/uecommerce/mundipagg.js            js/uecommerce/mundipagg.js
+js/uecommerce/jquery-3.1.0.min.js            js/uecommerce/jquery-3.1.0.min.js
 # skin
 skin/frontend/base/default/images/mundipagg/ajax-loader.gif            skin/frontend/base/default/images/mundipagg/ajax-loader.gif
 skin/frontend/base/default/images/mundipagg/boleto.jpg            skin/frontend/base/default/images/mundipagg/boleto.jpg
