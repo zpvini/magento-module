@@ -731,8 +731,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						$this->_addTransaction($payment, $TransactionKey, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
 					}
 				} else {
-					$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-					$log->info("TESTE2: cancel");
 					Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
 					return false;
