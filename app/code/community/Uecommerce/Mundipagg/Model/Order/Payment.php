@@ -24,24 +24,20 @@ class Uecommerce_Mundipagg_Model_Order_Payment {
 		}
 
 		$invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE);
-		$invoice->register()->pay();
-
-		$transactionSave = Mage::getModel('core/resource_transaction')
-			->addObject($invoice)
-			->addObject($invoice->getOrder());
+		$invoice->register();
+		$invoice->getOrder()->setCustomerNoteNotify(true);
+		$invoice->getOrder()->setIsInProcess(true);
+		$invoice->setCanVoidFlag(true);
+		$invoice->pay();
 
 		try {
+			$transactionSave = Mage::getModel('core/resource_transaction')
+				->addObject($invoice)
+				->addObject($invoice->getOrder());
+
 			$transactionSave->save();
 
 		} catch (Exception $e) {
-			Mage::throwException($e->getMessage());
-		}
-
-		try{
-			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING);
-			$order->save();
-
-		} catch (Exception $e){
 			Mage::throwException($e->getMessage());
 		}
 

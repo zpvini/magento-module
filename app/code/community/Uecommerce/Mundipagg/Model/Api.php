@@ -1633,19 +1633,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			return self::TRANSACTION_ALREADY_CAPTURED;
 		}
 
-		try {
-			$resource = Mage::getSingleton('core/resource');
-			$conn = $resource->getConnection('core_write');
-			$query = "UPDATE sales_payment_transaction SET is_closed = TRUE WHERE transaction_id={$transaction->getId()}";
-
-			$conn->query($query);
-			$log->info("Magento payment transaction closed");
-
-		} catch (Exception $e) {
-			$log->error("Unable to close transaction. Error: {$e->getMessage()}");
-			throw new RuntimeException($e);
-		}
-
 		if ($totalPaid < $grandTotal) {
 			$order->setStatus('underpaid');
 		} elseif ($totalPaid > $grandTotal) {
@@ -1654,19 +1641,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		if ($totalPaid == $grandTotal) {
 			// reset total paid, preparing to invoice
-			$totalPaid = 0;
 			$createInvoice = true;
-
-			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING)
-				->setStatus(Mage_Sales_Model_Order::STATE_PROCESSING);
-		}
-
-		try {
-			$order->setTotalPaid($totalPaid);
-			$order->save();
-
-		} catch (Exception $e) {
-			throw new RuntimeException($e);
 		}
 
 		if ($createInvoice) {
@@ -1694,6 +1669,27 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 				throw new RuntimeException($error);
 			}
+		}
+
+		try {
+			$order->setTotalPaid($totalPaid);
+			$order->save();
+
+		} catch (Exception $e) {
+			throw new RuntimeException($e);
+		}
+
+		try {
+			$resource = Mage::getSingleton('core/resource');
+			$conn = $resource->getConnection('core_write');
+			$query = "UPDATE sales_payment_transaction SET is_closed = TRUE WHERE transaction_id={$transaction->getId()}";
+
+			$conn->query($query);
+			$log->info("Magento payment transaction closed");
+
+		} catch (Exception $e) {
+			$log->error("Unable to close transaction. Error: {$e->getMessage()}");
+			throw new RuntimeException($e);
 		}
 
 		$log->info("Captured amount: {$amountToCapture}");
