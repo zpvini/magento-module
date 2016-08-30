@@ -4,7 +4,6 @@ class Uecommerce_Mundipagg_Model_Order_Payment {
 
 	const ERR_CANNOT_CREATE_INVOICE                  = 1;
 	const ERR_CANNOT_CREATE_INVOICE_WITHOUT_PRODUCTS = 2;
-	const SUCCESS                                    = 3;
 
 	/**
 	 * @param Mage_Sales_Model_Order $order

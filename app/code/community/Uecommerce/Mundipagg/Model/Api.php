@@ -1327,18 +1327,36 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$return = $this->captureTransaction($order, $amountToCapture, $transactionKey);
 
 					} catch (Exception $e) {
-						return "KO | Cannot capture transaction. Error: {$e->getMessage()}";
+						$orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
+						$error = $e->getMessage();
+
+						$helperLog->setLogLabel("#{$orderReference} | {$transactionKey}");
+
+						switch ($error) {
+							case $orderPayment::ERR_CANNOT_CREATE_INVOICE:
+								$error = "Can't created invoice";
+								$helperLog->error($error);
+								break;
+
+							case $orderPayment::ERR_CANNOT_CREATE_INVOICE_WITHOUT_PRODUCTS:
+								$error = "Can't create invoice without products";
+								$helperLog->error($error);
+								break;
+
+							default:
+								$error = "Can't create invoice, unexpected error: {$error}";
+								$helperLog->error($error);
+						}
+
+						$returnMessage = "KO | #{$orderReference} | Can't capture transaction {$transactionKey} | {$error}";
+
+						$helperLog->setLogLabel("");
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
 					}
 
 					switch ($return) {
-						case self::TRANSACTION_NOT_FOUND:
-							/**
-							 * @TODO fazer um query e inserir todas as transacoes
-							 */
-							$helperLog->info("Transaction not found. Searching for all transactions on MundiPagg...");
-							$this->queryTransactions();
-							break;
-
 						case self::TRANSACTION_ALREADY_CAPTURED:
 							$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_ALREADY_CAPTURED;
 							$helperLog->info($returnMessage);
@@ -1596,6 +1614,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 	}
 
+	/**
+	 * @param Mage_Sales_Model_Order $order
+	 * @param                        $amountToCapture
+	 * @param                        $transactionKey
+	 * @throws RuntimeException
+	 * @return string
+	 */
 	private function captureTransaction(Mage_Sales_Model_Order $order, $amountToCapture, $transactionKey) {
 		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$log->setLogLabel("#{$order->getIncrementId()} | {$transactionKey}");
@@ -1626,7 +1651,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 
 		if (is_null($transaction)) {
-			return self::TRANSACTION_NOT_FOUND;
+			Mage::throwException(self::TRANSACTION_NOT_FOUND);
 		}
 
 		if ($transaction->getIsClosed() == '1') {
@@ -1644,42 +1669,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$createInvoice = true;
 		}
 
-		if ($createInvoice) {
-			try {
-				$orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
+		$orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
+
+		try {
+			if($createInvoice){
 				$invoice = $orderPayment->createInvoice($order);
-
 				$log->info("Invoice {$invoice->getIncrementId()} created");
-
-			} catch (Exception $e) {
-				$error = $e->getMessage();
-
-				switch ($error) {
-					case $orderPayment::ERR_CANNOT_CREATE_INVOICE:
-						$log->error("Cannot created invoice");
-						break;
-
-					case $orderPayment::ERR_CANNOT_CREATE_INVOICE_WITHOUT_PRODUCTS:
-						$log->error("Cannot create invoice without products");
-						break;
-
-					default:
-						$log->error("Cannot create invoice. Unexpected error: {$error}");
-				}
-
-				throw new RuntimeException($error);
 			}
-		}
 
-		try {
-			$order->setTotalPaid($totalPaid);
-			$order->save();
-
-		} catch (Exception $e) {
-			throw new RuntimeException($e);
-		}
-
-		try {
 			$resource = Mage::getSingleton('core/resource');
 			$conn = $resource->getConnection('core_write');
 			$query = "UPDATE sales_payment_transaction SET is_closed = TRUE WHERE transaction_id={$transaction->getId()}";
@@ -1687,9 +1684,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$conn->query($query);
 			$log->info("Magento payment transaction closed");
 
+			$order->setTotalPaid($totalPaid);
+			$order->save();
+
 		} catch (Exception $e) {
-			$log->error("Unable to close transaction. Error: {$e->getMessage()}");
-			throw new RuntimeException($e);
+			throw new RuntimeException($e->getMessage());
 		}
 
 		$log->info("Captured amount: {$amountToCapture}");
