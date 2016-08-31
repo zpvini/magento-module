@@ -216,7 +216,6 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 								$onepage->getAntiFraud() == 0 &&
 								$onepage->getPaymentAction() == 'order'
 							) {
-								Mage::log("teste1", Zend_Log::INFO,"teste.log");
 								$resultCapture = $onepage->captureAndcreateInvoice($info);
 							}
 						}
