@@ -51,9 +51,12 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract {
 
 	private function write($msg) {
 		$file = "Mundipagg_Integracao_" . date('Y-m-d') . ".log";
+		$method = $this->method;
 
-		if (!empty($this->method)) {
-			if (!empty($this->logLabel)) {
+		if (!empty($method)) {
+			$logLabel = $this->logLabel;
+
+			if (!empty($logLabel)) {
 				$msg = "[{$this->method}] {$this->logLabel} | {$msg}";
 
 			} else {

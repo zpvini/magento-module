@@ -247,7 +247,9 @@ class Uecommerce_Mundipagg_Model_Recurrency extends Varien_Object {
      * Add current recorrency in array data.
      */
     protected function addRecurrencyData() {
-        if (!empty($this->_recurrency)) {
+    	$recurrencyRef = $this->_recurrency;
+
+        if (!empty($recurrencyRef)) {
             $recurrency = new Varien_Object();
             $recurrency->setData('product', $this->getProduct());
             $recurrency->setData('recurrency', $this->getRecurrency());

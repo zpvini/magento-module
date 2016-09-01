@@ -35,7 +35,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
     /**
     * Get extension version
     */
-    public function getExtensionVersion() 
+    public function getExtensionVersion()
     {
         return (string) Mage::getConfig()->getNode()->modules->Uecommerce_Mundipagg->version;
     }
@@ -44,7 +44,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
      * Return issuer
      * @param varchar $cardType
      */
-    public function issuer($cardType) 
+    public function issuer($cardType)
     {
         if ( $cardType == '') {
             return '';
@@ -57,7 +57,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
                 'HI' => 'Hipercard',
                 'EL' => 'Elo',
             );
-            
+
             foreach ($issuers as $key => $issuer) {
                 if ($key == $cardType) {
                     return $issuer;
@@ -65,7 +65,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
             }
         }
     }
-    
+
     /**
      * Return cardType
      * @param string $issuer
@@ -82,7 +82,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
                 'HI' => 'Hipercard',
                 'EL' => 'Elo',
             );
-            
+
             foreach ($issuers as $key => $cardType) {
                 if ($cardType == $issuer) {
                     return $key;
@@ -95,14 +95,14 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
     * Get credit cards number
     */
     public function getCreditCardsNumber($payment_method)
-    {  
+    {
         $num = 1;
 
         switch ($payment_method) {
             case 'mundipagg_creditcardoneinstallment':
                 $num = 0;
                 break;
-                
+
             case 'mundipagg_creditcard':
                 $num = 1;
                 break;
@@ -210,23 +210,23 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
 
     /**
     * Validate CPF
-    */ 
+    */
     public function validateCPF($cpf)
-    {   
+    {
         // Verifiva se o número digitado contém todos os digitos
         $cpf = preg_replace('[\D]', '', $cpf);
-        
+
         // Verifica se nenhuma das sequências abaixo foi digitada, caso seja, retorna falso
-        if (strlen($cpf) != 11 || 
-            $cpf == '00000000000' || 
-            $cpf == '11111111111' || 
-            $cpf == '22222222222' || 
-            $cpf == '33333333333' || 
-            $cpf == '44444444444' || 
-            $cpf == '55555555555' || 
-            $cpf == '66666666666' || 
-            $cpf == '77777777777' || 
-            $cpf == '88888888888' || 
+        if (strlen($cpf) != 11 ||
+            $cpf == '00000000000' ||
+            $cpf == '11111111111' ||
+            $cpf == '22222222222' ||
+            $cpf == '33333333333' ||
+            $cpf == '44444444444' ||
+            $cpf == '55555555555' ||
+            $cpf == '66666666666' ||
+            $cpf == '77777777777' ||
+            $cpf == '88888888888' ||
             $cpf == '99999999999') {
             return false;
         } else {   // Calcula os números para verificar se o CPF é verdadeiro
@@ -250,7 +250,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
     * Validate CNPJ
     */
     public function validateCNPJ($value)
-    { 
+    {
         $cnpj = str_replace(array("-"," ","/","."), "", $value);
         $digitosIguais = 1;
 
@@ -258,13 +258,13 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
             return false;
         }
         for ($i = 0; $i < strlen($cnpj) - 1; $i++) {
- 
+
             if ($cnpj{$i} != $cnpj{$i + 1}) {
                 $digitosIguais = 0;
                 break;
             }
         }
-        
+
         if (!$digitosIguais) {
             $tamanho = strlen($cnpj) - 2;
             $numeros = substr($cnpj, 0, $tamanho);
@@ -304,7 +304,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
 
     /**
     * Apply telephone mask
-    */ 
+    */
     public function applyTelephoneMask($string)
     {
         $string = preg_replace('[\D]', '', $string);
@@ -319,7 +319,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
             case 11:
                 $mask = '(##)#########';
                 break;
-            
+
             default:
                 return '';
         }
@@ -327,7 +327,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
         for($i=0;$i<strlen($string);$i++) {
             $mask[strpos($mask,"#")] = $string[$i];
         }
-       
+
         return '55'.$mask;
     }
 
@@ -337,7 +337,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
     * @param $order Mage_Sales_Model_Order
     * @return array
     */
-    public function getPhoneRequestCollection(Mage_Sales_Model_Order $order) 
+    public function getPhoneRequestCollection(Mage_Sales_Model_Order $order)
     {
         $billingAddress = $order->getBillingAddress();
         $telephone = $billingAddress->getTelephone();
@@ -376,19 +376,19 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function calcInstallmentValue($total, $interest, $periods)
     {
-        /* 
+        /*
          * Formula do coeficiente:
-         * 
+         *
          * juros / ( 1 - 1 / (1 + i)^n )
-         * 
+         *
          */
-        
+
         // calcula o coeficiente, seguindo a formula acima
         $coefficient = pow((1 + $interest), $periods);
         $coefficient = 1 / $coefficient;
         $coefficient = 1 - $coefficient;
         $coefficient = $interest / $coefficient;
-        
+
         // retorna o valor da parcela
         return ($total * $coefficient);
     }
@@ -404,14 +404,16 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
         }
     }
 
-    public function getTotalJuros($total, $parcela) 
+    public function getTotalJuros($total, $parcela)
     {
         return $this->getJurosParcela($total, $parcela) * $parcela;
     }
 
-    public function getConfigJuros($position) 
+    public function getConfigJuros($position)
     {
-        if (empty($this->config_juros)) {
+    	$configJuros =$this->config_juros;
+
+        if (empty($configJuros)) {
             $storeId = Mage::app()->getStore()->getStoreId();
 
             $value2 = Mage::getStoreConfig('payment/mundipagg_standard/installment_interest_value_2', $storeId);
@@ -425,7 +427,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
             $value10 = Mage::getStoreConfig('payment/mundipagg_standard/installment_interest_value_10', $storeId);
             $value11 = Mage::getStoreConfig('payment/mundipagg_standard/installment_interest_value_11', $storeId);
             $value12 = Mage::getStoreConfig('payment/mundipagg_standard/installment_interest_value_12', $storeId);
-            
+
             $this->config_juros = array(
                 $this->prepareCalc($value2?$value2:0),
                 $this->prepareCalc($value3?$value3:0),
@@ -444,15 +446,15 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
         return $this->config_juros[$position];
     }
 
-    public function prepareCalc($value) 
+    public function prepareCalc($value)
     {
         return (float) $value;
     }
 
-    public function getJurosParcelaEscolhida($parcela) 
+    public function getJurosParcelaEscolhida($parcela)
     {
         $juros = 0;
-        
+
         if ($parcela == 2) {
             $juros = $this->getConfigJuros(0);
         }
