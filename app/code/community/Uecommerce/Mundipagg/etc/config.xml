@@ -32,7 +32,7 @@
 <config>
     <modules>
         <Uecommerce_Mundipagg>
-            <version>2.7.1</version>
+            <version>2.7.2</version>
         </Uecommerce_Mundipagg>
     </modules>
 
@@ -117,15 +117,6 @@
                     </delete_offline_retry_data_from_canceled_order>
                 </observers>
             </order_cancel_after>
-            <catalog_product_save_before>
-                <observers>
-                    <mundi_catalog_product_save_before>
-                        <type>singleton</type>
-                        <class>Uecommerce_Mundipagg_Model_Observer</class>
-                        <method>catalogProductSaveBefore</method>
-                    </mundi_catalog_product_save_before>
-                </observers>
-            </catalog_product_save_before>
         </events>
 
         <resources>
