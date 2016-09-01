@@ -20,6 +20,10 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract {
 		$this->logLabel = $logLabel;
 	}
 
+	public function getLogLabel() {
+		return $this->logLabel;
+	}
+
 	public function info($msg) {
 		$this->level = Zend_Log::INFO;
 		$this->write($msg);

@@ -33,11 +33,12 @@
 </div>
 <?php
 $_coreHelper = $this->helper('core');
-$orderGrandTotal = $this->getOrder()->getGrandTotal();
+$order = $this->getOrder();
+$orderGrandTotal = $order->getGrandTotal();
 $restToPay = 0;
 
 // Session
-$authorizedAmount = Mage::getSingleton('checkout/session')->getAuthorizedAmount();
+$authorizedAmount = $order->getPaymentAuthorizationAmount();
 
 $restToPay = $orderGrandTotal - $authorizedAmount;
 

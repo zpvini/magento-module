@@ -89,6 +89,7 @@
 "Method","Método"
 "Payment Method","Método de pagamento"
 "OrderKey","Chave do pedido"
+"OrderKeys","Chaves do pedido"
 "Credit Card Issuer","Bandeira"
 "Transaction Status","Status da transação"
 "AuthorizedPendingCapture","AuthorizedPendingCapture"

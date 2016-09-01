@@ -219,14 +219,11 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 
 		$info = $this->getInfoInstance();
-
 		$mundipagg = array();
 		$helper = Mage::helper('mundipagg');
 
 		foreach ($data->getData() as $id => $value) {
 			$mundipagg[$id] = $value;
-
-			//Mage::log($id.' '.$value, null, 'Uecommerce_Mundipagg.log');
 
 			// We verify if a CPF OR CNPJ is valid
 			$posTaxvat = strpos($id, 'taxvat');
@@ -356,30 +353,25 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					// Total Installments from token and Credit Card
 					(float)$totalInstallments = $totalInstallmentsToken + $totalInstallmentsNew;
 
-					//Mage::log('totalInstallmentsToken: '. $totalInstallmentsToken, null, 'Uecommerce_Mundipagg.log');
-					//Mage::log('totalInstallmentsNew: '. $totalInstallmentsNew, null, 'Uecommerce_Mundipagg.log');
-
 					// If an amount has already been authorized
 					if (isset($mundipagg['multi']) && Mage::getSingleton('checkout/session')->getAuthorizedAmount()) {
-						//Mage::log('multi already authorized', null, 'Uecommerce_Mundipagg.log');
-
 						(float)$totalInstallments += (float)Mage::getSingleton('checkout/session')->getAuthorizedAmount();
 
 						// Unset session
 						Mage::getSingleton('checkout/session')->setAuthorizedAmount();
 					}
 
-//                    Mage::log('grandTotal: '.$grandTotal, null, 'Uecommerce_Mundipagg.log');
-//                    Mage::log('totalInstallments: '.$totalInstallments, null, 'Uecommerce_Mundipagg.log');
-//                    Mage::log('getPaymentInterest: '. $info->getPaymentInterest());
-//                    Mage::log('cal: '. abs($grandTotal-$totalInstallments-$info->getPaymentInterest()), null, 'Uecommerce_Mundipagg.log');
-
-
 					$epsilon = 0.00001;
 
-					if ($totalInstallments > 0 && ($grandTotal - $totalInstallments - $info->getPaymentInterest()) > $epsilon) {
-						Mage::throwException(Mage::helper('payment')->__('Installments does not match with quote.'));
-					}
+//					$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+//					$helperLog->info("totalInstallments: {$totalInstallments}");
+//					$helperLog->info("grandTotal: {$grandTotal}");
+//					$helperLog->info("getPaymentInterest: {$info->getPaymentInterest()}");
+//					$helperLog->info("epsilon: {$epsilon}");
+
+//					if ($totalInstallments > 0 && ($grandTotal - $totalInstallments - $info->getPaymentInterest())) {
+//						Mage::throwException(Mage::helper('payment')->__('Installments does not match with quote.'));
+//					}
 				}
 			} else {
 				if (isset($mundipagg['method'])) {
@@ -642,7 +634,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					if (
 						count($creditCardTransactionResultCollection) > 1 &&
 						$this->getAntiFraud() == 0 &&
-						$this->getPaymentAction() == 'order'
+						$this->getPaymentAction() == 'order' &&
+						$order->getPaymentAuthorizationAmount() == $order->getGrandTotal()
 					) {
 						$this->captureAndcreateInvoice($payment);
 					}
@@ -650,6 +643,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			}
 
 			return $this;
+
 		} catch (Exception $e) {
 			Mage::logException($e);
 		}
@@ -695,48 +689,52 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				$TransactionReference = $transaction->getAdditionalInformation('TransactionReference');
 			}
 
-			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
-			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
-			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
-			$data['OrderKey'] = $payment->getAdditionalInformation('OrderKey');
-			$data['ManageOrderOperationEnum'] = 'Capture';
+//			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
+//			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
+//			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
+			$orderkeys = (array) $payment->getAdditionalInformation('OrderKey');
 
-			//Call Gateway Api
-			$api = Mage::getModel('mundipagg/api');
+			foreach ($orderkeys as $orderkey) {
+				$data['OrderKey'] = $orderkey;
+				$data['ManageOrderOperationEnum'] = 'Capture';
 
-			$capture = $api->manageOrderRequest($data, $this);
+				//Call Gateway Api
+				$api = Mage::getModel('mundipagg/api');
 
-			// Xml
-			$xml = $capture['result'];
-			$json = json_encode($xml);
+				$capture = $api->manageOrderRequest($data, $this);
 
-			$capture['result'] = array();
-			$capture['result'] = json_decode($json, true);
+				// Xml
+				$xml = $capture['result'];
+				$json = json_encode($xml);
 
-			// Save transactions
-			if (isset($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
-				if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-					$trans = $capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+				$capture['result'] = array();
+				$capture['result'] = json_decode($json, true);
 
-					$this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
-				} else {
-					$CapturedAmountInCents = 0;
+				// Save transactions
+				if (isset($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
+					if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
+						$trans = $capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
 
-					foreach ($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
-						$TransactionKey = $trans['TransactionKey'];
-						$CapturedAmountInCents += $trans['CapturedAmountInCents'];
+						$this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
+					} else {
+						$CapturedAmountInCents = 0;
+
+						foreach ($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
+							$TransactionKey = $trans['TransactionKey'];
+							$CapturedAmountInCents += $trans['CapturedAmountInCents'];
+						}
+
+						$trans = array();
+						$trans['CapturedAmountInCents'] = $CapturedAmountInCents;
+						$trans['Success'] = true;
+
+						$this->_addTransaction($payment, $TransactionKey, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
 					}
+				} else {
+					Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
-					$trans = array();
-					$trans['CapturedAmountInCents'] = $CapturedAmountInCents;
-					$trans['Success'] = true;
-
-					$this->_addTransaction($payment, $TransactionKey, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
+					return false;
 				}
-			} else {
-				Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
-
-				return false;
 			}
 		} else {
 			Mage::throwException(Mage::helper('mundipagg')->__('No OrderKey found.'));
@@ -1006,7 +1004,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 				if ($customerId) {
 					$customer = Mage::getModel('customer/customer')->load($customerId);
-
 					$taxvat = $customer->getTaxvat();
 				}
 
@@ -1021,15 +1018,12 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$data['customer_id'] = $order->getCustomerId();
 			$data['address_id'] = $order->getBillingAddress()->getCustomerAddressId();
 			$data['payment_method'] = isset($postData['payment']['method']) ? $postData['payment']['method'] : $mundipaggData['method'];
-
 			$type = $data['payment_method'];
 
 			// 1 or more Credit Cards Payment
 			if ($data['payment_method'] != 'mundipagg_boleto' && $data['payment_method'] != 'mundipagg_debit') {
 				$helper = Mage::helper('mundipagg');
-
 				$num = $helper->getCreditCardsNumber($type);
-
 				$method = $helper->getPaymentMethod($num);
 
 				if ($num == 0) {
@@ -1069,6 +1063,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						}
 
 						$data['payment'][$i]['TaxDocumentNumber'] = isset($postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i]) ? $postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i] : $taxvat;
+
 					} else { // Token
 						$data['payment'][$i]['card_on_file_id'] = isset($postData['payment'][$method . '_token_' . $num . '_' . $i]) ? $postData['payment'][$method . '_token_' . $num . '_' . $i] : $mundipaggData[$method . '_token_' . $num . '_' . $i];
 						$data['payment'][$i]['InstallmentCount'] = isset($postData['payment'][$method . '_credito_parcelamento_' . $num . '_' . $i]) ? $postData['payment'][$method . '_credito_parcelamento_' . $num . '_' . $i] : 1;
@@ -1152,6 +1147,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			// Api
 			$api = Mage::getModel('mundipagg/api');
+			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
 			// Get approval request from gateway
 			switch ($type) {
@@ -1170,14 +1166,20 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			// Set some data from Mundipagg
 			$payment = $this->setPaymentAdditionalInformation($approvalRequest, $payment);
+			$authorizedAmount = $order->getPaymentAuthorizationAmount();
+
+			if (is_null($authorizedAmount)) {
+				$authorizedAmount = 0;
+			}
 
 			// Payment gateway error
 			if (isset($approvalRequest['error'])) {
+
 				// Partial payment
 				if (isset($approvalRequest['ErrorCode']) && $approvalRequest['ErrorCode'] == 'multi') {
-					// We set authorized amount in session
+
+					// We set authorized amount
 					$orderGrandTotal = $order->getGrandTotal();
-					$authorizedAmount = 0;
 
 					foreach ($approvalRequest['result']->CreditCardTransactionResultCollection->CreditCardTransactionResult as $key => $result) {
 						if ($result->Success == true) {
@@ -1197,136 +1199,171 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('partial');
 							Mage::getSingleton('checkout/session')->setAuthorizedAmount($authorizedAmount);
 						}
+
+						$order->setPaymentAuthorizationAmount($authorizedAmount);
+						$order->save();
+
 					} else {
+						$helperLog->info("TESTE1: cancel");
 						Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 					}
 				} else {
 					$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
 				}
-			} else {
-				switch ($approvalRequest['message']) {
-					// BoletoBancario
-					case 0:
-						Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
-						break;
 
-					// 1CreditCards
-					case 1: // AuthAndCapture
-					case 2: // AuthOnly
-					case 3: // AuthAndCaptureWithDelay
-						// We set authorized amount in session
-						$orderGrandTotal = $order->getGrandTotal();
-						$authorizedAmount = 0;
+				return $approvalRequest;
+			}
 
-						$xml = $approvalRequest['result'];
+			switch ($approvalRequest['message']) {
+				// BoletoBancario
+				case 0:
+					Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
+					break;
 
-						if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-							$result = $xml->CreditCardTransactionResultCollection->CreditCardTransactionResult;
+				// 1CreditCards
+				case 1: // AuthAndCapture
+				case 2: // AuthOnly
+				case 3: // AuthAndCaptureWithDelay
+					// We set authorized amount in session
+					$orderGrandTotal = $order->getGrandTotal();
+					$xml = $approvalRequest['result'];
 
+					if (isset($xml->OrderResult)) {
+						$orderResult = $xml->OrderResult;
+					}
+
+					if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
+						$result = $xml->CreditCardTransactionResultCollection->CreditCardTransactionResult;
+
+						if ($result->Success == true) {
+							$authorizedAmount += $result->AuthorizedAmountInCents * 0.01;
+						}
+					} else {
+						foreach ($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult as $key => $result) {
 							if ($result->Success == true) {
 								$authorizedAmount += $result->AuthorizedAmountInCents * 0.01;
 							}
-						} else {
-							foreach ($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult as $key => $result) {
-								if ($result->Success == true) {
-									$authorizedAmount += $result->AuthorizedAmountInCents * 0.01;
+						}
+					}
+
+					// If authorized amount is the same as order grand total we can show success page
+					$epsilon = 0.1;
+
+					if (($orderGrandTotal - $authorizedAmount) <= $epsilon) {
+						Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
+						Mage::getSingleton('checkout/session')->setAuthorizedAmount();
+
+						if ($orderGrandTotal < $authorizedAmount) {
+							$interestInformation = $payment->getAdditionalInformation('mundipagg_interest_information');
+							$newInterestInformation = array();
+
+							if (count($interestInformation)) {
+								$newInterest = 0;
+
+								foreach ($interestInformation as $key => $ii) {
+									if (strpos($key, 'partial') !== false) {
+										if ($ii->hasValue()) {
+											$newInterest += (float)($ii->getInterest());
+										}
+									}
+
 								}
 							}
+							$this->addInterestToOrder($order, $newInterest);
 						}
 
-						// If authorized amount is the same as order grand total we can show success page
-						$epsilon = 0.1;
+					} else {
+						if ($authorizedAmount != 0) {
+							if (($orderGrandTotal - $authorizedAmount) >= $epsilon) {
+								Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('partial');
+								Mage::getSingleton('checkout/session')->setAuthorizedAmount($authorizedAmount);
 
-						if (($orderGrandTotal - $authorizedAmount) <= $epsilon) {
-							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
-							Mage::getSingleton('checkout/session')->setAuthorizedAmount();
-
-							if ($orderGrandTotal < $authorizedAmount) {
 								$interestInformation = $payment->getAdditionalInformation('mundipagg_interest_information');
+								$unauthorizedAmount = (float)($orderGrandTotal - $authorizedAmount);
 								$newInterestInformation = array();
+
 								if (count($interestInformation)) {
-									$newInterest = 0;
 									foreach ($interestInformation as $key => $ii) {
-										if (strpos($key, 'partial') !== false) {
-											if ($ii->hasValue()) {
-												$newInterest += (float)($ii->getInterest());
+
+										if ($ii->hasValue()) {
+											if ((float)($ii->getValue() + $ii->getInterest()) == (float)trim($unauthorizedAmount)) {
+												$this->removeInterestToOrder($order, $ii->getInterest());
+											} else {
+												$newInterestInformation[$key] = $ii;
+											}
+										} else {
+											if (($order->getGrandTotal() + $order->getMundipaggInterest()) == $unauthorizedAmount) {
+												$this->removeInterestToOrder($order, $ii->getInterest());
+											} else {
+												$newInterestInformation[$key] = $ii;
 											}
 										}
-
 									}
-//                                    Mage::log('newInterest: '.$newInterest);
-//                                    Mage::log('grandTodal: '.$orderGrandTotal);
-//                                    Mage::log('authorizeAmount: '.$authorizedAmount);
+
+									$payment->setAdditionalInformation('mundipagg_interest_information', $newInterestInformation);
 								}
-								$this->addInterestToOrder($order, $newInterest);
 							}
 						} else {
-							if ($authorizedAmount != 0) {
-								if (($orderGrandTotal - $authorizedAmount) >= $epsilon) {
-
-									Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('partial');
-									Mage::getSingleton('checkout/session')->setAuthorizedAmount($authorizedAmount);
-									$interestInformation = $payment->getAdditionalInformation('mundipagg_interest_information');
-									$unauthorizedAmount = (float)($orderGrandTotal - $authorizedAmount);
-									$newInterestInformation = array();
-									if (count($interestInformation)) {
-										foreach ($interestInformation as $key => $ii) {
-
-											if ($ii->hasValue()) {
-												if ((float)($ii->getValue() + $ii->getInterest()) == (float)trim($unauthorizedAmount)) {
-													$this->removeInterestToOrder($order, $ii->getInterest());
-												} else {
-													$newInterestInformation[$key] = $ii;
-												}
-											} else {
-												if (($order->getGrandTotal() + $order->getMundipaggInterest()) == $unauthorizedAmount) {
-													$this->removeInterestToOrder($order, $ii->getInterest());
-												} else {
-													$newInterestInformation[$key] = $ii;
-												}
-											}
-										}
-
-										$payment->setAdditionalInformation('mundipagg_interest_information', $newInterestInformation);
-									}
-								}
-							} else {
-								$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
-							}
+							$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
 						}
+					}
 
-						// Session
-						$xml = simplexml_load_string($approvalRequest['result']);
-						$json = json_encode($xml);
-						$dataR = array();
-						$dataR = json_decode($json, true);
+					// Session
+					$xml = simplexml_load_string($approvalRequest['result']);
+					$json = json_encode($xml);
+					$dataR = array();
+					$dataR = json_decode($json, true);
 
-						// Transaction
-						$transactionKey = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey'] : null;
-						$creditCardTransactionStatusEnum = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus'] : null;
+					// Transaction
+					$transactionKey = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey'] : null;
+					$creditCardTransactionStatusEnum = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus'] : null;
 
-						try {
-							if ($transactionKey != null) {
-								$this->_transactionId = $transactionKey;
+					try {
+						if ($transactionKey != null) {
+							$this->_transactionId = $transactionKey;
 
-								$payment->setTransactionId($this->_transactionId);
-
-								$payment->save();
-							}
-						} catch (Exception $e) {
-							continue;
+							$payment->setTransactionId($this->_transactionId);
+							$payment->save();
 						}
-						break;
+					} catch (Exception $e) {
+						$helperLog->error($e->getMessage());
+						continue;
+					}
+					break;
 
-					// Debit
-					case 4:
-						Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('debit');
-						Mage::getSingleton('checkout/session')->setBankRedirectUrl($approvalRequest['result']['BankRedirectUrl']);
-						break;
+				// Debit
+				case 4:
+					Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('debit');
+					Mage::getSingleton('checkout/session')->setBankRedirectUrl($approvalRequest['result']['BankRedirectUrl']);
+					break;
+			}
+
+			if (isset($orderResult)) {
+				$newOrderKey = (string)$orderResult->OrderKey;
+				$orderPayment = $order->getPayment();
+				$orderKeys = (array)$orderPayment->getAdditionalInformation('OrderKey');
+
+				if (is_null($orderKeys) || !is_array($orderKeys)) {
+					$orderKeys = array();
 				}
+
+				if (!in_array($newOrderKey, $orderKeys)) {
+					$orderKeys[] = $newOrderKey;
+				}
+
+				$orderPayment->setAdditionalInformation('OrderKey', $orderKeys);
+				$orderPayment->save();
+			}
+
+			$order->setPaymentAuthorizationAmount($authorizedAmount);
+			$order->save();
+
+			if ($authorizedAmount == $order->getGrandTotal()) {
+				Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
 			}
 
 			return $approvalRequest;
+
 		} catch (Exception $e) {
 			//Api
 			$api = Mage::getModel('mundipagg/api');
@@ -1438,62 +1475,76 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				$TransactionReference = $transaction->getAdditionalInformation('TransactionReference');
 			}
 
-			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
-			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
-			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
-			$data['OrderKey'] = $payment->getAdditionalInformation('OrderKey');
-			$data['ManageOrderOperationEnum'] = 'Cancel';
+//			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
+//			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
+//			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
+//			$data['OrderKey'] = $payment->getAdditionalInformation('OrderKey');
+			$orderkeys = $payment->getAdditionalInformation('OrderKey');
 
-			//Call Gateway Api
-			$api = Mage::getModel('mundipagg/api');
-
-			$void = $api->manageOrderRequest($data, $this);
-
-			// Xml
-			$xml = $void['result'];
-			$json = json_encode($xml);
-
-			$void['result'] = array();
-			$void['result'] = json_decode($json, true);
-
-			// We record transaction(s)
-			if (count($void['result']['CreditCardTransactionResultCollection']) > 0) {
-				if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-					$trans = $void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
-
-					$this->_addTransaction($payment, $trans['TransactionKey'], 'void', $trans);
-				} else {
-					foreach ($void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
-						$this->_addTransaction($payment, $trans['TransactionKey'], 'void', $trans, $key);
-					}
-				}
+			if (!is_array($orderkeys)) {
+//				$errMsg = "Impossible to capture: orderkeys must be an array";
+//				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+//
+//				$helperLog->error($errMsg);
+//				Mage::throwException($errMsg);
+				$orderkeys = array($orderkeys);
 			}
 
-			if (isset($void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
-				$order = $payment->getOrder();
-				$order->setBaseDiscountRefunded($order->getBaseDiscountInvoiced());
-				$order->setBaseShippingRefunded($order->getBaseShippingAmount());
-				$order->setBaseShippingTaxRefunded($order->getBaseShippingTaxInvoiced());
-				$order->setBaseSubtotalRefunded($order->getBaseSubtotalInvoiced());
-				$order->setBaseTaxRefunded($order->getBaseTaxInvoiced());
-				$order->setBaseTotalOnlineRefunded($order->getBaseGrandTotal());
-				$order->setDiscountRefunded($order->getDiscountInvoiced());
-				$order->setShippinRefunded($order->getShippingInvoiced());
-				$order->setShippinTaxRefunded($order->getShippingTaxAmount());
-				$order->setSubtotalRefunded($order->getSubtotalInvoiced());
-				$order->setTaxRefunded($order->getTaxInvoiced());
-				$order->setTotalOnlineRefunded($order->getBaseGrandTotal());
-				$order->setTotalRefunded($order->getBaseGrandTotal());
-				$order->save();
+			foreach ($orderkeys as $orderkey) {
+				$data['ManageOrderOperationEnum'] = 'Cancel';
+				$data['OrderKey'] = $orderkey;
 
-				return $this;
-			} else {
-				$error = Mage::helper('mundipagg')->__('Unable to void order.');
+				//Call Gateway Api
+				$api = Mage::getModel('mundipagg/api');
 
-				//Log error
-				Mage::log($error, null, 'Uecommerce_Mundipagg.log');
+				$void = $api->manageOrderRequest($data, $this);
 
-				Mage::throwException($error);
+				// Xml
+				$xml = $void['result'];
+				$json = json_encode($xml);
+
+				$void['result'] = array();
+				$void['result'] = json_decode($json, true);
+
+				// We record transaction(s)
+				if (count($void['result']['CreditCardTransactionResultCollection']) > 0) {
+					if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
+						$trans = $void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+
+						$this->_addTransaction($payment, $trans['TransactionKey'], 'void', $trans);
+					} else {
+						foreach ($void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
+							$this->_addTransaction($payment, $trans['TransactionKey'], 'void', $trans, $key);
+						}
+					}
+				}
+
+				if (isset($void['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
+					$order = $payment->getOrder();
+					$order->setBaseDiscountRefunded($order->getBaseDiscountInvoiced());
+					$order->setBaseShippingRefunded($order->getBaseShippingAmount());
+					$order->setBaseShippingTaxRefunded($order->getBaseShippingTaxInvoiced());
+					$order->setBaseSubtotalRefunded($order->getBaseSubtotalInvoiced());
+					$order->setBaseTaxRefunded($order->getBaseTaxInvoiced());
+					$order->setBaseTotalOnlineRefunded($order->getBaseGrandTotal());
+					$order->setDiscountRefunded($order->getDiscountInvoiced());
+					$order->setShippinRefunded($order->getShippingInvoiced());
+					$order->setShippinTaxRefunded($order->getShippingTaxAmount());
+					$order->setSubtotalRefunded($order->getSubtotalInvoiced());
+					$order->setTaxRefunded($order->getTaxInvoiced());
+					$order->setTotalOnlineRefunded($order->getBaseGrandTotal());
+					$order->setTotalRefunded($order->getBaseGrandTotal());
+					$order->save();
+
+					return $this;
+				} else {
+					$error = Mage::helper('mundipagg')->__('Unable to void order.');
+
+					//Log error
+					Mage::log($error, null, 'Uecommerce_Mundipagg.log');
+
+					Mage::throwException($error);
+				}
 			}
 		} else {
 			Mage::throwException(Mage::helper('mundipagg')->__('No OrderKey found.'));
@@ -1854,16 +1905,17 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 */
 	private function offlineRetryCancelOrSuccessOrder($orderIncrementId) {
 		$offlineRetryIsEnabled = Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled();
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$logLabel = "Order #{$orderIncrementId}";
 
 		if ($offlineRetryIsEnabled == false) {
+			$helperLog->info("{$logLabel} | Payment not authorized and store don't have offline retry, order will be canceled.");
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
 			return;
 		}
 
 		$api = new Uecommerce_Mundipagg_Model_Api();
-		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-		$logLabel = "Order #{$orderIncrementId}";
 
 		if ($api->orderIsInOfflineRetry($orderIncrementId)) {
 			$message = "{$logLabel} | payment not authorized but order is in offline retry yet, not cancel.";
@@ -1871,10 +1923,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$helperLog->info($message);
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
 
-		} else {
-			$helperLog->info("{$logLabel} | Payment not authorized and store don't have offline retry, order will be canceled.");
+		}/* else {
+			$helperLog->info("{$logLabel} | Payment not authorized and order is not on offline retry.");
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
-		}
+		}*/
 	}
 
 }
