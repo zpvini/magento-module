@@ -4,18 +4,14 @@ class Uecommerce_Mundipagg_Model_Urlvalidation extends Mage_Core_Model_Config_Da
 
 	public function save() {
 		$url = $this->getValue();
+
+		if (is_null($url) || empty($url)) {
+			return;
+		}
+
 		$parsedUrl = parse_url($url);
-		$path = null;
-
-		if (isset($parsedUrl['path'])) {
-			$path = str_replace("/","", $parsedUrl['path']);
-		}
-
-		if (is_null($path) || strtolower($path) != 'sale') {
-			$parsedUrl['path'] = 'Sale/';
-		}
-
-		$newUrl = "{$parsedUrl['scheme']}://{$parsedUrl['host']}/{$parsedUrl['path']}";
+		$parsedUrl['path'] = 'Sale';
+		$newUrl = "{$parsedUrl['scheme']}://{$parsedUrl['host']}/{$parsedUrl['path']}/";
 
 		$this->setValue($newUrl);
 
