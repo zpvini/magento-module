@@ -661,11 +661,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// Data
 			$dataToPost = json_encode($_request);
 
-			if ($standard->getDebug() == 1) {
-//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-//				Mage::log(print_r($_request, 1), null, 'Uecommerce_Mundipagg.log');
-				$helperLog->debug(print_r($_request, true));
-			}
+			$helperLog->debug(print_r($_request, true));
 
 			// Send payment data to MundiPagg
 			$ch = curl_init();
@@ -696,11 +692,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// Close connection
 			curl_close($ch);
 
-			if ($standard->getDebug() == 1) {
-//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-//				Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
-				$helperLog->debug(print_r($_response, true));
-			}
+			$helperLog->debug(print_r($_response, true));
 
 			// Is there an error?
 			$xml = simplexml_load_string($_response);
@@ -708,11 +700,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$data = array();
 			$data = json_decode($json, true);
 
-			if ($standard->getDebug() == 1) {
-//				Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion(), null, 'Uecommerce_Mundipagg.log');
-//				Mage::log(print_r($data, 1), null, 'Uecommerce_Mundipagg.log');
-				$helperLog->debug(print_r($data, true));
-			}
+			$helperLog->debug(print_r($data, true));
 
 			// Error
 			if (isset($data['ErrorReport']) && !empty($data['ErrorReport'])) {
@@ -1134,10 +1122,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$dataToPost = json_encode($data);
 			$helperUtil = new Uecommerce_Mundipagg_Helper_Util();
 
-			if ($standard->getDebug() == 1) {
-				$helperLog->debug("Url: {$url}");
-				$helperLog->debug("Request:\n{$helperUtil->jsonEncodePretty($data)}\n");
-			}
+			$helperLog->debug("Url: {$url}");
+			$helperLog->info("Request:\n{$helperUtil->jsonEncodePretty($data)}\n");
 
 			// Send payment data to MundiPagg
 			$ch = curl_init();
@@ -1158,9 +1144,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// Close connection
 			curl_close($ch);
 
-			if ($standard->getDebug() == 1) {
-				$helperLog->debug("Response:\n{$json}\n");
-			}
+			$helperLog->info("Response:\n{$json}\n");
 
 			// Return
 			return array('result' => simplexml_load_string($_response));
@@ -1202,19 +1186,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$xml = simplexml_load_string($xmlStatusNotificationString);
 			$json = json_encode($xml);
 			$data = json_decode($json, true);
+			$orderReference = isset($xml->OrderReference) ? $xml->OrderReference : null;
 
-			if ($standard->getConfigData('debug') == 1) {
-				$orderReference = isset($xml->OrderReference) ? $xml->OrderReference : null;
+			if (is_null($orderReference)) {
+				$logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
 
-				if (is_null($orderReference)) {
-					$logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
-
-				} else {
-					$logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
-				}
-
-				$helperLog->debug($logMessage);
+			} else {
+				$logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
 			}
+
+			$helperLog->info($logMessage);
 
 			$orderReference = $data['OrderReference'];
 			$order = Mage::getModel('sales/order');
@@ -1672,7 +1653,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
 
 		try {
-			if($createInvoice){
+			if ($createInvoice) {
 				$invoice = $orderPayment->createInvoice($order);
 				$log->info("Invoice {$invoice->getIncrementId()} created");
 			}
@@ -1818,11 +1799,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		// Close connection
 		curl_close($ch);
 
-		if ($standard->getDebug() == 1) {
-//			Mage::log('Uecommerce_Mundipagg: ' . Mage::helper('mundipagg')->getExtensionVersion() . ' Notification (return url)', null, 'Uecommerce_Mundipagg.log');
-//			Mage::log(print_r($_response, 1), null, 'Uecommerce_Mundipagg.log');
-			$helperLog->debug(print_r($_response, true));
-		}
+		$helperLog->debug(print_r($_response, true));
 
 		// Return
 		return array('result' => simplexml_load_string($_response));
@@ -1971,15 +1948,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			'SessionId' => ''
 		);
 
-		if ($this->debugEnabled) {
-			$helperLog->debug("Checking antifraud config...");
-		}
-
 		if ($antifraud == false) {
-			if ($this->debugEnabled) {
-				$helperLog->debug("Antifraud disabled.");
-			}
-
 			return false;
 		}
 
@@ -2045,19 +2014,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			throw new InvalidArgumentException($errMsg);
 		}
 
-		$debug = $this->modelStandard->getDebug();
-
-		if ($debug) {
-
-			if (empty($_logRequest)) {
-				$_logRequest = $dataToPost;
-			}
-
-			$requestRawJson = json_encode($dataToPost);
-			$requestJSON = $this->helperUtil->jsonEncodePretty($_logRequest);
-
-			$helperLog->debug("Request:\n{$requestJSON}\n");
+		if (empty($_logRequest)) {
+			$_logRequest = $dataToPost;
 		}
+
+		$requestRawJson = json_encode($dataToPost);
+		$requestJSON = $this->helperUtil->jsonEncodePretty($_logRequest);
+
+		$helperLog->info("Request:\n{$requestJSON}\n");
 
 		$ch = curl_init();
 
@@ -2079,9 +2043,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$responseJSON = $this->helperUtil->jsonEncodePretty($xml);
 		$responseArray = json_decode($responseJSON, true);
 
-		if ($debug) {
-			$helperLog->debug("Response:\n{$responseJSON} \n");
-		}
+		$helperLog->info("Response:\n{$responseJSON} \n");
 
 		$responseData = array(
 			'xmlData'   => $xml,
