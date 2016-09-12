@@ -75,7 +75,7 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <comment>
-                                <![CDATA[O Debug permite gravar o retorno da MundiPagg nos logs do Magento (/var/log/system.log), para tal é necessário ter os logs do Magento ativados (System -> Configuration -> Advanced -> Developer -> Log Settings -> Yes)]]></comment>
+                                <![CDATA[O Debug permite gravar o retorno da MundiPagg nos logs do Magento. Habilitar esta opção irá habilitar os logs do Magento (System -> Configuration -> Advanced -> Developer -> Log Settings -> Yes)]]></comment>
                         </debug>
 
                         <apiUrlStaging translate="label">
