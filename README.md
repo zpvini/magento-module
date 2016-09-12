@@ -4,7 +4,7 @@
 https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html
 
 ## System requirements ##
-PHP 5.5
+PHP 5.4
 
 ## Installation with modman ##
 
