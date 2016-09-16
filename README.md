@@ -9,11 +9,9 @@ PHP 5.4
 ## Installation with modgit ##
 modgit: https://github.com/jreinke/modgit
 
-cd /path/to/magento
-
-modgit init
-
-modgit add mundipagg_integracao git@github.com:mundipagg/Magento.Integracao.git
+    $ cd /path/to/magento
+    $ modgit init
+    $ modgit add mundipagg_integracao git@github.com:mundipagg/Magento.Integracao.git
 
 ## Simulator rules by amount ##
 
