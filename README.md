@@ -6,15 +6,13 @@ https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html
 ## System requirements ##
 PHP 5.4
 
-## Installation with modman ##
+## Installation with modgit ##
+modgit: https://github.com/jreinke/modgit
 
-modman: https://github.com/sitewards/modman-php
+cd /path/to/magento
+modgit init
+modgit add mundipagg_integracao git@github.com:mundipagg/Magento.Integracao.git
 
-```
-cd $PROJECT
-modman init
-modman clone https://github.com/mundipagg/Magento.Integracao
-```
 ## Simulator rules by amount ##
 
 ### Authorization ###
