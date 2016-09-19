@@ -692,7 +692,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 //			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
 //			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
 //			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
-			$orderkeys = (array) $payment->getAdditionalInformation('OrderKey');
+			$orderkeys = (array)$payment->getAdditionalInformation('OrderKey');
 
 			foreach ($orderkeys as $orderkey) {
 				$data['OrderKey'] = $orderkey;
@@ -1175,8 +1175,35 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			// Payment gateway error
 			if (isset($approvalRequest['error'])) {
 
-				// Partial payment
+				if (isset($approvalRequest['ErrorItemCollection'])) {
+					$errorItemCollection = $approvalRequest['ErrorItemCollection'];
+
+					if (isset($errorItemCollection['ErrorItem']['ErrorCode'])) {
+						$errorCode = $errorItemCollection['ErrorItem']['ErrorCode'];
+
+						if ($errorCode == '504') {
+							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
+							Mage::getSingleton('checkout/session')->setAuthorizedAmount();
+
+							try {
+								$order->setStatus('mundipagg_with_error');
+								$order->save();
+
+							} catch (Exception $e) {
+								$errMsg = "Order #{$order->getIncrementId()} | ";
+								$errMsg .= "Unable to modify order status to 'mundipagg_with_error: {$e->getMessage()}";
+								$helperLog->error($errMsg);
+							}
+
+							$helperLog->info("Order #{$order->getIncrementId()} | With error in Mundipagg.");
+
+							return $approvalRequest;
+						}
+					}
+				}
+
 				if (isset($approvalRequest['ErrorCode']) && $approvalRequest['ErrorCode'] == 'multi') {
+					// Partial payment
 
 					// We set authorized amount
 					$orderGrandTotal = $order->getGrandTotal();
@@ -1204,7 +1231,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						$order->save();
 
 					} else {
-						$helperLog->info("TESTE1: cancel");
 						Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 					}
 				} else {
