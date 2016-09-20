@@ -1182,20 +1182,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						$errorCode = $errorItemCollection['ErrorItem']['ErrorCode'];
 
 						if ($errorCode == '504') {
-							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
-							Mage::getSingleton('checkout/session')->setAuthorizedAmount();
-
-							try {
-								$order->setStatus('mundipagg_with_error');
-								$order->save();
-
-							} catch (Exception $e) {
-								$errMsg = "Order #{$order->getIncrementId()} | ";
-								$errMsg .= "Unable to modify order status to 'mundipagg_with_error: {$e->getMessage()}";
-								$helperLog->error($errMsg);
-							}
-
-							$helperLog->info("Order #{$order->getIncrementId()} | With error in Mundipagg.");
+							$statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
+							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess($statusWithError);
 
 							return $approvalRequest;
 						}
@@ -1757,12 +1745,18 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 * @return void
 	 */
 	public function getOrderPlaceRedirectUrl() {
+		$statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
+
 		switch (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess()) {
 			case 'debit':
 				$redirectUrl = Mage::getSingleton('checkout/session')->getBankRedirectUrl();
 				break;
 
 			case 'success':
+				$redirectUrl = Mage::getUrl('mundipagg/standard/success', array('_secure' => true));
+				break;
+
+			case $statusWithError:
 				$redirectUrl = Mage::getUrl('mundipagg/standard/success', array('_secure' => true));
 				break;
 
@@ -1953,6 +1947,28 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$helperLog->info("{$logLabel} | Payment not authorized and order is not on offline retry.");
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 		}*/
+	}
+
+	public static function transactionWithError(Mage_Sales_Model_Order $order) {
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
+		try {
+			$order->setState(
+				'pending',
+				'mundipagg_with_error',
+				'With Error',
+				false
+			);
+
+			$order->save();
+
+		} catch (Exception $e) {
+			$errMsg = "Order #{$order->getIncrementId()} | ";
+			$errMsg .= "Unable to modify order status to 'mundipagg_with_error: {$e->getMessage()}";
+			$log->error($errMsg);
+		}
+
+		$log->info("Order #{$order->getIncrementId()} | With error in Mundipagg.");
 	}
 
 }
