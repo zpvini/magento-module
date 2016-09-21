@@ -1949,26 +1949,30 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}*/
 	}
 
-	public static function transactionWithError(Mage_Sales_Model_Order $order) {
-		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-
+	/**
+	 * @param Mage_Sales_Model_Order $order
+	 * @throws Exception
+	 */
+	public static function transactionWithError(Mage_Sales_Model_Order $order, $comment = true) {
 		try {
-			$order->setState(
-				'pending',
-				'mundipagg_with_error',
-				'With Error',
-				false
-			);
+			if ($comment) {
+				$order->setState(
+					'pending',
+					'mundipagg_with_error',
+					'With Error',
+					false
+				);
+			} else {
+				$order->setStatus('mundipagg_with_error');
+			}
 
 			$order->save();
 
 		} catch (Exception $e) {
-			$errMsg = "Order #{$order->getIncrementId()} | ";
-			$errMsg .= "Unable to modify order status to 'mundipagg_with_error: {$e->getMessage()}";
-			$log->error($errMsg);
-		}
+			$errMsg = "Unable to modify order status to 'mundipagg_with_error: {$e->getMessage()}";
 
-		$log->info("Order #{$order->getIncrementId()} | With error in Mundipagg.");
+			throw new Exception($errMsg);
+		}
 	}
 
 }

@@ -322,7 +322,13 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 			$lastOrderId = Mage::getSingleton('checkout/session')->getLastOrderId();
 			$order = Mage::getModel('sales/order')->load($lastOrderId);
 
-			Uecommerce_Mundipagg_Model_Standard::transactionWithError($order);
+			try{
+				Uecommerce_Mundipagg_Model_Standard::transactionWithError($order);
+
+			} catch (Exception $e){
+				$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+				$log->error($e->getMessage());
+			}
 
 			$approvalRequestSuccess = 'success';
 		}
