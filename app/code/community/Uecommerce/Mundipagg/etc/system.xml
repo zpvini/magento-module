@@ -1,34 +1,4 @@
 <?xml version="1.0"?>
-<!-- 
-/**
- * Uecommerce
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Uecommerce EULA.
- * It is also available through the world-wide-web at this URL:
- * http://www.uecommerce.com.br/
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade the extension
- * to newer versions in the future. If you wish to customize the extension
- * for your needs please refer to http://www.uecommerce.com.br/ for more information
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
- * @license    http://www.uecommerce.com.br/
- */
-
-/**
- * Mundipagg Payment module
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @author     Uecommerce Dev Team
- */
--->
 <config>
     <sections>
         <payment translate="label" module="payment">
@@ -153,6 +123,19 @@
                             <show_in_store>1</show_in_store>
                         </antifraud_provider>
 
+                        <fingerprint translate="label">
+                            <label>Use fingerprint</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <depends>
+                                <antifraud>1</antifraud>
+                            </depends>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </fingerprint>
+
                         <environment_fcontrol translate="label">
                             <label>Fingerprint environment</label>
                             <frontend_type>select</frontend_type>
@@ -160,8 +143,9 @@
                             <depends>
                                 <antifraud>1</antifraud>
                                 <antifraud_provider>2</antifraud_provider>
+                                <fingerprint>1</fingerprint>
                             </depends>
-                            <sort_order>10</sort_order>
+                            <sort_order>11</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -170,10 +154,11 @@
                         <fcontrol_key_sandbox translate="label">
                             <label>FControl sandbox key</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>11</sort_order>
+                            <sort_order>12</sort_order>
                             <depends>
                                 <antifraud>1</antifraud>
                                 <antifraud_provider>2</antifraud_provider>
+                                <fingerprint>1</fingerprint>
                                 <environment_fcontrol>1</environment_fcontrol>
                             </depends>
                             <show_in_default>1</show_in_default>
@@ -185,7 +170,7 @@
                         <fcontrol_key_production translate="label">
                             <label>FControl production key</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>11</sort_order>
+                            <sort_order>12</sort_order>
                             <depends>
                                 <antifraud>1</antifraud>
                                 <antifraud_provider>2</antifraud_provider>
@@ -200,10 +185,11 @@
                         <clearsale_entitycode translate="label">
                             <label>EntityCode</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>10</sort_order>
+                            <sort_order>11</sort_order>
                             <depends>
                                 <antifraud>1</antifraud>
                                 <antifraud_provider>1</antifraud_provider>
+                                <fingerprint>1</fingerprint>
                             </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -214,10 +200,11 @@
                         <clearsale_app translate="label">
                             <label>AppKey</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>11</sort_order>
+                            <sort_order>12</sort_order>
                             <depends>
                                 <antifraud>1</antifraud>
                                 <antifraud_provider>1</antifraud_provider>
+                                <fingerprint>1</fingerprint>
                             </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -228,10 +215,11 @@
                         <stone_entitycode translate="label">
                             <label>EntityCode</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>10</sort_order>
+                            <sort_order>11</sort_order>
                             <depends>
                                 <antifraud>1</antifraud>
                                 <antifraud_provider>3</antifraud_provider>
+                                <fingerprint>1</fingerprint>
                             </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -242,10 +230,11 @@
                         <stone_app translate="label">
                             <label>AppKey</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>11</sort_order>
+                            <sort_order>12</sort_order>
                             <depends>
                                 <antifraud>1</antifraud>
                                 <antifraud_provider>3</antifraud_provider>
+                                <fingerprint>1</fingerprint>
                             </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -257,7 +246,7 @@
                             <label>Credit Card Issuers</label>
                             <frontend_type>multiselect</frontend_type>
                             <source_model>Uecommerce_Mundipagg_Model_Source_Cctypes</source_model>
-                            <sort_order>12</sort_order>
+                            <sort_order>13</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -267,7 +256,7 @@
                         <heading_installments translate="label">
                             <label>Installments and Interest</label>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-                            <sort_order>13</sort_order>
+                            <sort_order>14</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -277,7 +266,7 @@
                             <label>Ativar parcelamento?</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>14</sort_order>
+                            <sort_order>15</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -287,7 +276,7 @@
                             <label>Exibir total com juros ao lado das parcelas?</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>15</sort_order>
+                            <sort_order>16</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -297,7 +286,7 @@
                             <label>Qual parcelamento exibir na página do produto?</label>
                             <frontend_type>select</frontend_type>
                             <source_model>Uecommerce_Mundipagg_Model_Source_CctypeProductInstallments</source_model>
-                            <sort_order>16</sort_order>
+                            <sort_order>17</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -305,7 +294,7 @@
 
                         <setoldsettings translate="label comment tooltip">
                             <label>Set old settings</label>
-                            <sort_order>17</sort_order>
+                            <sort_order>18</sort_order>
                             <frontend_type>button</frontend_type>
                             <frontend_model>mundipagg/adminhtml_system_config_form_button</frontend_model>
                             <show_in_default>1</show_in_default>
@@ -323,7 +312,7 @@
                             <label>Installments default</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>18</sort_order>
+                            <sort_order>19</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -334,7 +323,7 @@
                             <label>Installments for Visa</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>19</sort_order>
+                            <sort_order>20</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -345,7 +334,7 @@
                             <label>Installments for Mastercard</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>20</sort_order>
+                            <sort_order>21</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -356,7 +345,7 @@
                             <label>Installments for Amex</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>21</sort_order>
+                            <sort_order>22</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -367,7 +356,7 @@
                             <label>Installments for Diners</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>22</sort_order>
+                            <sort_order>23</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -379,7 +368,7 @@
                             <label>Installments for Elo</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>23</sort_order>
+                            <sort_order>24</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -390,7 +379,7 @@
                             <label>Installments for Hipercard</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>24</sort_order>
+                            <sort_order>25</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -399,7 +388,7 @@
                         <offline_retry_heading translate="label">
                             <label>Offline Retry</label>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-                            <sort_order>25</sort_order>
+                            <sort_order>26</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -409,7 +398,7 @@
                             <label>Enabled</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>26</sort_order>
+                            <sort_order>27</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -418,7 +407,7 @@
                         <delayed_retry_max_time translate="label">
                             <label>Max time to retry in minutes</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>27</sort_order>
+                            <sort_order>28</sort_order>
                             <depends>
                                 <offline_retry_enabled>1</offline_retry_enabled>
                             </depends>
@@ -431,7 +420,7 @@
                         <heading_extras translate="label">
                             <label>Extras</label>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-                            <sort_order>30</sort_order>
+                            <sort_order>29</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
