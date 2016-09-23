@@ -1,4 +1,11 @@
 <?php
+
+$fingerprintIsEnabled = Mage::getStoreConfig('payment/mundipagg_standard/fingerprint');
+
+if (!$fingerprintIsEnabled) {
+	return;
+}
+
 $fcontrol = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
 $antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider');
 $environment = Mage::getStoreConfig('payment/mundipagg_standard/environment_fcontrol');
@@ -12,69 +19,7 @@ if ($environment == Uecommerce_Mundipagg_Model_Source_FControlEnvironment::SANDB
 if ($fcontrol && $antifraudProvider == Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL): ?>
 
 	<script type="text/javascript" src="<?php echo $scriptUrl; ?>"></script>
-	<script type="text/javascript">
-		jQuery.noConflict();
-
-		jQuery(document).ready(function ($) {
-
-			$.ajax({
-				method: 'POST',
-				url: '/mundipagg/fcontrol/getConfig',
-				dataType: 'JSON'
-
-			}).done(function (data) {
-				var fp = new FcontrolFingerprint();
-				fp.send(data.key, data.sessionId);
-			});
-
-			$(document).ajaxComplete(function (event, request, settings) {
-				if (typeof settings.url != 'undefined') {
-					if (settings.url.match(/\/fcontrol\/fingerprint\//)) {
-						var logRequest = settings.data;
-
-						var logResponse = {
-							statusCode: request.status,
-							statusText: request.statusText
-						};
-
-						var responseText = request.responseText
-
-						if(responseText.length > 0){
-							logResponse.fcontrolResponse = request.responseText
-						}
-
-						logResponse = JSON.stringify(logResponse);
-
-						$.ajaxSetup({
-							url: '/mundipagg/fcontrol/logFp',
-							method: 'POST'
-						});
-
-						$.ajax({data: {event: 'Request', data: logRequest}})
-							.done(function () {
-								$.ajax({
-									data: {
-										event: 'Response',
-										data: logResponse
-									}
-								});
-							});
-					}
-				}
-
-			});
-
-			var reportError = function (message) {
-				jQuery.ajax({
-					method: 'POST',
-					url: '/mundipagg/fcontrol/reportError',
-					dataType: 'JSON',
-					data: {message: message}
-				});
-			};
-
-		});
-
-	</script>
+	<script type="text/javascript" src="/js/uecommerce/jquery-3.1.0.min.js"></script>
+	<script type="text/javascript" src="/js/uecommerce/fcontrol/fingerprint-fcontrol.js"></script>
 
 <?php endif; ?>
