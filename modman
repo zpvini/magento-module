@@ -33,6 +33,7 @@ app/design/adminhtml/default/default/template/mundipagg/boleto.phtml            
 # js
 js/uecommerce/recurrency.js            js/uecommerce/recurrency.js
 js/uecommerce/fcontrol/hmlg-fcontrol-ed.min.js            js/uecommerce/fcontrol/hmlg-fcontrol-ed.min.js
+js/uecommerce/fcontrol/fingerprint-fcontrol.js            js/uecommerce/fcontrol/fingerprint-fcontrol.js
 js/uecommerce/mundipagg.js            js/uecommerce/mundipagg.js
 js/uecommerce/jquery-3.1.0.min.js            js/uecommerce/jquery-3.1.0.min.js
 # skin
