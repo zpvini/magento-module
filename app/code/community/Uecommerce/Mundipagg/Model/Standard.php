@@ -1900,15 +1900,22 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 
 		foreach ($transactionAdditionalInfo as $transKey => $value) {
+
 			if (!is_array($value)) {
 				$transaction->setAdditionalInformation($transKey, htmlspecialchars_decode($value));
-
 				$payment->setAdditionalInformation($num . '_' . $transKey, htmlspecialchars_decode($value));
-			} else {
-				foreach ($value as $key2 => $value2) {
-					$transaction->setAdditionalInformation($key2, htmlspecialchars_decode($value2));
 
-					$payment->setAdditionalInformation($num . '_' . $key2, htmlspecialchars_decode($value2));
+			} else {
+
+				if (count($value) == 0) {
+					$transaction->setAdditionalInformation($transKey, htmlspecialchars_decode($value));
+					$payment->setAdditionalInformation($num . '_' . $transKey, htmlspecialchars_decode($value));
+
+				} else {
+					foreach ($value as $key2 => $value2) {
+						$transaction->setAdditionalInformation($key2, htmlspecialchars_decode($value2));
+						$payment->setAdditionalInformation($num . '_' . $key2, htmlspecialchars_decode($value2));
+					}
 				}
 			}
 		}
