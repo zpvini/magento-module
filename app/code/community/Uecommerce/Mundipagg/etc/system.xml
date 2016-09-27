@@ -45,7 +45,7 @@
                         </environment>
 
                         <apiUrlStaging translate="label">
-                            <label>API URL sandbox</label>
+                            <label>API URL Sandbox</label>
                             <frontend_type>text</frontend_type>
                             <sort_order>3</sort_order>
                             <backend_model>mundipagg/urlvalidation</backend_model>
@@ -444,8 +444,7 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <comment>Max time to wait for an authorization. After this, the order will be cancelled.
-                            </comment>
+                            <comment>Max time to wait for an authorization. After this, the order will be cancelled.</comment>
                         </delayed_retry_max_time>
 
                         <heading_extras translate="label">
