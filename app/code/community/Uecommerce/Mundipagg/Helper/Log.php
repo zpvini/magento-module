@@ -50,21 +50,30 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract {
 	}
 
 	private function write($msg) {
+		$debugIsEnabled = intval(Mage::getStoreConfig('payment/mundipagg_standard/debug'));
+
+		if ($debugIsEnabled === false)
+			return;
+
+		$version = Mage::helper('mundipagg')->getExtensionVersion();
 		$file = "Mundipagg_Integracao_" . date('Y-m-d') . ".log";
 		$method = $this->method;
+		$newMsg = "v{$version} ";
 
 		if (!empty($method)) {
 			$logLabel = $this->logLabel;
 
 			if (!empty($logLabel)) {
-				$msg = "[{$this->method}] {$this->logLabel} | {$msg}";
+				$newMsg .= "[{$this->method}] {$this->logLabel} | {$msg}";
 
 			} else {
-				$msg = "[{$this->method}] {$msg}";
+				$newMsg .= "[{$this->method}] {$msg}";
 			}
+		} else {
+			$newMsg .= $msg;
 		}
 
-		Mage::log($msg, $this->level, $file);
+		Mage::log($newMsg, $this->level, $file);
 	}
 
 } 
