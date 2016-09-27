@@ -10,14 +10,23 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
-
+                        <![CDATA[<br><a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png"/></a><br><br><br>]]></comment>
+                    
                     <fields>
+                        <heading_basic_config translate="label">
+                            <label>Module Basic Configuration</label>
+                            <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+                            <sort_order>0</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </heading_basic_config>
+
                         <version translate="label">
                             <label>Version</label>
                             <frontend_type>select</frontend_type>
                             <frontend_model>Uecommerce_Mundipagg_Block_Adminhtml_Version</frontend_model>
-                            <sort_order>0</sort_order>
+                            <sort_order>1</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -27,20 +36,70 @@
                             <label>Environment</label>
                             <frontend_type>select</frontend_type>
                             <source_model>Uecommerce_Mundipagg_Model_Source_Environment</source_model>
-                            <sort_order>1</sort_order>
+                            <sort_order>2</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <comment>
-                                <![CDATA[<b>Development</b> = ambiente de teste<br/><b>Production</b> = ambiente de produção]]></comment>
+                                <![CDATA[<b>Sandbox</b> = ambiente de teste<br/><b>Production</b> = ambiente de produção]]></comment>
                         </environment>
 
+                        <apiUrlStaging translate="label">
+                            <label>API URL sandbox</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>3</sort_order>
+                            <backend_model>mundipagg/urlvalidation</backend_model>
+                            <depends>
+                                <environment>development</environment>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </apiUrlStaging>
+
+                        <merchantKeyStaging translate="label">
+                            <label>MerchantKey Sandbox</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>4</sort_order>
+                            <depends>
+                                <environment>development</environment>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </merchantKeyStaging>
+
+                        <apiUrlProduction translate="label">
+                            <label>API URL Production</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>3</sort_order>
+                            <backend_model>mundipagg/urlvalidation</backend_model>
+                            <depends>
+                                <environment>production</environment>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </apiUrlProduction>
+
+                        <merchantKeyProduction translate="label">
+                            <label>MerchantKey Production</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>4</sort_order>
+                            <depends>
+                                <environment>production</environment>
+                            </depends>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </merchantKeyProduction>
+
                         <debug translate="label">
-                            <label>Debug</label>
+                            <label>Logs</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Debug</backend_model>
-                            <sort_order>2</sort_order>
+                            <sort_order>5</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -48,49 +107,11 @@
                                 <![CDATA[O Debug permite gravar o retorno da MundiPagg nos logs do Magento. Habilitar esta opção irá habilitar os logs do Magento (System -> Configuration -> Advanced -> Developer -> Log Settings -> Yes)]]></comment>
                         </debug>
 
-                        <apiUrlStaging translate="label">
-                            <label>Api URL Staging</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>3</sort_order>
-                            <backend_model>mundipagg/urlvalidation</backend_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </apiUrlStaging>
-
-                        <merchantKeyStaging translate="label">
-                            <label>merchantKey Staging</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>4</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </merchantKeyStaging>
-
-                        <apiUrlProduction translate="label">
-                            <label>Api URL Production</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>5</sort_order>
-                            <backend_model>mundipagg/urlvalidation</backend_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </apiUrlProduction>
-
-                        <merchantKeyProduction translate="label">
-                            <label>merchantKey Production</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>6</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </merchantKeyProduction>
-
                         <payment_action translate="label">
                             <label>Payment Action</label>
                             <frontend_type>select</frontend_type>
                             <source_model>Uecommerce_Mundipagg_Model_Source_PaymentAction</source_model>
-                            <sort_order>7</sort_order>
+                            <sort_order>6</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -98,8 +119,17 @@
                                 <![CDATA[<b>AuthOnly</b> = Autorizar<br/><b>AuthAndCapture</b> = Autorizar e capturar]]></comment>
                         </payment_action>
 
+                        <heading_anti_fraud translate="label">
+                            <label>Anti fraud</label>
+                            <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
+                            <sort_order>7</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </heading_anti_fraud>
+
                         <antifraud translate="label">
-                            <label>Enviar para anti-fraude?</label>
+                            <label>Anti fraud</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>8</sort_order>
@@ -124,7 +154,7 @@
                         </antifraud_provider>
 
                         <fingerprint translate="label">
-                            <label>Use fingerprint</label>
+                            <label>Fingerprint</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <depends>
@@ -242,19 +272,8 @@
                             <comment>codigo informado pela Stone</comment>
                         </stone_app>
 
-                        <cc_types translate="label">
-                            <label>Credit Card Issuers</label>
-                            <frontend_type>multiselect</frontend_type>
-                            <source_model>Uecommerce_Mundipagg_Model_Source_Cctypes</source_model>
-                            <sort_order>13</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment><![CDATA[Escolha as bandeiras que você aceita na sua loja]]></comment>
-                        </cc_types>
-
                         <heading_installments translate="label">
-                            <label>Installments and Interest</label>
+                            <label>Credit Card Basic Configuration</label>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
                             <sort_order>14</sort_order>
                             <show_in_default>1</show_in_default>
@@ -262,11 +281,33 @@
                             <show_in_store>0</show_in_store>
                         </heading_installments>
 
-                        <enable_installments translate="label">
-                            <label>Ativar parcelamento?</label>
+                        <cc_types translate="label">
+                            <label>Credit Card Issuers</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <source_model>Uecommerce_Mundipagg_Model_Source_Cctypes</source_model>
+                            <sort_order>15</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Escolha as bandeiras que você aceita na sua loja]]></comment>
+                        </cc_types>
+
+                        <save_cardonfile translate="label">
+                            <label>Instant Buy</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>15</sort_order>
+                            <sort_order>16</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment><![CDATA[Enable customer to save his cards for future purchases.Creditcard numbers are saved in Mundipagg, the store only save a token to the customer card.]]></comment>
+                        </save_cardonfile>
+
+                        <enable_installments translate="label">
+                            <label>Installment</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>17</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -276,7 +317,10 @@
                             <label>Exibir total com juros ao lado das parcelas?</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>16</sort_order>
+                            <sort_order>18</sort_order>
+                            <depends>
+                                <enable_installments>1</enable_installments>
+                            </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -286,77 +330,63 @@
                             <label>Qual parcelamento exibir na página do produto?</label>
                             <frontend_type>select</frontend_type>
                             <source_model>Uecommerce_Mundipagg_Model_Source_CctypeProductInstallments</source_model>
-                            <sort_order>17</sort_order>
+                            <sort_order>19</sort_order>
+                            <depends>
+                                <enable_installments>1</enable_installments>
+                            </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                         </product_pages_installment_default>
 
-                        <setoldsettings translate="label comment tooltip">
-                            <label>Set old settings</label>
-                            <sort_order>18</sort_order>
-                            <frontend_type>button</frontend_type>
-                            <frontend_model>mundipagg/adminhtml_system_config_form_button</frontend_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>If you just update the module and its old version is below 2.0.0, you can click
-                                this button to generate the installments as were set in the old version of the module.
-                            </comment>
-                            <tooltip>If you have already set manually, CAUTION! This function will reset all
-                                installments.
-                            </tooltip>
-                        </setoldsettings>
-
                         <installments translate="label">
                             <label>Installments default</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>19</sort_order>
+                            <sort_order>20</sort_order>
+                            <depends>
+                                <enable_installments>1</enable_installments>
+                            </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-
                         </installments>
 
                         <installments_VI translate="label">
                             <label>Installments for Visa</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>20</sort_order>
+                            <sort_order>21</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-
                         </installments_VI>
 
                         <installments_MC translate="label">
                             <label>Installments for Mastercard</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>21</sort_order>
+                            <sort_order>22</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-
                         </installments_MC>
 
                         <installments_AE translate="label">
                             <label>Installments for Amex</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>22</sort_order>
+                            <sort_order>23</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-
                         </installments_AE>
 
                         <installments_DI translate="label">
                             <label>Installments for Diners</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>23</sort_order>
+                            <sort_order>24</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -368,7 +398,7 @@
                             <label>Installments for Elo</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>24</sort_order>
+                            <sort_order>25</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -379,7 +409,7 @@
                             <label>Installments for Hipercard</label>
                             <frontend_model>mundipagg/adminhtml_form_field_installments</frontend_model>
                             <backend_model>mundipagg/system_config_backend_installments</backend_model>
-                            <sort_order>25</sort_order>
+                            <sort_order>26</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
@@ -388,7 +418,7 @@
                         <offline_retry_heading translate="label">
                             <label>Offline Retry</label>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-                            <sort_order>26</sort_order>
+                            <sort_order>27</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -398,7 +428,7 @@
                             <label>Enabled</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>27</sort_order>
+                            <sort_order>28</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -407,20 +437,21 @@
                         <delayed_retry_max_time translate="label">
                             <label>Max time to retry in minutes</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>28</sort_order>
+                            <sort_order>29</sort_order>
                             <depends>
                                 <offline_retry_enabled>1</offline_retry_enabled>
                             </depends>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <comment>Max time to wait for an authorization. After this, the order will be cancelled.</comment>
+                            <comment>Max time to wait for an authorization. After this, the order will be cancelled.
+                            </comment>
                         </delayed_retry_max_time>
 
                         <heading_extras translate="label">
                             <label>Extras</label>
                             <frontend_model>adminhtml/system_config_form_field_heading</frontend_model>
-                            <sort_order>29</sort_order>
+                            <sort_order>30</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -446,16 +477,6 @@
                             <comment><![CDATA[Quantidade de dias em média para entrega de seus produtos.]]></comment>
                         </delivery_deadline>
 
-                        <save_cardonfile translate="label">
-                            <label>Enable feature (use the card for future purchases)</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>33</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </save_cardonfile>
-
                         <cielo_sku translate="label">
                             <label>SKU produto de teste de R$1,00 da Cielo</label>
                             <frontend_type>text</frontend_type>
@@ -466,92 +487,9 @@
                             <comment>
                                 <![CDATA[SKU do produto de teste da Cielo para forçar o pagamento pela Cielo durante a homologação]]></comment>
                         </cielo_sku>
-
                     </fields>
-
                 </mundipagg_standard>
 
-                <mundipagg_creditcardoneinstallment type="group" translate="label">
-                    <label><![CDATA[MundiPagg - Cartão de Crédito à vista]]></label>
-                    <sort_order>430</sort_order>
-                    <show_in_default>1</show_in_default>
-                    <show_in_website>1</show_in_website>
-                    <show_in_store>1</show_in_store>
-                    <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
-                    <fields>
-                        <active translate="label">
-                            <label>Enabled</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_yesno</source_model>
-                            <sort_order>1</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </active>
-
-                        <title translate="label">
-                            <label>Title</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>2</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <comment>
-                                <![CDATA[Texto que irá aparecer no seu checkout para descrever a forma de pagamento.]]></comment>
-                        </title>
-
-                        <allowspecific translate="label">
-                            <label>Payment from Applicable Countries</label>
-                            <frontend_type>allowspecific</frontend_type>
-                            <sort_order>60</sort_order>
-                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </allowspecific>
-
-                        <specificcountry translate="label">
-                            <label>Payment from Specific Countries</label>
-                            <frontend_type>multiselect</frontend_type>
-                            <sort_order>61</sort_order>
-                            <source_model>adminhtml/system_config_source_country</source_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                        </specificcountry>
-
-                        <min_order_total translate="label">
-                            <label>Min Order Total</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>70</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <frontend_class>validate-number</frontend_class>
-                        </min_order_total>
-
-                        <max_order_total translate="label">
-                            <label>Max Order Total</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>80</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <frontend_class>validate-number</frontend_class>
-                        </max_order_total>
-
-                        <sort_order translate="label">
-                            <label>Sort Order</label>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>100</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>1</show_in_store>
-                            <frontend_class>validate-number</frontend_class>
-                        </sort_order>
-                    </fields>
-                </mundipagg_creditcardoneinstallment>
                 <mundipagg_creditcard type="group" translate="label">
                     <label><![CDATA[MundiPagg - Cartão de Crédito]]></label>
                     <sort_order>430</sort_order>
@@ -559,7 +497,7 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                        <![CDATA[<br><a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png"/></a><br><br><br>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -640,7 +578,7 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                        <![CDATA[<br><a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png"/></a><br><br><br>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -721,7 +659,7 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                        <![CDATA[<br><a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png"/></a><br><br><br>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -802,7 +740,7 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                        <![CDATA[<br><a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png"/></a><br><br><br>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -883,7 +821,7 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                        <![CDATA[<br><a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png"/></a><br><br><br>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -964,7 +902,7 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                        <![CDATA[<br><a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png"/></a><br><br><br>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
@@ -1047,7 +985,7 @@
                     <show_in_website>1</show_in_website>
                     <show_in_store>1</show_in_store>
                     <comment>
-                        <![CDATA[<a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundipagg-avatar-blue.png"/></a></span>]]></comment>
+                        <![CDATA[<br><a href="http://www.mundipagg.com.br" target="_blank"><img title="MundiPagg" alt="MundiPagg" src="/skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png"/></a><br><br><br>]]></comment>
                     <fields>
                         <active translate="label">
                             <label>Enabled</label>
