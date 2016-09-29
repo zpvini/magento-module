@@ -1907,9 +1907,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			} else {
 
-				if (count($value) == 0) {
-					$transaction->setAdditionalInformation($transKey, htmlspecialchars_decode($value));
-					$payment->setAdditionalInformation($num . '_' . $transKey, htmlspecialchars_decode($value));
+				if (empty($value)) {
+					$transaction->setAdditionalInformation($transKey, '');
+					$payment->setAdditionalInformation($num . '_' . $transKey, '');
 
 				} else {
 					foreach ($value as $key2 => $value2) {
