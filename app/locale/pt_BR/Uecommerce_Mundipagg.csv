@@ -208,3 +208,5 @@
 "Installment","Parcelamento"
 "Enable customer to save his cards for future purchases.Creditcard numbers are saved in Mundipagg, the store only save a token to the customer card.","Possibilita o cliente salvar seus cartões para compras futuras. Os números de cartão são salvos na Mundipagg, a loja armazena apenas um token do cartão."
 "Version","Versão"
+"Anti Fraud Provider","Fornecedor Anti-fraude"
+"Cart Minimum Value","Valor Mínimo do Carrinho"
