@@ -2,9 +2,6 @@
 
 class Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval extends Mage_Core_Model_Config_Data {
 
-	const DISABLED = 0;
-	const ENABLED  = 1;
-
 	public function save() {
 		$helper = Mage::helper('mundipagg');
 		$value = $this->getValue();
