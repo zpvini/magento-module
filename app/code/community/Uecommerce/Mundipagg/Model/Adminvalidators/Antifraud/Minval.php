@@ -10,7 +10,7 @@ class Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval extends Mage_C
 		$value = $this->getValue();
 
 		if (empty($value)) {
-			$this->setValue(0);
+			$this->setValue('0.00');
 
 			return parent::save();
 		}
@@ -21,12 +21,18 @@ class Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval extends Mage_C
 		$afProviderName = $helper->getAntifraudName($antifraudProvider);
 		$afProviderNameCaptilized = strtoupper($afProviderName);
 
+		if ($helper->isValidNumber($value) === false) {
+			$errMsg = $helper->__("Cart minimum value '%s' for antifraud %s isn't in the valid format", $value, $afProviderNameCaptilized);
+			Mage::throwException($errMsg);
+		}
+
 		if ($valueInCents < 0) {
 			$errMsg = $helper->__("Cart minimum value for antifraud %s can't be negative", $afProviderNameCaptilized);
 			Mage::throwException($errMsg);
 		}
 
-//		$value =
+		$floatValue = $helper->priceInCentsToFloat($valueInCents);
+		$this->setValue($floatValue);
 
 		return parent::save();
 	}

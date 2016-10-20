@@ -153,7 +153,7 @@
                             <show_in_store>1</show_in_store>
                         </antifraud_provider>
 
-                        <antifraud_minimum_clearsale translate="label">
+                        <antifraud_minimum_clearsale>
                             <label>Cart Minimum Value</label>
                             <frontend_type>text</frontend_type>
                             <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval</backend_model>
@@ -165,9 +165,10 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
+                            <comment>Valid formats: 0.00 - 0,00</comment>
                         </antifraud_minimum_clearsale>
 
-                        <antifraud_minimum_fcontrol translate="label">
+                        <antifraud_minimum_fcontrol>
                             <label>Cart Minimum Value</label>
                             <frontend_type>text</frontend_type>
                             <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval</backend_model>
@@ -179,9 +180,10 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
+                            <comment>Valid formats: 0.00 - 0,00</comment>
                         </antifraud_minimum_fcontrol>
 
-                        <antifraud_minimum_stone translate="label">
+                        <antifraud_minimum_stone>
                             <label>Cart Minimum Value</label>
                             <frontend_type>text</frontend_type>
                             <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval</backend_model>
@@ -193,6 +195,7 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
+                            <comment>Valid formats: 0.00 - 0,00</comment>
                         </antifraud_minimum_stone>
 
                         <fingerprint translate="label">

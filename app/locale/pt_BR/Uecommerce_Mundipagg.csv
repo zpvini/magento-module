@@ -211,3 +211,5 @@
 "Anti Fraud Provider","Fornecedor Anti-fraude"
 "Cart Minimum Value","Valor Mínimo do Carrinho"
 "Cart minimum value for antifraud %s can't be negative","Valor mínimo do carrinho para o antifraude %s não pode ser negativo"
+"Valid formats: 0.00 - 0,00","Formatos válidos: 0,00 - 0.00"
+"Cart minimum value '%s' for antifraud %s isn't in the valid format","Valor mínimo do carrinho '%s' informado para o antifraude %s não está no formato válido"

@@ -492,11 +492,41 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract {
 		return boolval($antifraud);
 	}
 
+	public function priceFormatter($amountInCents) {
+		$number = round($amountInCents, 2, PHP_ROUND_HALF_DOWN);
+		$number = number_format($number, 2, ',', '');
+		return $number;
+	}
+
 	public function formatPriceToCents($oldPrice) {
 		$newPrice = str_replace(",", ".", $oldPrice);
 		$newPrice *= 100;
 
 		return $newPrice;
+	}
+
+	public function priceInCentsToFloat($priceInCents) {
+		$priceFormatted = $this->priceFormatter($priceInCents / 100);
+		$newPrice = str_replace(",", ".", $priceFormatted);
+
+		return $newPrice;
+	}
+
+	/**
+	 * Check if input value is a valid number
+	 * @param $value
+	 * @return bool
+	 */
+	public function isValidNumber($value) {
+		$value = str_replace(',', '.', $value);
+		$arrVal = explode('.', $value);
+		$cents = $arrVal[1];
+
+		if (strlen($cents) > 2 || !is_numeric($value)){
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
