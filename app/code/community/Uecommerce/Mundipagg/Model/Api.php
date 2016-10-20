@@ -210,6 +210,36 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				}
 			}
 
+			// check anti fraud minimum value
+			if ($helper->isAntiFraudEnabled()) {
+				$antifraudProviderConfig = intval(Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider'));
+				$antifraudProvider = null;
+
+				switch ($antifraudProviderConfig) {
+					case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_CLEARSALE:
+						$antifraudProvider = 'clearsale';
+						break;
+
+					case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_FCONTROL:
+						$antifraudProvider = 'fcontrol';
+						break;
+
+					case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_STONE:
+						$antifraudProvider = 'stone';
+						break;
+				}
+
+				$minValueConfig = Mage::getStoreConfig("payment/mundipagg_standard/antifraud_minimum_{$antifraudProvider}");
+				$minValueConfig = $helper->formatPriceToCents($minValueConfig);
+
+				if ($amountInCentsVar >= $minValueConfig) {
+					$_request['Options']['IsAntiFraudEnabled'] = true;
+				} else {
+					$_request['Options']['IsAntiFraudEnabled'] = false;
+				}
+
+			}
+
 			// Data
 			$_response = $this->sendRequest($_request, $url, $_logRequest);
 			$xml = $_response['xmlData'];

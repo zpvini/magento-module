@@ -210,3 +210,4 @@
 "Version","Versão"
 "Anti Fraud Provider","Fornecedor Anti-fraude"
 "Cart Minimum Value","Valor Mínimo do Carrinho"
+"Cart minimum value for antifraud %s can't be negative","Valor mínimo do carrinho para o antifraude %s não pode ser negativo"
