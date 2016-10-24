@@ -154,7 +154,7 @@
                         </antifraud_provider>
 
                         <antifraud_minimum_clearsale>
-                            <label>Cart Minimum Value</label>
+                            <label>Order Minimum Value</label>
                             <frontend_type>text</frontend_type>
                             <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval</backend_model>
                             <depends>
@@ -169,7 +169,7 @@
                         </antifraud_minimum_clearsale>
 
                         <antifraud_minimum_fcontrol>
-                            <label>Cart Minimum Value</label>
+                            <label>Order Minimum Value</label>
                             <frontend_type>text</frontend_type>
                             <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval</backend_model>
                             <depends>
@@ -184,7 +184,7 @@
                         </antifraud_minimum_fcontrol>
 
                         <antifraud_minimum_stone>
-                            <label>Cart Minimum Value</label>
+                            <label>Order Minimum Value</label>
                             <frontend_type>text</frontend_type>
                             <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Antifraud_Minval</backend_model>
                             <depends>
