@@ -1240,6 +1240,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				return "KO | {$returnMessage}";
 			}
 
+			$transactionData = null;
+
 			if (!empty($data['BoletoTransaction'])) {
 				$status = $data['BoletoTransaction']['BoletoTransactionStatus'];
 				$transactionKey = $data['BoletoTransaction']['TransactionKey'];
@@ -1482,14 +1484,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						return $returnMessage;
 					}
 
-					// order is in offline retry time yet
-					if ($this->orderIsInOfflineRetry($orderIncrementId)) {
-						$returnMessage = "OK | {$returnMessageLabel} | Order is in offline retry yet.";
-						$helperLog->info($returnMessage);
-
-						return $returnMessage;
-					}
-
 					$helper = Mage::helper('mundipagg');
 					$grandTotal = $order->getGrandTotal();
 					$grandTotalInCents = $helper->formatPriceToCents($grandTotal);
@@ -1505,6 +1499,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					try {
 						$this->tryCancelOrder($order);
+
 					} catch (Exception $e) {
 						$returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
 
