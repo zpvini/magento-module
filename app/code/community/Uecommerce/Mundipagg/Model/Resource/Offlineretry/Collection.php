@@ -6,15 +6,4 @@ class Uecommerce_Mundipagg_Model_Resource_Offlineretry_Collection extends Mage_C
 		$this->_init('mundipagg/offlineretry');
 	}
 
-//	public function addEntityIdFilter($entityId) {
-//		$this->addFieldToFilter('entity_id', $entityId);
-//
-//		return $this;
-//	}
-//
-//	public function addExpiresAtFilter() {
-//		$this->addFieldToFilter('expires_at', array('gteq' => date('Y-m-t')));
-//
-//		return $this;
-//	}
 }

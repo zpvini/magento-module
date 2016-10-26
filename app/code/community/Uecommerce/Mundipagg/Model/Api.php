@@ -1471,12 +1471,53 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					break;
 
 				case 'notauthorized':
-					$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' received.";
+					$orderIncrementId = $order->getIncrementId();
+					$offlineRetryModel = Mage::getModel('mundipagg/offlineretry');
+					$offlineRetry = $offlineRetryModel->loadByIncrementId($orderIncrementId);
 
+					if (is_null($offlineRetry->getId())) {
+						$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' received";
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+					}
+
+					// order is in offline retry time yet
+					if ($this->orderIsInOfflineRetry($orderIncrementId)) {
+						$returnMessage = "OK | {$returnMessageLabel} | Order is in offline retry yet.";
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+					}
+
+					$helper = Mage::helper('mundipagg');
+					$grandTotal = $order->getGrandTotal();
+					$grandTotalInCents = $helper->formatPriceToCents($grandTotal);
+					$amountInCents = $transactionData['AmountInCents'];
+
+					// if not authorized amount equal to order grand total, order must be canceled
+					if ($amountInCents != $grandTotalInCents) {
+						$returnMessage = "OK | {$returnMessageLabel} | Order grand_total not equal to transaction AmountInCents";
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+					}
+
+					try {
+						$this->tryCancelOrder($order);
+					} catch (Exception $e) {
+						$returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
+
+						$helperLog->error($e, true);
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+					}
+
+					$returnMessage = "OK | {$returnMessageLabel} | Order canceled: total amount not authorized";
 					$helperLog->info($returnMessage);
 
 					return $returnMessage;
-
 					break;
 
 				case 'canceled':
