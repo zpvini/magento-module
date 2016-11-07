@@ -33,7 +33,7 @@ class Uecommerce_Mundipagg_Model_Source_Frequency extends Mage_Eav_Model_Entity_
     public function getAllOptions()
     {
         return array(
-            array('value' => '0', 'label' => 'Nenhuma'),
+            array('value' => '0', 'label' => '...'),
             array('value' => 'Daily', 'label' => Mage::helper('mundipagg')->__('Daily')),
             array('value' => 'Weekly', 'label' => Mage::helper('mundipagg')->__('Weekly')),
             array('value' => 'Monthly', 'label' => Mage::helper('mundipagg')->__('Monthly')),

@@ -29,6 +29,14 @@
         </models>
 
         <events>
+            <catalog_product_save_before>
+                <observers>
+                    <checkRecurrencyFrequency>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>checkRecurrencyFrequency</method>
+                    </checkRecurrencyFrequency>
+                </observers>
+            </catalog_product_save_before>
             <controller_action_predispatch>
                 <observers>
                     <sessionUpdate>
