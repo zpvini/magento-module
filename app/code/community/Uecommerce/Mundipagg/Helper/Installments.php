@@ -299,24 +299,20 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 
 		if ($installments > 0) {
 			$ccTypeInstallments = "installments_" . $ccType;
-//Mage::log( 'ccTypeInstallments' );
-//Mage::log( print_r($ccTypeInstallments,1) );
 			$all_installments = $this->getInstallments(null, $ccTypeInstallments);
-//Mage::log( 'all_installments' );
-//Mage::log( print_r($all_installments,1) );
+
 			if (empty($all_installments)) {
 				$all_installments = $this->getInstallments();
 			}
-
-//Mage::log( 'if empty all_installments' );
-//Mage::log( print_r($all_installments,1) );
 
 			$installmentKey = $installments - 1;
 
 			if (!$installmentKey) {
 				return 0;
 			}
-			$installment = $all_installments[$installmentKey];
+
+			$helper = Mage::helper('mundipagg');
+			$installment = $helper->issetOr($all_installments[$installmentKey]);
 
 			if ($installment != null && is_array($installment)) {
 				// check if interest rate is filled in
