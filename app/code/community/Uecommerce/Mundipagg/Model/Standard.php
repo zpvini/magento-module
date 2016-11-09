@@ -522,14 +522,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				break;
 		}
 
-		$mageVersion = Mage::helper('mundipagg/version')->convertVersionToCommunityVersion(Mage::getVersion());
-
-		if (version_compare($mageVersion, '1.5.0', '<')) {
-			$orderAction = 'order';
-		} else {
-			$orderAction = Mage_Payment_Model_Method_Abstract::ACTION_ORDER;
-		}
-
+		$orderAction = Mage_Payment_Model_Method_Abstract::ACTION_ORDER;
 		$payment = $this->getInfoInstance();
 		$order = $payment->getOrder();
 
@@ -809,13 +802,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		// Return error
 		if (isset($resultPayment['error'])) {
 			try {
-				$mageVersion = Mage::helper('mundipagg/version')->convertVersionToCommunityVersion(Mage::getVersion());
-
-				if (version_compare($mageVersion, '1.5.0', '<')) {
-					$transactionType = 'payment';
-				} else {
-					$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
-				}
+				$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
 
 				// Xml
 				$xml = $resultPayment['result'];
@@ -866,13 +853,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			}
 		} else {
 			if (isset($resultPayment['message'])) {
-				$mageVersion = Mage::helper('mundipagg/version')->convertVersionToCommunityVersion(Mage::getVersion());
 
-				if (version_compare($mageVersion, '1.5.0', '<')) {
-					$transactionType = 'payment';
-				} else {
-					$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
-				}
+				$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
 
 				// Xml
 				$xml = $resultPayment['result'];
