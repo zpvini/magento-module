@@ -579,6 +579,13 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			// Proceed to authorization on Gateway
 			$resultPayment = $this->doPayment($payment, $order);
 
+			$helper = Mage::helper('mundipagg');
+			$result = $helper->issetOr($resultPayment['result'], false);
+
+			if ($result === false) {
+				return $this->integrationTimeOut($order);
+			}
+
 			// We record transaction(s)
 			if (isset($resultPayment['result'])) {
 				$xml = $resultPayment['result'];
