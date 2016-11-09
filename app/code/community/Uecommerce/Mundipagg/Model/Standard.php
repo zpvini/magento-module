@@ -793,64 +793,22 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 		// Load order
 		$order = $payment->getOrder();
-
 		$order = Mage::getModel('sales/order')->loadByIncrementId($order->getRealOrderId());
 
 		// Proceed to payment on Gateway
 		$resultPayment = $this->doPayment($payment, $order);
 
+		$helper = Mage::helper('mundipagg');
+		$result = $helper->issetOr($resultPayment['result'], false);
+
+		if ($result === false) {
+			return $this->integrationTimeOut($order);
+		}
+
 		// Return error
 		if (isset($resultPayment['error'])) {
-			try {
-				$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
+			return $this->paymentError($order, $resultPayment);
 
-				// Xml
-				$xml = $resultPayment['result'];
-				$json = json_encode($xml);
-
-				$resultPayment['result'] = array();
-				$resultPayment['result'] = json_decode($json, true);
-
-				// We record transaction(s)
-				if (isset($resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
-					if (count($resultPayment['result']['CreditCardTransactionResultCollection']) == 1) {
-						$trans = $resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
-
-						$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
-					} else {
-						foreach ($resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
-							$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
-						}
-					}
-				}
-
-				if (isset($resultPayment['ErrorItemCollection'])) {
-					if (count($resultPayment['ErrorItemCollection']) == 1) {
-						foreach ($resultPayment['ErrorItemCollection']['ErrorItem'] as $key => $value) {
-							$payment->setAdditionalInformation($key, $value)->save();
-						}
-					} else {
-						foreach ($resultPayment['ErrorItemCollection'] as $key1 => $error) {
-							foreach ($error as $key2 => $value) {
-								$payment->setAdditionalInformation($key1 . '_' . $key2, $value)->save();
-							}
-						}
-					}
-				}
-
-				$payment->setSkipOrderProcessing(true)->save();
-
-				if (isset($resultPayment['ErrorDescription'])) {
-					$order->addStatusHistoryComment(Mage::helper('mundipagg')->__(htmlspecialchars_decode($resultPayment['ErrorDescription'])));
-					$order->save();
-
-					Mage::throwException(Mage::helper('mundipagg')->__($resultPayment['ErrorDescription']));
-				} else {
-					Mage::throwException(Mage::helper('mundipagg')->__('Erro'));
-				}
-			} catch (Exception $e) {
-				return $this;
-			}
 		} else {
 			if (isset($resultPayment['message'])) {
 
@@ -1962,6 +1920,81 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			throw new Exception($errMsg);
 		}
+	}
+
+	/**
+	 * @param Mage_Sales_Model_Order $order
+	 * @param                        $resultPayment
+	 * @return $this
+	 */
+	private function paymentError(Mage_Sales_Model_Order $order, $resultPayment) {
+		try {
+			// Xml
+			$xml = $resultPayment['result'];
+			$json = json_encode($xml);
+
+			$resultPayment['result'] = array();
+			$resultPayment['result'] = json_decode($json, true);
+
+			$payment = $order->getPayment();
+			$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
+
+			// We record transaction(s)
+			if (isset($resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
+				if (count($resultPayment['result']['CreditCardTransactionResultCollection']) == 1) {
+					$trans = $resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+
+					$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
+				} else {
+					foreach ($resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
+						$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
+					}
+				}
+			}
+
+			if (isset($resultPayment['ErrorItemCollection'])) {
+				if (count($resultPayment['ErrorItemCollection']) == 1) {
+					foreach ($resultPayment['ErrorItemCollection']['ErrorItem'] as $key => $value) {
+						$payment->setAdditionalInformation($key, $value)->save();
+					}
+				} else {
+					foreach ($resultPayment['ErrorItemCollection'] as $key1 => $error) {
+						foreach ($error as $key2 => $value) {
+							$payment->setAdditionalInformation($key1 . '_' . $key2, $value)->save();
+						}
+					}
+				}
+			}
+
+			$payment->setSkipOrderProcessing(true)->save();
+
+			if (isset($resultPayment['ErrorDescription'])) {
+				$order->addStatusHistoryComment(Mage::helper('mundipagg')->__(htmlspecialchars_decode($resultPayment['ErrorDescription'])));
+				$order->save();
+
+				Mage::throwException(Mage::helper('mundipagg')->__($resultPayment['ErrorDescription']));
+			} else {
+				Mage::throwException(Mage::helper('mundipagg')->__('Erro'));
+			}
+		} catch (Exception $e) {
+			return $this;
+		}
+	}
+
+	private function integrationTimeOut(Mage_Sales_Model_Order $order) {
+		$session = Mage::getSingleton('checkout/session');
+		$session->setApprovalRequestSuccess('success');
+
+		$payment = $order->getPayment();
+		$payment->setSkipOrderProcessing(true)->save();
+
+		$helper = Mage::helper('mundipagg');
+		$comment = $helper->__('Integration Timeout, waiting MundiPagg notification');
+
+		$order->addStatusHistoryComment($comment);
+		$order->save();
+
+		return $this;
 	}
 
 }
