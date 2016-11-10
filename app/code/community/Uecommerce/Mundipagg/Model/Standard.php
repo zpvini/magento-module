@@ -1837,17 +1837,21 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		$transaction->setTxnId($transactionId . '-' . $transactionType);
 
 		if ($transactionType == 'authorization') {
-			if ($transactionAdditionalInfo['CreditCardTransactionStatus'] == 'AuthorizedPendingCapture') {
-				$transaction->setIsClosed(0);
-			}
+			$ccTransactionStatus = $transactionAdditionalInfo['CreditCardTransactionStatus'];
 
-			if ($transactionAdditionalInfo['CreditCardTransactionStatus'] == 'NotAuthorized') {
-				$transaction->setIsClosed(1);
+			switch ($ccTransactionStatus){
+				case 'AuthorizedPendingCapture':
+				case 'Captured':
+				$transaction->setIsClosed(0);
+					break;
+
+				case 'NotAuthorized':
+					$transaction->setIsClosed(1);
+					break;
 			}
 		}
 
 		foreach ($transactionAdditionalInfo as $transKey => $value) {
-
 			if (!is_array($value)) {
 				$transaction->setAdditionalInformation($transKey, htmlspecialchars_decode($value));
 				$payment->setAdditionalInformation($num . '_' . $transKey, htmlspecialchars_decode($value));
