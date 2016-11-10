@@ -1874,7 +1874,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_setopt($ch, CURLOPT_HEADER, false);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $key . ''));
 		curl_setopt($ch, CURLOPT_URL, $url);
-
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 		// Execute get
@@ -2127,7 +2126,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$responseJSON = $this->helperUtil->jsonEncodePretty($xml);
 		$responseArray = json_decode($responseJSON, true);
 
-		$helperLog->info("Response:\n{$responseJSON} \n");
+		if($_response != 'false'){
+			$helperLog->info("Response:\n{$responseJSON} \n");
+		} else {
+			$helperLog->warning("Response: Integration timeout!");
+		}
 
 		$responseData = array(
 			'xmlData'   => $xml,

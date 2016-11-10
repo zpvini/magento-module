@@ -937,6 +937,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 */
 	public function doPayment($payment, $order) {
 		try {
+			$helper = Mage::helper('mundipagg');
 			$session = Mage::getSingleton('checkout/session');
 			$mundipaggData = $session->getMundipaggData();
 
@@ -969,7 +970,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			// 1 or more Credit Cards Payment
 			if ($data['payment_method'] != 'mundipagg_boleto' && $data['payment_method'] != 'mundipagg_debit') {
-				$helper = Mage::helper('mundipagg');
 				$num = $helper->getCreditCardsNumber($type);
 				$method = $helper->getPaymentMethod($num);
 
@@ -1169,7 +1169,11 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 					}
 				} else {
-					$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
+					$result = $helper->issetOr($approvalRequest['result'], false);
+
+					if ($result !== false) {
+						$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
+					}
 				}
 
 				return $approvalRequest;
@@ -1265,7 +1269,11 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 								}
 							}
 						} else {
-							$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
+							$result = $helper->issetOr($approvalRequest['result'], false);
+
+							if ($result !== false) {
+								$this->offlineRetryCancelOrSuccessOrder($order->getIncrementId());
+							}
 						}
 					}
 
@@ -1839,10 +1847,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		if ($transactionType == 'authorization') {
 			$ccTransactionStatus = $transactionAdditionalInfo['CreditCardTransactionStatus'];
 
-			switch ($ccTransactionStatus){
+			switch ($ccTransactionStatus) {
 				case 'AuthorizedPendingCapture':
 				case 'Captured':
-				$transaction->setIsClosed(0);
+					$transaction->setIsClosed(0);
 					break;
 
 				case 'NotAuthorized':
