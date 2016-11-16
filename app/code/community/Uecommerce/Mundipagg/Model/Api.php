@@ -50,6 +50,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * Credit Card Transaction
 	 */
 	public function creditCardTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard) {
+		$helper = Mage::helper('mundipagg');
 		$_logRequest = array();
 
 		try {
@@ -94,7 +95,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$amountInCentsVar = intval(strval(($baseGrandTotal * 100)));
 
 			// CreditCardOperationEnum : if more than one payment method we use AuthOnly and then capture if all are ok
-			$helper = Mage::helper('mundipagg');
 
 			$num = $helper->getCreditCardsNumber($data['payment_method']);
 
@@ -240,35 +240,40 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			}
 
-			// Data
-			$_response = $this->sendRequest($_request, $url, $_logRequest);
-			$xml = $_response['xmlData'];
-			$dataR = $_response['arrayData'];
+			$response = $this->sendJSON($_request);
+			$errorReport = $helper->issetOr($response['ErrorReport']);
+			$orderKey = $helper->issetOr($response['OrderResult']['OrderKey']);
+			$orderReference = $helper->issetOr($response['OrderResult']['OrderReference']);
+			$createDate = $helper->issetOr($response['OrderResult']['CreateDate']);
 
 			// if some error ocurred ex.: http 500 internal server error
-			if (isset($dataR['ErrorReport']) && !empty($dataR['ErrorReport'])) {
-				$_errorItemCollection = $dataR['ErrorReport']['ErrorItemCollection'];
+			if (!is_null($errorReport)) {
+				$errorItemCollection = $errorReport['ErrorItemCollection'];
 
 				// Return errors
 				return array(
 					'error'               => 1,
 					'ErrorCode'           => '',
 					'ErrorDescription'    => '',
-					'OrderKey'            => isset($dataR['OrderResult']['OrderKey']) ? $dataR['OrderResult']['OrderKey'] : null,
-					'OrderReference'      => isset($dataR['OrderResult']['OrderReference']) ? $dataR['OrderResult']['OrderReference'] : null,
-					'ErrorItemCollection' => $_errorItemCollection,
-					'result'              => $dataR,
+					'OrderKey'            => $orderKey,
+					'OrderReference'      => $orderReference,
+					'ErrorItemCollection' => $errorItemCollection,
+					'result'              => $response,
 				);
 			}
 
 			// Transactions colllection
-			$creditCardTransactionResultCollection = $dataR['CreditCardTransactionResultCollection'];
+			$creditCardTransactionResultCollection = $helper->issetOr($response['CreditCardTransactionResultCollection']);
+			$transactionsQty = count($creditCardTransactionResultCollection);
 
 			// Only 1 transaction
-			if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
+			if (count($creditCardTransactionResultCollection) == 1) {
+				$creditCardTransaction = $creditCardTransactionResultCollection[0];
+				$success = boolval($helper->issetOr($creditCardTransaction['Success']));
+
 				//and transaction success is true
-				if ((string)$creditCardTransactionResultCollection['CreditCardTransactionResult']['Success'] == 'true') {
-					$trans = $creditCardTransactionResultCollection['CreditCardTransactionResult'];
+				if ($success === true) {
+//					$trans = $creditCardTransactionResultCollection['CreditCardTransactionResult'];
 
 					// We save Card On File
 					if ($data['customer_id'] != 0 && isset($data['payment'][1]['token']) && $data['payment'][1]['token'] == 'new') {
@@ -277,26 +282,25 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$cardonfile->setEntityId($data['customer_id']);
 						$cardonfile->setAddressId($data['address_id']);
 						$cardonfile->setCcType($data['payment'][1]['CreditCardBrandEnum']);
-						$cardonfile->setCreditCardMask($trans['CreditCard']['MaskedCreditCardNumber']);
+						$cardonfile->setCreditCardMask($creditCardTransaction['CreditCard']['MaskedCreditCardNumber']);
 						$cardonfile->setExpiresAt(date("Y-m-t", mktime(0, 0, 0, $data['payment'][1]['ExpMonth'], 1, $data['payment'][1]['ExpYear'])));
-						$cardonfile->setToken($trans['CreditCard']['InstantBuyKey']);
+						$cardonfile->setToken($creditCardTransaction['CreditCard']['InstantBuyKey']);
 						$cardonfile->setActive(1);
-
 						$cardonfile->save();
 					}
 
 					$result = array(
 						'success'        => true,
 						'message'        => 1,
-						'returnMessage'  => urldecode($creditCardTransactionResultCollection['CreditCardTransactionResult']['AcquirerMessage']),
-						'OrderKey'       => $dataR['OrderResult']['OrderKey'],
-						'OrderReference' => $dataR['OrderResult']['OrderReference'],
+						'returnMessage'  => urldecode($creditCardTransaction['AcquirerMessage']),
+						'OrderKey'       => $orderKey,
+						'OrderReference' => $orderReference,
 						'isRecurrency'   => $recurrencyModel->recurrencyExists(),
-						'result'         => $xml
+						'result'         => $response
 					);
 
-					if (isset($dataR['OrderResult']['CreateDate'])) {
-						$result['CreateDate'] = $dataR['OrderResult']['CreateDate'];
+					if (is_null($createDate === false)) {
+						$result['CreateDate'] = $createDate;
 					}
 
 					return $result;
@@ -305,15 +309,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					// CreditCardTransactionResult success == false, not authorized
 					$result = array(
 						'error'            => 1,
-						'ErrorCode'        => $creditCardTransactionResultCollection['CreditCardTransactionResult']['AcquirerReturnCode'],
-						'ErrorDescription' => urldecode($creditCardTransactionResultCollection['CreditCardTransactionResult']['AcquirerMessage']),
-						'OrderKey'         => $dataR['OrderResult']['OrderKey'],
-						'OrderReference'   => $dataR['OrderResult']['OrderReference'],
-						'result'           => $xml
+						'ErrorCode'        => $creditCardTransaction['AcquirerReturnCode'],
+						'ErrorDescription' => urldecode($creditCardTransaction['AcquirerMessage']),
+						'OrderKey'         => $orderKey,
+						'OrderReference'   => $orderReference,
+						'result'           => $response
 					);
 
-					if (isset($dataR['OrderResult']['CreateDate'])) {
-						$result['CreateDate'] = $dataR['OrderResult']['CreateDate'];
+					if (is_null($createDate) === false) {
+						$result['CreateDate'] = $createDate;
 					}
 
 					/**
@@ -321,12 +325,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					 * com mais de 1 cartao
 					 */
 					// save offline retry statements if this feature is enabled
-					$orderResult = $dataR['OrderResult'];
-					$this->saveOfflineRetryStatements($orderResult['OrderReference'], new DateTime($orderResult['CreateDate']));
+					$this->saveOfflineRetryStatements($orderReference, new DateTime($createDate));
 
 					return $result;
 				}
-			} else { // More than 1 transaction
+
+			} elseif ($transactionsQty > 1) { // More than 1 transaction
 				$allTransactions = $creditCardTransactionResultCollection['CreditCardTransactionResult'];
 
 				// We remove other transactions made before
@@ -342,8 +346,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					// Reorganize array indexes from 0
 					$allTransactions = array_values($allTransactions);
 				}
-
-				$needSaveOfflineRetry = true;
 
 				foreach ($allTransactions as $key => $trans) {
 
@@ -362,28 +364,22 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$cardonfile->save();
 					}
 
-//					//some transaction not authorized, save offline retry if necessary
-//					if (isset($trans['Success']) && $trans['Success'] == 'false' && $needSaveOfflineRetry) {
-//						$needSaveOfflineRetry = false;
-//						$orderResult = $dataR['OrderResult'];
-//
-//						$this->saveOfflineRetryStatements($orderResult['OrderReference'], new DateTime($orderResult['CreateDate']));
-//					}
-
 				}
 
 				// Result
 				$result = array(
 					'success'        => true,
 					'message'        => 1,
-					'OrderKey'       => $dataR['OrderResult']['OrderKey'],
-					'OrderReference' => $dataR['OrderResult']['OrderReference'],
+					'OrderKey'       => $orderKey,
+					'OrderReference' => $orderReference,
 					'isRecurrency'   => $recurrencyModel->recurrencyExists(),
-					'result'         => $xml,
+					'result'         => $response,
 				);
 
-				if (isset($dataR['OrderResult']['CreateDate'])) {
-					$result['CreateDate'] = $dataR['OrderResult']['CreateDate'];
+				$createDate = $helper->issetOr($response['OrderResult']['CreateDate']);
+
+				if (is_null($createDate) === false) {
+					$result['CreateDate'] = $createDate;
 				}
 
 				return $result;
@@ -409,6 +405,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			return $approvalRequest;
 		}
+
+		// time out or no Mundipagg API response
+		return false;
 	}
 
 	/**
@@ -2126,7 +2125,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$responseJSON = $this->helperUtil->jsonEncodePretty($xml);
 		$responseArray = json_decode($responseJSON, true);
 
-		if($_response != 'false'){
+		if ($_response != 'false') {
 			$helperLog->info("Response:\n{$responseJSON} \n");
 		} else {
 			$helperLog->warning("Response: Integration timeout!");
@@ -2138,6 +2137,68 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		);
 
 		$this->clearAntifraudDataFromSession();
+
+		return $responseData;
+	}
+
+	/**
+	 * @param array $data
+	 * @return array
+	 */
+	public function sendJSON($data) {
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
+		if (empty($data)) {
+			$errMsg = __METHOD__ . "Exception: one or more arguments not informed to request";
+
+			$log->error($errMsg, true);
+			throw new InvalidArgumentException($errMsg);
+		}
+
+		$helper = Mage::helper('mundipagg');
+		$orderReference = $helper->issetOr($data['Order']['OrderReference']);
+
+		if(is_null($orderReference) === false){
+			$log->setLogLabel("Order #{$orderReference}");
+		}
+
+		$requestRaw = json_encode($data);
+		$headers = array(
+			'Content-Type: application/json',
+			"MerchantKey: {$this->modelStandard->getMerchantKey()}",
+			'Accept: JSON'
+		);
+
+		$url = $this->modelStandard->getUrl();
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRaw);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		// Execute post
+		$response = curl_exec($ch);
+
+		// Close connection
+		curl_close($ch);
+
+		$responseData = json_decode($response, true);
+		$requestPretty = $this->helperUtil->jsonEncodePretty($data);
+		$responsePretty = $this->helperUtil->jsonEncodePretty($responseData);
+
+		$this->clearAntifraudDataFromSession();
+
+		// log Request JSON
+		$log->info("Request:\n{$requestPretty}\n");
+
+		if ($response == 'false') {
+			$log->warning("Response: Integration timeout!");
+
+			return false;
+		}
+
+		$log->info("Response:\n{$responsePretty}\n");
 
 		return $responseData;
 	}

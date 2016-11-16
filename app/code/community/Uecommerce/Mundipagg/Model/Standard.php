@@ -848,7 +848,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						}
 
 						$payment->setTransactionId($this->_transactionId);
-
 						$payment->save();
 
 						// Send new order email when not in admin
@@ -860,14 +859,19 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 					// Credit Card
 					case 1:
+						$creditCardTransactionResultCollection = $result['CreditCardTransactionResultCollection'];
+						$transactionsQty = count($creditCardTransactionResultCollection);
+
 						// We record transaction(s)
-						if (count($resultPayment['result']['CreditCardTransactionResultCollection']) == 1) {
-							$trans = $resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
-							if (array_key_exists('TransactionKey', $trans)) {
-								$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
+						if ($transactionsQty == 1) {
+							$transaction = $creditCardTransactionResultCollection[0];
+
+							if (array_key_exists('TransactionKey', $transaction)) {
+								$this->_addTransaction($payment, $transaction['TransactionKey'], $transactionType, $transaction);
 							}
+
 						} else {
-							foreach ($resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
+							foreach ($creditCardTransactionResultCollection as $key => $trans) {
 								if (array_key_exists('TransactionKey', $trans)) {
 									$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
 								}
@@ -885,7 +889,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						if (!$order->canInvoice()) {
 							// Log error
 							Mage::logException(Mage::helper('core')->__('Cannot create an invoice.'));
-
 							Mage::throwException(Mage::helper('core')->__('Cannot create an invoice.'));
 						}
 
@@ -1111,6 +1114,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					break;
 			}
 
+			if($approvalRequest === false){
+				return false;
+			}
+
 			// Set some data from Mundipagg
 			$payment = $this->setPaymentAdditionalInformation($approvalRequest, $payment);
 			$authorizedAmount = $order->getPaymentAuthorizationAmount();
@@ -1191,22 +1198,24 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				case 3: // AuthAndCaptureWithDelay
 					// We set authorized amount in session
 					$orderGrandTotal = $order->getGrandTotal();
-					$xml = $approvalRequest['result'];
+					$result = $helper->issetOr($approvalRequest['result']);
+					$orderResult = $helper->issetOr($result['OrderResult']);
+					$creditCardTransactionResultCollection = $result['CreditCardTransactionResultCollection'];
+					$transactionsQty = count($creditCardTransactionResultCollection);
 
-					if (isset($xml->OrderResult)) {
-						$orderResult = $xml->OrderResult;
-					}
+					if ($transactionsQty == 1) {
+						$transaction = $creditCardTransactionResultCollection[0];
+						$success = $transaction['Success'];
 
-					if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-						$result = $xml->CreditCardTransactionResultCollection->CreditCardTransactionResult;
-
-						if ($result->Success == true) {
-							$authorizedAmount += $result->AuthorizedAmountInCents * 0.01;
+						if ($success === true) {
+							$authorizedAmount += $transaction['AuthorizedAmountInCents'] * 0.01;
 						}
 					} else {
-						foreach ($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult as $key => $result) {
-							if ($result->Success == true) {
-								$authorizedAmount += $result->AuthorizedAmountInCents * 0.01;
+						foreach ($creditCardTransactionResultCollection as $key => $transaction) {
+							$success = $transaction['Success'];
+
+							if ($success === true) {
+								$authorizedAmount += $transaction['AuthorizedAmountInCents'] * 0.01;
 							}
 						}
 					}
@@ -1277,15 +1286,12 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						}
 					}
 
-					// Session
-					$xml = simplexml_load_string($approvalRequest['result']);
-					$json = json_encode($xml);
-					$dataR = array();
-					$dataR = json_decode($json, true);
-
 					// Transaction
-					$transactionKey = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey'] : null;
-					$creditCardTransactionStatusEnum = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus'] : null;
+//					$transactionKey = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey'] : null;
+//					$creditCardTransactionStatusEnum = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus'] : null;
+
+					$transactionKey = $transaction['TransactionKey'];
+					$creditCardTransactionStatusEnum = $transaction['CreditCardTransactionStatus'];
 
 					try {
 						if ($transactionKey != null) {
@@ -1307,8 +1313,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					break;
 			}
 
+			$orderResult = $helper->issetOr($result['OrderResult']);
+
 			if (isset($orderResult)) {
-				$newOrderKey = (string)$orderResult->OrderKey;
+				$newOrderKey = $orderResult['OrderKey'];
 				$orderPayment = $order->getPayment();
 				$orderKeys = (array)$orderPayment->getAdditionalInformation('OrderKey');
 
@@ -1345,6 +1353,11 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 	}
 
+	/**
+	 * @param array $approvalRequest
+	 * @param $payment
+	 * @return mixed
+	 */
 	private function setPaymentAdditionalInformation($approvalRequest, $payment) {
 		if (isset($approvalRequest['ErrorCode'])) {
 			$payment->setAdditionalInformation('ErrorCode', $approvalRequest['ErrorCode']);
