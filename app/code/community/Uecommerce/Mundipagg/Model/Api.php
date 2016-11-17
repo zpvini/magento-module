@@ -2280,4 +2280,35 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 	}
 
+	public function getOrderTransactions($orderReference) {
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$log->setLogLabel("Order {$orderReference}");
+
+		$headers = array(
+			'Content-Type: application/json',
+			"MerchantKey: {$this->modelStandard->getMerchantKey()}",
+			'Accept: JSON'
+		);
+
+		$url = $this->modelStandard->getUrl() . "Query/OrderReference={$orderReference}";
+
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		$responseRaw = curl_exec($ch);
+		curl_close($ch);
+
+		$util = new Uecommerce_Mundipagg_Helper_Util();
+
+		$responseData = json_decode($responseRaw);
+		$responseJSON = $util->jsonEncodePretty($responseData);
+
+		$log->info("Request: {$url}");
+		$log->info("Response:\n{$responseJSON}");
+
+		return $responseData;
+	}
+
 }
