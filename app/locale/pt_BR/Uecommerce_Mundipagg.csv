@@ -215,3 +215,4 @@
 "Order minimum value '%s' for antifraud %s isn't in the valid format","Valor mínimo do carrinho '%s' informado para o antifraude %s não está no formato válido"
 "Offline Retry","Retentativa Offline"
 "Offline retry can't be used with more than 1 creditcard payment method yet. This feature will be available comming soon.","A retentativa offline ainda não pode ser utilizada em conjunto com métodos de pagamento de mais de 1 cartão. Funcionalidade será disponibilizada em versões futuras do módulo Mundipagg."
+"Integration error","Erro na integração"

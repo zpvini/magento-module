@@ -63,7 +63,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 				$model = Mage::getModel('mundipagg/offlineretry');
 				$incrementId = $order->getIncrementId();
 				$offlineRetry = $model->loadByIncrementId($incrementId);
-				$offlineRetryData =$offlineRetry->getData();
+				$offlineRetryData = $offlineRetry->getData();
 
 				if (!empty($offlineRetryData)) {
 					$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);

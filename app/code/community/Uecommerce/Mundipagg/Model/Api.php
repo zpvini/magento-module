@@ -32,6 +32,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	const TRANSACTION_NOT_FOUND        = "Transaction not found";
 	const TRANSACTION_ALREADY_CAPTURED = "Transaction already captured";
 	const TRANSACTION_CAPTURED         = "Transaction captured";
+	const INTEGRATION_TIMEOUT          = "MundiPagg API timeout, waiting Mundi notification";
 
 	private $helperUtil;
 	private $modelStandard;
@@ -472,8 +473,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 **/
 	public function boletoTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard) {
 		try {
-			// Get Webservice URL
-			$url = $standard->getURL();
+			$helper = Mage::helper('mundipagg');
 
 			// Set Data
 			$_request = array();
@@ -541,49 +541,60 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$_request['RequestData'] = $nodeRequestData;
 			}
 
-			// Data
-			$_response = $this->sendRequest($_request, $url);
+			$response = $this->sendJSON($_request);
 
-			$xml = $_response['xmlData'];
-			$data = $_response['arrayData'];
+			// time out or no Mundipagg API response
+			if ($response === false) {
+				return false;
+			}
+
+			$errorReport = $helper->issetOr($response['ErrorReport'], false);
 
 			// Error
-			if (isset($data['ErrorReport']) && !empty($data['ErrorReport'])) {
-				$_errorItemCollection = $data['ErrorReport']['ErrorItemCollection'];
+			if ($errorReport) {
+				$_errorItemCollection = $errorReport['ErrorItemCollection'];
+				$errorCode = null;
+				$errorDescription = null;
 
 				foreach ($_errorItemCollection as $errorItem) {
 					$errorCode = $errorItem['ErrorCode'];
-					$ErrorDescription = $errorItem['Description'];
+					$errorDescription = $errorItem['Description'];
 				}
 
 				return array(
 					'error'            => 1,
 					'ErrorCode'        => $errorCode,
-					'ErrorDescription' => Mage::helper('mundipagg')->__($ErrorDescription),
-					'result'           => $data
+					'ErrorDescription' => Mage::helper('mundipagg')->__($errorDescription),
+					'result'           => $response
 				);
 			}
 
+			$success = $helper->issetOr($response['Success']);
+
 			// False
-			if (isset($data['Success']) && (string)$data['Success'] == 'false') {
+			if ($success === false) {
 				return array(
 					'error'            => 1,
 					'ErrorCode'        => 'WithError',
 					'ErrorDescription' => 'WithError',
-					'result'           => $data
+					'result'           => $response
 				);
 			} else {
+				$orderKey = $helper->issetOr($response['OrderResult']['OrderKey']);
+				$orderReference = $helper->issetOr($response['OrderResult']['OrderReference']);
+				$createDate = $helper->issetOr($response['OrderResult']['CreateDate']);
+
 				// Success
 				$result = array(
 					'success'        => true,
 					'message'        => 0,
-					'OrderKey'       => $data['OrderResult']['OrderKey'],
-					'OrderReference' => $data['OrderResult']['OrderReference'],
-					'result'         => $data
+					'OrderKey'       => $orderKey,
+					'OrderReference' => $orderReference,
+					'result'         => $response
 				);
 
-				if (isset($data['OrderResult']['CreateDate'])) {
-					$result['CreateDate'] = $data['OrderResult']['CreateDate'];
+				if (is_null($createDate) === false) {
+					$result['CreateDate'] = $createDate;
 				}
 
 				return $result;
@@ -593,8 +604,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
 			//Log error
-			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-			$helperLog->error($e, true);
+			$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+			$log->error($e, true);
 
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
@@ -2158,7 +2169,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$helper = Mage::helper('mundipagg');
 		$orderReference = $helper->issetOr($data['Order']['OrderReference']);
 
-		if(is_null($orderReference) === false){
+		if (is_null($orderReference) === false) {
 			$log->setLogLabel("Order #{$orderReference}");
 		}
 
@@ -2179,6 +2190,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		// Execute post
 		$response = curl_exec($ch);
+		$response = 'false';
 
 		// Close connection
 		curl_close($ch);

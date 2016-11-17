@@ -59,7 +59,9 @@ if ($paymentAction == 'authorize') {
 <div>
 	<p>
 		<?php
-		$PaymentMethod = $_order->getPayment()->getAdditionalInformation('PaymentMethod');
+		$info = $this->getInfo();
+		$PaymentMethod = $info->getAdditionalInformation('PaymentMethod');
+		$integrationError = $info->getAdditionalInformation('IntegrationError');
 
 		echo $helper->__('Method') . ': ' . $helper->__($PaymentMethod) . '<br/>';
 
@@ -91,6 +93,7 @@ if ($paymentAction == 'authorize') {
 		$tid = '';
 		$ccNumber = '';
 		$message = '';
+		$errorMessage = '';
 
 		foreach ($transaction as $t) :
 			$t = $t->getData();
@@ -156,6 +159,7 @@ if ($paymentAction == 'authorize') {
 					echo $helper->__('Transaction Status') . ': ' . $CreditCardTransactionStatusEnum . '<br/>';
 				endif;
 			endif;
+
 		endif;
 
 		if ($PaymentMethod == 'mundipagg_creditcardoneinstallment'):
@@ -243,4 +247,12 @@ if ($paymentAction == 'authorize') {
 	endif;
 	?>
 	</p>
+
+	<?php
+	// Integration Error
+	if ($info->getAdditionalInformation('IntegrationError')):
+		echo "<p class='error'>{$helper->__('Integration error')}: {$info->getAdditionalInformation('IntegrationError')}</p>";
+	endif;
+	?>
+
 </div>

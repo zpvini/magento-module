@@ -583,7 +583,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$result = $helper->issetOr($resultPayment['result'], false);
 
 			if ($result === false) {
-				return $this->integrationTimeOut($order);
+				return $this->integrationTimeOut($order, $payment);
 			}
 
 			// We record transaction(s)
@@ -809,7 +809,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		$result = $helper->issetOr($resultPayment['result'], false);
 
 		if ($result === false) {
-			return $this->integrationTimeOut($order);
+			return $this->integrationTimeOut($order, $payment);
 		}
 
 		// Return error
@@ -831,7 +831,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				switch ($resultPayment['message']) {
 					// Boleto
 					case 0:
-						$payment->setAdditionalInformation('BoletoUrl', $resultPayment['result']['BoletoTransactionResultCollection']['BoletoTransactionResult']['BoletoUrl']);
+						$payment->setAdditionalInformation(
+							'BoletoUrl',
+							$resultPayment['result']['BoletoTransactionResultCollection']['BoletoTransactionResult']['BoletoUrl']
+						);
 
 						// In order to show "Print Boleto" link in order email
 						$order->getPayment()->setAdditionalInformation('BoletoUrl', $resultPayment['result']['BoletoTransactionResultCollection']['BoletoTransactionResult']['BoletoUrl']);
@@ -1114,7 +1117,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					break;
 			}
 
-			if($approvalRequest === false){
+			if ($approvalRequest === false) {
 				return false;
 			}
 
@@ -1355,7 +1358,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 	/**
 	 * @param array $approvalRequest
-	 * @param $payment
+	 * @param       $payment
 	 * @return mixed
 	 */
 	private function setPaymentAdditionalInformation($approvalRequest, $payment) {
@@ -2013,18 +2016,16 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 	}
 
-	private function integrationTimeOut(Mage_Sales_Model_Order $order) {
-		$session = Mage::getSingleton('checkout/session');
-		$session->setApprovalRequestSuccess('success');
+	private function integrationTimeOut(Mage_Sales_Model_Order $order, Mage_Sales_Model_Order_Payment &$payment) {
+		$payment->setSkipOrderProcessing(true);
+		$payment->setAdditionalInformation('IntegrationError', Uecommerce_Mundipagg_Model_Api::INTEGRATION_TIMEOUT);
 
-		$payment = $order->getPayment();
-		$payment->setSkipOrderProcessing(true)->save();
-
-		$helper = Mage::helper('mundipagg');
-		$comment = $helper->__('Integration Timeout, waiting MundiPagg notification');
-
+		$comment = Uecommerce_Mundipagg_Model_Api::INTEGRATION_TIMEOUT;
 		$order->addStatusHistoryComment($comment);
 		$order->save();
+
+		$session = Mage::getSingleton('checkout/session');
+		$session->setApprovalRequestSuccess('success');
 
 		return $this;
 	}
