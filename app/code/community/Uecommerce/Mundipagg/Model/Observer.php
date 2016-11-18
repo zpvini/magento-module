@@ -415,4 +415,17 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 
 	}
 
+	public function checkRecurrencyFrequency(Varien_Event_Observer $observer) {
+		$product = $observer->getProduct();
+		$recurrent = boolval($product->getData('mundipagg_recurrent'));
+		$frequency = $product->getData('mundipagg_frequency_enum');
+
+		if ($recurrent === true && $frequency == '0') {
+			$helper = Mage::helper('mundipagg');
+			$errMsg = $helper->__('Recurrency frequency is required');
+
+			Mage::throwException($errMsg);
+		}
+	}
+
 }
