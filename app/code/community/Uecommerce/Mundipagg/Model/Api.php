@@ -2190,7 +2190,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		// Execute post
 		$response = curl_exec($ch);
-		$response = 'false';
 
 		// Close connection
 		curl_close($ch);
