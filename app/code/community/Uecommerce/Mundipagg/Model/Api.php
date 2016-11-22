@@ -270,7 +270,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// Only 1 transaction
 			if (count($creditCardTransactionResultCollection) == 1) {
 				$creditCardTransaction = $creditCardTransactionResultCollection[0];
-				$success = boolval($helper->issetOr($creditCardTransaction['Success']));
+				$success = $helper->issetOr($creditCardTransaction['Success'], false);
 
 				//and transaction success is true
 				if ($success === true) {
