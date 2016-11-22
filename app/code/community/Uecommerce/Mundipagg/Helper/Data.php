@@ -487,9 +487,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract {
 	}
 
 	public function isAntiFraudEnabled() {
-		$antifraud = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
-
-		return boolval($antifraud);
+		return Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
 	}
 
 	public function priceFormatter($amountInCents) {
