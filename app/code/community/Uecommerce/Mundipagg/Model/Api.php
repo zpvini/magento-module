@@ -1304,30 +1304,28 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 
 			// We check if transactionKey exists in database
-			$t = 0;
-
-			$transactions = Mage::getModel('sales/order_payment_transaction')
-				->getCollection()
-				->addAttributeToFilter('order_id', array('eq' => $order->getEntityId()));
-
-			foreach ($transactions as $key => $transaction) {
-				$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
-
-				// transactionKey found
-				if ($orderTransactionKey == $transactionKey) {
-					$t++;
-					continue;
-				}
-			}
+			$t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
 
 			if ($t <= 0) {
-				$helperLog->info("Order #{$orderReference} | TransactionKey {$transactionKey} not found on database for this order. Adding...");
+				$helperLog->setLogLabel("Order #{$orderReference}");
+				$helperLog->info("TransactionKey {$transactionKey} not found on database for this order.");
+				$helperLog->info("Searching order history...");
+				$helperLog->setLogLabel("");
 
 				$payment = $order->getPayment();
-				$transactionId = $transactionKey;
-				$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH;
 
-				$this->_addTransaction($payment, $transactionId, $transactionType, $transactionData);
+				$mundiQueryResults = $this->getOrderTransactions($orderReference);
+				$this->processMundiQueryResult($mundiQueryResults, $payment);
+			}
+
+			// We check if transactionKey exists in database again, after query MundiPagg transactions
+			$t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
+
+			if ($t <= 0) {
+				$errMsg = "KO | Order #{$orderReference} | TransactionKey {$transactionKey} not found for this order";
+				$helperLog->info($errMsg);
+
+				return $errMsg;
 			}
 
 			$order->addStatusHistoryComment("Transaction update received: {$status}", false);
@@ -2188,8 +2186,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRaw);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
+		//@TODO remove
+		curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+
 		// Execute post
 		$response = curl_exec($ch);
+
+		//@TODO remove
 		$response = 'false';
 
 		// Close connection
@@ -2280,6 +2283,26 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 	}
 
+	public function getLocalTransactionsQty($orderId, $transactionKey) {
+		$qty = 0;
+
+		$transactions = Mage::getModel('sales/order_payment_transaction')
+			->getCollection()
+			->addAttributeToFilter('order_id', array('eq' => $orderId));
+
+		foreach ($transactions as $key => $transaction) {
+			$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
+
+			// transactionKey found
+			if ($orderTransactionKey == $transactionKey) {
+				$qty++;
+				continue;
+			}
+		}
+
+		return $qty;
+	}
+
 	public function getOrderTransactions($orderReference) {
 		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$log->setLogLabel("Order {$orderReference}");
@@ -2302,13 +2325,40 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$util = new Uecommerce_Mundipagg_Helper_Util();
 
-		$responseData = json_decode($responseRaw);
+		$responseData = json_decode($responseRaw, true);
 		$responseJSON = $util->jsonEncodePretty($responseData);
 
 		$log->info("Request: {$url}");
 		$log->info("Response:\n{$responseJSON}");
 
 		return $responseData;
+	}
+
+	public function processMundiQueryResult($mundiQueryResult, $payment) {
+		$helper = Mage::helper('mundipagg');
+		$saleDataCollection = $helper->issetOr($mundiQueryResult['SaleDataCollection']);
+
+		if (is_null($saleDataCollection)) {
+			return null;
+		}
+
+		$saleData = end($saleDataCollection);
+
+		$creditCardTransactionDataCollection = $helper->issetOr(
+			$saleData['CreditCardTransactionDataCollection']
+		);
+
+		if (is_null($creditCardTransactionDataCollection)) {
+			return null;
+		}
+
+		$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH;
+
+		foreach ($creditCardTransactionDataCollection as $i) {
+			$transactionId = $i['TransactionKey'];
+			$this->_addTransaction($payment, $transactionId, $transactionType, $i);
+		}
+
 	}
 
 }
