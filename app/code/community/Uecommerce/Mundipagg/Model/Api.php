@@ -1303,6 +1303,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				}
 			}
 
+			$payment = $order->getPayment();
+
 			// We check if transactionKey exists in database
 			$t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
 
@@ -1311,8 +1313,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$helperLog->info("TransactionKey {$transactionKey} not found on database for this order.");
 				$helperLog->info("Searching order history...");
 				$helperLog->setLogLabel("");
-
-				$payment = $order->getPayment();
 
 				$mundiQueryResults = $this->getOrderTransactions($orderReference);
 				$this->processMundiQueryResult($mundiQueryResults, $payment);
@@ -1379,6 +1379,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 						return $returnMessage;
 					}
+
+					$this->removeIntegrationErrorInfo($order);
 
 					switch ($return) {
 						case self::TRANSACTION_ALREADY_CAPTURED:
@@ -1484,8 +1486,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$orderIncrementId = $order->getIncrementId();
 					$offlineRetryModel = Mage::getModel('mundipagg/offlineretry');
 					$offlineRetry = $offlineRetryModel->loadByIncrementId($orderIncrementId);
+					$integrationError = $order->getPayment()->getAdditionalInformation('IntegrationError');
 
-					if (is_null($offlineRetry->getId())) {
+					if (is_null($offlineRetry->getId()) && $integrationError == false) {
 						$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' received";
 						$helperLog->info($returnMessage);
 
@@ -1507,6 +1510,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					try {
 						$this->tryCancelOrder($order);
+						$this->removeIntegrationErrorInfo($order);
 
 					} catch (Exception $e) {
 						$returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
@@ -2332,33 +2336,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$log->info("Response:\n{$responseJSON}");
 
 		return $responseData;
-	}
-
-	public function processMundiQueryResult($mundiQueryResult, $payment) {
-		$helper = Mage::helper('mundipagg');
-		$saleDataCollection = $helper->issetOr($mundiQueryResult['SaleDataCollection']);
-
-		if (is_null($saleDataCollection)) {
-			return null;
-		}
-
-		$saleData = end($saleDataCollection);
-
-		$creditCardTransactionDataCollection = $helper->issetOr(
-			$saleData['CreditCardTransactionDataCollection']
-		);
-
-		if (is_null($creditCardTransactionDataCollection)) {
-			return null;
-		}
-
-		$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH;
-
-		foreach ($creditCardTransactionDataCollection as $i) {
-			$transactionId = $i['TransactionKey'];
-			$this->_addTransaction($payment, $transactionId, $transactionType, $i);
-		}
-
 	}
 
 }

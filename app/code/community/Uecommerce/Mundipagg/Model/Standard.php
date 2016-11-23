@@ -2030,4 +2030,58 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		return $this;
 	}
 
+	public function processMundiQueryResult($mundiQueryResult, Mage_Sales_Model_Order_Payment $payment) {
+		$helper = Mage::helper('mundipagg');
+		$saleDataCollection = $helper->issetOr($mundiQueryResult['SaleDataCollection']);
+
+		if (is_null($saleDataCollection)) {
+			return null;
+		}
+
+		$saleData = null;
+
+		foreach ($saleDataCollection as $i){
+			$createDate = $i['OrderData']['CreateDate'];
+			$date = new DateTime($createDate);
+
+		}
+
+		$creditCardTransactionDataCollection = $helper->issetOr(
+			$saleData['CreditCardTransactionDataCollection']
+		);
+
+		if (is_null($creditCardTransactionDataCollection)) {
+			return null;
+		}
+
+		$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH;
+
+		foreach ($creditCardTransactionDataCollection as $i) {
+			$transactionId = $i['TransactionKey'];
+			$this->_addTransaction($payment, $transactionId, $transactionType, $i);
+		}
+	}
+
+	public function removeIntegrationErrorInfo(Mage_Sales_Model_Order $order) {
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$log->setLogLabel("Order #{$order->getIncrementId()}");
+
+		try {
+			$info = $order->getPayment()->getAdditionalInformation();
+
+			unset($info['IntegrationError']);
+
+			$order->getPayment()
+				->setAdditionalInformation($info)
+				->save();
+
+			$log->info("IntegrationError message removed");
+
+		} catch (Exception $e) {
+			$log->error($e);
+		}
+
+		return $order;
+	}
+
 }
