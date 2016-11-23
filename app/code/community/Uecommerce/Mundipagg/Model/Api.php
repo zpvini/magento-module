@@ -2190,6 +2190,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRaw);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
+
+
 		//@TODO remove
 		curl_setopt($ch, CURLOPT_TIMEOUT, 1);
 

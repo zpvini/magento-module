@@ -2039,10 +2039,21 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 
 		$saleData = null;
+		$dateFormat = 'Y-m-d';
+		$order = $payment->getOrder();
 
-		foreach ($saleDataCollection as $i){
+		foreach ($saleDataCollection as $i) {
 			$createDate = $i['OrderData']['CreateDate'];
-			$date = new DateTime($createDate);
+			$transactionCreateDate = new DateTime($createDate);
+			$orderCreateDate = new DateTime($order->getCreatedAt());
+
+			$formatTransDate = $transactionCreateDate->format($dateFormat);
+			$formatOrderDate = $orderCreateDate->format($dateFormat);
+
+			if ($formatTransDate == $formatOrderDate) {
+				$saleData = $i;
+				continue;
+			}
 
 		}
 
