@@ -1862,16 +1862,18 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 		if ($transactionType == 'authorization') {
 			$ccTransactionStatus = $transactionAdditionalInfo['CreditCardTransactionStatus'];
+			$transactionOpenStatuses = array(
+				'AuthorizedPendingCapture',
+				'Captured',
+				'PartialCapture',
+				'WithError',
+				'PendingAuthorize'
+			);
 
-			switch ($ccTransactionStatus) {
-				case 'AuthorizedPendingCapture':
-				case 'Captured':
-					$transaction->setIsClosed(0);
-					break;
-
-				case 'NotAuthorized':
-					$transaction->setIsClosed(1);
-					break;
+			if(in_array($ccTransactionStatus, $transactionOpenStatuses)){
+				$transaction->setIsClosed(0);
+			} else {
+				$transaction->setIsClosed(1);
 			}
 		}
 
@@ -2030,17 +2032,28 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		return $this;
 	}
 
-	public function processMundiQueryResult($mundiQueryResult, Mage_Sales_Model_Order_Payment $payment) {
+	/**
+	 * @param array                          $mundiQueryResult
+	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @return bool|null
+	 */
+	public function processQueryResults($mundiQueryResult, Mage_Sales_Model_Order_Payment $payment) {
 		$helper = Mage::helper('mundipagg');
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
+		$order = $payment->getOrder();
+		$log->setLogLabel("#{$order->getIncrementId()}");
+
 		$saleDataCollection = $helper->issetOr($mundiQueryResult['SaleDataCollection']);
 
 		if (is_null($saleDataCollection)) {
-			return null;
+			$log->info("SaleDataCollection is null. Method execution is over");
+
+			return false;
 		}
 
 		$saleData = null;
 		$dateFormat = 'Y-m-d';
-		$order = $payment->getOrder();
 
 		foreach ($saleDataCollection as $i) {
 			$createDate = $i['OrderData']['CreateDate'];
@@ -2054,7 +2067,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				$saleData = $i;
 				continue;
 			}
-
 		}
 
 		$creditCardTransactionDataCollection = $helper->issetOr(
@@ -2062,7 +2074,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		);
 
 		if (is_null($creditCardTransactionDataCollection)) {
-			return null;
+			$log->info("CreditCardTransactionDataCollection is null. Method execution is over");
+
+			return false;
 		}
 
 		$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH;
@@ -2071,11 +2085,14 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$transactionId = $i['TransactionKey'];
 			$this->_addTransaction($payment, $transactionId, $transactionType, $i);
 		}
+
+		return true;
 	}
 
 	public function removeIntegrationErrorInfo(Mage_Sales_Model_Order $order) {
+		$errMsg = null;
 		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-		$log->setLogLabel("Order #{$order->getIncrementId()}");
+		$log->setLogLabel("#{$order->getIncrementId()}");
 
 		try {
 			$info = $order->getPayment()->getAdditionalInformation();
@@ -2089,10 +2106,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$log->info("IntegrationError message removed");
 
 		} catch (Exception $e) {
-			$log->error($e);
+			$log->error($e, true);
 		}
-
-		return $order;
 	}
 
 }

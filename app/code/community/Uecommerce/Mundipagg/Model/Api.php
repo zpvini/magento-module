@@ -1314,8 +1314,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$helperLog->info("Searching order history...");
 				$helperLog->setLogLabel("");
 
-				$mundiQueryResults = $this->getOrderTransactions($orderReference);
-				$this->processMundiQueryResult($mundiQueryResults, $payment);
+				$mundiQueryResult = $this->getOrderTransactions($orderReference);
+				$processQueryResult = $this->processQueryResults($mundiQueryResult, $payment);
+
+				if($processQueryResult){
+					$this->removeIntegrationErrorInfo($order);
+				}
 			}
 
 			// We check if transactionKey exists in database again, after query MundiPagg transactions
@@ -2309,6 +2313,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		return $qty;
 	}
 
+	/**
+	 * @param string|int $orderReference
+	 * @return array
+	 */
 	public function getOrderTransactions($orderReference) {
 		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$log->setLogLabel("Order {$orderReference}");
