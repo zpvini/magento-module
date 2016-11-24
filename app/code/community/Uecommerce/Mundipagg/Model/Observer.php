@@ -120,35 +120,13 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 	 * Update status
 	 * */
 	public function updateStatus($event) {
-		$standard = Mage::getModel('mundipagg/standard');
-
-		$paymentAction = $standard->getConfigData('payment_action');
-
 		$method = $event->getOrder()->getPayment()->getAdditionalInformation('PaymentMethod');
-
-		// If it's a multi-payment types we force to ACTION_AUTHORIZE
-		$num = substr($method, 0, 1);
-
-		if ($num > 1) {
-			$paymentAction = Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE;
-		}
-
 		$approvalRequestSuccess = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
 
 		if ($method == 'mundipagg_boleto' && $approvalRequestSuccess != 'cancel') {
 			$comment = Mage::helper('mundipagg')->__('Waiting for Boleto Bancário payment');
 
 			$this->_updateStatus($event->getOrder(), Mage_Sales_Model_Order::STATE_HOLDED, true, $comment, false);
-		}
-
-		if ($method != 'mundipagg_boleto' && $paymentAction == 'authorize' && $approvalRequestSuccess == 'partial') {
-			$this->_updateStatus($event->getOrder(), Mage_Sales_Model_Order::STATE_NEW, 'pending', '', false);
-		}
-
-		if ($method != 'mundipagg_boleto' && $paymentAction == 'authorize' && $approvalRequestSuccess == 'success') {
-			$comment = Mage::helper('mundipagg')->__('Authorized');
-
-			$this->_updateStatus($event->getOrder(), Mage_Sales_Model_Order::STATE_NEW, 'pending', $comment, false);
 		}
 	}
 
