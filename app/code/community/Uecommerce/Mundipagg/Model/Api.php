@@ -2131,6 +2131,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRawJson);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
+		$timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
+
+		if(is_null($timeoutLimit) === false){
+			curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
+		}
+
 		// Execute post
 		$_response = curl_exec($ch);
 
@@ -2194,16 +2200,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRaw);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
+		$timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
 
-
-		//@TODO remove
-		curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+		if(is_null($timeoutLimit) === false){
+			curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
+		}
 
 		// Execute post
 		$response = curl_exec($ch);
-
-		//@TODO remove
-		$response = 'false';
 
 		// Close connection
 		curl_close($ch);

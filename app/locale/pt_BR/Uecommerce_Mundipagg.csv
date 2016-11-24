@@ -216,3 +216,6 @@
 "Offline Retry","Retentativa Offline"
 "Offline retry can't be used with more than 1 creditcard payment method yet. This feature will be available comming soon.","A retentativa offline ainda não pode ser utilizada em conjunto com métodos de pagamento de mais de 1 cartão. Funcionalidade será disponibilizada em versões futuras do módulo Mundipagg."
 "Integration error","Erro na integração"
+"Integration timeout limit","Limite para timeout na integração"
+"Integration timeout limit must be an numeric value","Limite para timeout na integração precisa ser numérico"
+"In seconds","Em segundos"

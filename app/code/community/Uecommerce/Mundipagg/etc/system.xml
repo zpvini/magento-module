@@ -536,6 +536,7 @@
                         <integration_timeout_limit>
                             <label>Integration timeout limit</label>
                             <frontend_type>text</frontend_type>
+                            <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Timeout</backend_model>
                             <sort_order>35</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
