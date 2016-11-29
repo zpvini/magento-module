@@ -2,9 +2,9 @@
 
 class Uecommerce_Mundipagg_Model_Order_Payment {
 
-	const ERR_CANNOT_CREATE_INVOICE                  = 1;
-	const ERR_CANNOT_CREATE_INVOICE_WITHOUT_PRODUCTS = 2;
-	const ERR_UNEXPECTED_ERROR                       = 99;
+	const ERR_CANNOT_CREATE_INVOICE                  = "Cannot create invoice";
+	const ERR_CANNOT_CREATE_INVOICE_WITHOUT_PRODUCTS = "Cannot create invoice without products";
+	const ERR_UNEXPECTED_ERROR                       = "Unexpected error";
 
 	/**
 	 * @param Mage_Sales_Model_Order $order
