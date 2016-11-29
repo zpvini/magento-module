@@ -1497,7 +1497,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$amountInCents = $transactionData['AmountInCents'];
 
 					// if not authorized amount equal to order grand total, order must be canceled
-					if ($amountInCents != $grandTotalInCents) {
+					if (sprintf($amountInCents) != sprintf($grandTotalInCents)) {
 						$returnMessage = "OK | {$returnMessageLabel} | Order grand_total not equal to transaction AmountInCents";
 						$helperLog->info($returnMessage);
 
