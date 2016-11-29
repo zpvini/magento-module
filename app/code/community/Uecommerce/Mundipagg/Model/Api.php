@@ -1356,7 +1356,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$return = $this->captureTransaction($order, $amountToCapture, $transactionKey);
 
 					} catch (Exception $e) {
-						$returnMessage = "KO | #{$orderReference} | Can't capture transaction {$transactionKey} | {$e->getMessage()}";
+						$errMsg = $e->getMessage();
+
+						$returnMessage = "KO | #{$orderReference} | {$transactionKey} | ";
+						$returnMessage .= "Can't capture transaction: {$errMsg}";
 						$helperLog->info($returnMessage);
 
 						return $returnMessage;
@@ -1392,22 +1395,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					}
 
 					return $returnMessage;
-
-//					switch ($return) {
-//						case self::TRANSACTION_ALREADY_CAPTURED:
-//							$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_ALREADY_CAPTURED;
-//							$helperLog->info($returnMessage);
-//
-//							return $returnMessage;
-//							break;
-//
-//						case self::TRANSACTION_CAPTURED:
-//							$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
-//							$helperLog->info($returnMessage);
-//
-//							return $returnMessage;
-//							break;
-//					}
 					break;
 
 				case 'paid':
@@ -1745,7 +1732,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			Mage::throwException(self::TRANSACTION_NOT_FOUND);
 		}
 
-		if ($transaction->getIsClosed() == '1') {
+		if ($transaction->getIsClosed() == true) {
 			Mage::throwException(self::TRANSACTION_ALREADY_CAPTURED);
 		}
 
@@ -1760,10 +1747,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 				try {
 					$invoice = $orderPayment->createInvoice($order);
-
 				} catch (Exception $e) {
-					$log->debug("error: {$e->getMessage()}");
-					Mage::throwException($e);
+					Mage::throwException($e->getMessage());
 				}
 
 				// close transaction
@@ -1772,16 +1757,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				if (is_null($transactionToClose)) {
 					$log->warning("Transaction not found");
 				} else {
-					try {
-						$payment = $order->getPayment();
+					$payment = $order->getPayment();
 
-						$transactionToClose->setOrderPaymentObject($payment)
-							->setIsClosed(true)
-							->save();
-
-					} catch (Exception $e) {
-						$log->error("Unable to close transaction: {$e->getMessage()}", true);
-					}
+					$transactionToClose->setOrderPaymentObject($payment)
+						->setIsClosed(true)
+						->save();
 				}
 
 				return $invoice;
@@ -1790,7 +1770,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			// order overpaid
 			case $accTotalPaid > $accGrandTotal:
-				$log->debug("overpaid");
 				try {
 					$orderPayment->orderOverpaid($order);
 				} catch (Exception $e) {
@@ -1802,7 +1781,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			// order underpaid
 			case $accTotalPaid < $accGrandTotal:
-				$log->debug("underpaid");
 				try {
 					$orderPayment->orderUnderPaid($order);
 				} catch (Exception $e) {
