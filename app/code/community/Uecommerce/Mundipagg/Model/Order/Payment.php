@@ -4,6 +4,7 @@ class Uecommerce_Mundipagg_Model_Order_Payment {
 
 	const ERR_CANNOT_CREATE_INVOICE                  = 1;
 	const ERR_CANNOT_CREATE_INVOICE_WITHOUT_PRODUCTS = 2;
+	const ERR_UNEXPECTED_ERROR                       = 99;
 
 	/**
 	 * @param Mage_Sales_Model_Order $order
@@ -40,8 +41,47 @@ class Uecommerce_Mundipagg_Model_Order_Payment {
 			Mage::throwException($e->getMessage());
 		}
 
-		return $invoice;
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$log->info("#{$order->getIncrementId()} | invoice created {$invoice->getIncrementId()}");
 
+		return $invoice;
+	}
+
+	public function closeTransaction($transactionKey, $orderId) {
+		$transactions = Mage::getModel('sales/order_payment_transaction')
+			->getCollection()
+			->addAttributeToFilter('order_id', array('eq' => $orderId));
+
+		foreach ($transactions as $key => $transaction) {
+			$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
+
+			// transactionKey found
+			if ($orderTransactionKey == $transactionKey) {
+				try {
+					$transaction->setIsClosed(1)->save();
+				} catch (Exception $e) {
+					Mage::throwException($e);
+				}
+			}
+		}
+	}
+
+	public function orderOverpaid(Mage_Sales_Model_Order $order) {
+		try {
+			$order->setStatus('overpaid')
+				->save();
+		} catch (Exception $e) {
+			Mage::throwException($e);
+		}
+	}
+
+	public function orderUnderPaid(Mage_Sales_Model_Order $order) {
+		try {
+			$order->setStatus('underpaid')
+				->save();
+		} catch (Exception $e) {
+			Mage::throwException($e);
+		}
 	}
 
 }

@@ -32,7 +32,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	const TRANSACTION_NOT_FOUND        = "Transaction not found";
 	const TRANSACTION_ALREADY_CAPTURED = "Transaction already captured";
 	const TRANSACTION_CAPTURED         = "Transaction captured";
+	const ORDER_UNDERPAID              = "Order underpaid";
+	const ORDER_OVERPAID               = "Order overpaid";
 	const INTEGRATION_TIMEOUT          = "MundiPagg API timeout, waiting Mundi notification";
+	const UNEXPECTED_ERROR             = "Unexpected error";
 
 	private $helperUtil;
 	private $modelStandard;
@@ -1353,51 +1356,58 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$return = $this->captureTransaction($order, $amountToCapture, $transactionKey);
 
 					} catch (Exception $e) {
-						$orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
-						$error = $e->getMessage();
-
-						$helperLog->setLogLabel("#{$orderReference} | {$transactionKey}");
-
-						switch ($error) {
-							case $orderPayment::ERR_CANNOT_CREATE_INVOICE:
-								$error = "Can't created invoice";
-								$helperLog->error($error);
-								break;
-
-							case $orderPayment::ERR_CANNOT_CREATE_INVOICE_WITHOUT_PRODUCTS:
-								$error = "Can't create invoice without products";
-								$helperLog->error($error);
-								break;
-
-							default:
-								$error = "Can't create invoice, unexpected error: {$error}";
-								$helperLog->error($error);
-						}
-
-						$returnMessage = "KO | #{$orderReference} | Can't capture transaction {$transactionKey} | {$error}";
-
-						$helperLog->setLogLabel("");
+						$returnMessage = "KO | #{$orderReference} | Can't capture transaction {$transactionKey} | {$e->getMessage()}";
 						$helperLog->info($returnMessage);
 
 						return $returnMessage;
 					}
 
-					switch ($return) {
-						case self::TRANSACTION_ALREADY_CAPTURED:
-							$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_ALREADY_CAPTURED;
-							$helperLog->info($returnMessage);
+					if ($return instanceof Mage_Sales_Model_Order_Invoice) {
+						$returnMessage = "OK | {$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
 
-							return $returnMessage;
-							break;
+						$helperLog->info($returnMessage);
 
-						case self::TRANSACTION_CAPTURED:
-							$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
-							$helperLog->info($returnMessage);
-
-							return $returnMessage;
-							break;
+						return $returnMessage;
 					}
 
+					// cannot capture transaction
+					$returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
+
+					switch ($return) {
+						case self::ORDER_OVERPAID:
+							$returnMessage .= self::ORDER_OVERPAID;
+
+							$helperLog->info($returnMessage);
+							break;
+
+						case self::ORDER_UNDERPAID:
+							$returnMessage .= self::ORDER_UNDERPAID;
+
+							$helperLog->info($returnMessage);
+
+							break;
+
+						default:
+							$returnMessage .= self::UNEXPECTED_ERROR;
+					}
+
+					return $returnMessage;
+
+//					switch ($return) {
+//						case self::TRANSACTION_ALREADY_CAPTURED:
+//							$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_ALREADY_CAPTURED;
+//							$helperLog->info($returnMessage);
+//
+//							return $returnMessage;
+//							break;
+//
+//						case self::TRANSACTION_CAPTURED:
+//							$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
+//							$helperLog->info($returnMessage);
+//
+//							return $returnMessage;
+//							break;
+//					}
 					break;
 
 				case 'paid':
@@ -1648,8 +1658,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 
 
-		} catch (Exception $e) {
-			$returnMessage = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
+		} catch (Exception
+		$e) {
+			$returnMessage = "Internal server error | {
+				$e->getCode()} -ErrMsg: {
+				$e->getMessage()}";
 
 			//Log error
 			$helperLog->error($e, true);
@@ -1657,7 +1670,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
 
-			return "KO | {$returnMessage}";
+			return "KO | {
+				$returnMessage}";
 		}
 	}
 
@@ -1681,11 +1695,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				return true;
 
 			} catch (Exception $e) {
-				throw new RuntimeException("Order cannot be canceled. Error reason: {$e->getMessage()}");
+				throw new RuntimeException("Order cannot be canceled . Error reason: {
+				$e->getMessage()}");
 			}
 
 		} else {
-			throw new RuntimeException("Order cannot be canceled.");
+			throw new RuntimeException("Order cannot be canceled . ");
 		}
 	}
 
@@ -1693,7 +1708,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @param Mage_Sales_Model_Order $order
 	 * @param                        $amountToCapture
 	 * @param                        $transactionKey
-	 * @throws RuntimeException
+	 * @throws Mage_Core_Exception
 	 * @return string
 	 */
 	private function captureTransaction(Mage_Sales_Model_Order $order, $amountToCapture, $transactionKey) {
@@ -1702,8 +1717,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$totalPaid = $order->getTotalPaid();
 		$grandTotal = $order->getGrandTotal();
-		$createInvoice = false;
 		$transaction = null;
+
+		$orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
 
 		if (is_null($totalPaid)) {
 			$totalPaid = 0;
@@ -1730,45 +1746,80 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 
 		if ($transaction->getIsClosed() == '1') {
-			return self::TRANSACTION_ALREADY_CAPTURED;
+			Mage::throwException(self::TRANSACTION_ALREADY_CAPTURED);
 		}
 
-		if ($totalPaid < $grandTotal) {
-			$order->setStatus('underpaid');
-		} elseif ($totalPaid > $grandTotal) {
-			$order->setStatus('overpaid');
+		$accTotalPaid = sprintf($totalPaid);
+		$accGrandTotal = sprintf($grandTotal);
+
+		switch (true) {
+
+			// total paid equal grand_total, create invoice
+			case $accTotalPaid == $accGrandTotal:
+				$invoice = null;
+
+				try {
+					$invoice = $orderPayment->createInvoice($order);
+
+				} catch (Exception $e) {
+					$log->debug("error: {$e->getMessage()}");
+					Mage::throwException($e);
+				}
+
+				return $invoice;
+
+				break;
+
+			// order overpaid
+			case $accTotalPaid > $accGrandTotal:
+				$log->debug("overpaid");
+				try {
+					$orderPayment->orderOverpaid($order);
+				} catch (Exception $e) {
+					Mage::throwException("Cannot set order to overpaid: {$e->getMessage()}");
+				}
+
+				return self::ORDER_OVERPAID;
+				break;
+
+			// order underpaid
+			case $accTotalPaid < $accGrandTotal:
+				$log->debug("underpaid");
+				try {
+					$orderPayment->orderUnderPaid($order);
+				} catch (Exception $e) {
+					Mage::throwException("Cannot set order to underpaid: {$e->getMessage()}");
+				}
+
+				return self::ORDER_UNDERPAID;
+				break;
+
+			// unexpected situation
+			default:
+				Mage::throwException(self::UNEXPECTED_ERROR);
+				break;
 		}
 
-		if ($totalPaid == $grandTotal) {
-			// reset total paid, preparing to invoice
-			$createInvoice = true;
-		}
-
-		$orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
-
-		try {
-			if ($createInvoice) {
-				$invoice = $orderPayment->createInvoice($order);
-				$log->info("Invoice {$invoice->getIncrementId()} created");
-			}
-
-			$resource = Mage::getSingleton('core/resource');
-			$conn = $resource->getConnection('core_write');
-			$query = "UPDATE sales_payment_transaction SET is_closed = TRUE WHERE transaction_id={$transaction->getId()}";
-
-			$conn->query($query);
-			$log->info("Magento payment transaction closed");
-
-			$order->setTotalPaid($totalPaid);
-			$order->save();
-
-		} catch (Exception $e) {
-			throw new RuntimeException($e->getMessage());
-		}
-
-		$log->info("Captured amount: {$amountToCapture}");
-
-		return self::TRANSACTION_CAPTURED;
+//		try {
+//			if ($createInvoice) {
+//
+//			}
+//
+//			$resource = Mage::getSingleton('core/resource');
+//			$conn = $resource->getConnection('core_write');
+//			$query = "UPDATE sales_payment_transaction SET is_closed = TRUE WHERE transaction_id={$transaction->getId()}";
+//
+//			$conn->query($query);
+//			$log->info("Magento payment transaction closed");
+//
+//			$order->setTotalPaid($totalPaid);
+//			$order->save();
+//
+//		} catch (Exception $e) {
+//			throw new RuntimeException($e->getMessage());
+//		}
+//
+//		$log->info("Captured amount: {$amountToCapture}");
 	}
 
 	private function queryTransactions() {
