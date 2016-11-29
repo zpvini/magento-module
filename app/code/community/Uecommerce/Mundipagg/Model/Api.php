@@ -1363,7 +1363,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					}
 
 					if ($return instanceof Mage_Sales_Model_Order_Invoice) {
-						$returnMessage = "OK | {$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
+						$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
 
 						$helperLog->info($returnMessage);
 
@@ -1766,6 +1766,24 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					Mage::throwException($e);
 				}
 
+				// close transaction
+				$transactionToClose = $this->getOrderTxnByTransactionKey($order->getId(), $transactionKey);
+
+				if (is_null($transactionToClose)) {
+					$log->warning("Transaction not found");
+				} else {
+					try {
+						$payment = $order->getPayment();
+
+						$transactionToClose->setOrderPaymentObject($payment)
+							->setIsClosed(true)
+							->save();
+
+					} catch (Exception $e) {
+						$log->error("Unable to close transaction: {$e->getMessage()}", true);
+					}
+				}
+
 				return $invoice;
 
 				break;
@@ -1800,26 +1818,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				break;
 		}
 
-//		try {
-//			if ($createInvoice) {
-//
-//			}
-//
-//			$resource = Mage::getSingleton('core/resource');
-//			$conn = $resource->getConnection('core_write');
-//			$query = "UPDATE sales_payment_transaction SET is_closed = TRUE WHERE transaction_id={$transaction->getId()}";
-//
-//			$conn->query($query);
-//			$log->info("Magento payment transaction closed");
-//
-//			$order->setTotalPaid($totalPaid);
-//			$order->save();
-//
-//		} catch (Exception $e) {
-//			throw new RuntimeException($e->getMessage());
-//		}
-//
-//		$log->info("Captured amount: {$amountToCapture}");
 	}
 
 	private function queryTransactions() {
@@ -2359,6 +2357,27 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$log->info("Response:\n{$responseJSON}");
 
 		return $responseData;
+	}
+
+	public function getOrderTxnByTransactionKey($orderId, $transactionKey) {
+		$transactionFound = null;
+
+		$transactions = Mage::getModel('sales/order_payment_transaction')
+			->getCollection()
+			->addAttributeToFilter('order_id', array('eq' => $orderId));
+
+		foreach ($transactions as $key => $transaction) {
+			$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
+
+			// transactionKey found
+			if ($orderTransactionKey == $transactionKey) {
+				$transactionFound = $transaction;
+				continue;
+			}
+		}
+
+		return $transactionFound;
+
 	}
 
 }

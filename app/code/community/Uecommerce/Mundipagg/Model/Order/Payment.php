@@ -47,25 +47,6 @@ class Uecommerce_Mundipagg_Model_Order_Payment {
 		return $invoice;
 	}
 
-	public function closeTransaction($transactionKey, $orderId) {
-		$transactions = Mage::getModel('sales/order_payment_transaction')
-			->getCollection()
-			->addAttributeToFilter('order_id', array('eq' => $orderId));
-
-		foreach ($transactions as $key => $transaction) {
-			$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
-
-			// transactionKey found
-			if ($orderTransactionKey == $transactionKey) {
-				try {
-					$transaction->setIsClosed(1)->save();
-				} catch (Exception $e) {
-					Mage::throwException($e);
-				}
-			}
-		}
-	}
-
 	public function orderOverpaid(Mage_Sales_Model_Order $order) {
 		try {
 			$order->setStatus('overpaid')
