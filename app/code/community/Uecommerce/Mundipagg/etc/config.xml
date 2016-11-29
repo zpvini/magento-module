@@ -279,6 +279,7 @@
                 <antifraud_minimum_clearsale>0.00</antifraud_minimum_clearsale>
                 <antifraud_minimum_fcontrol>0.00</antifraud_minimum_fcontrol>
                 <antifraud_minimum_stone>0.00</antifraud_minimum_stone>
+                <integration_timeout_limit>30</integration_timeout_limit>
             </mundipagg_standard>
             <mundipagg_creditcardoneinstallment>
                 <model>mundipagg/creditcardoneinstallment</model>

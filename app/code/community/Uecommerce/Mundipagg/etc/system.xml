@@ -532,6 +532,18 @@
                             <comment>
                                 <![CDATA[SKU do produto de teste da Cielo para forçar o pagamento pela Cielo durante a homologação]]></comment>
                         </cielo_sku>
+
+                        <integration_timeout_limit>
+                            <label>Integration timeout limit</label>
+                            <frontend_type>text</frontend_type>
+                            <backend_model>Uecommerce_Mundipagg_Model_Adminvalidators_Timeout</backend_model>
+                            <sort_order>35</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>In seconds</comment>
+                        </integration_timeout_limit>
+
                     </fields>
                 </mundipagg_standard>
 
