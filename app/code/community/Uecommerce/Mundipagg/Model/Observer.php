@@ -63,9 +63,8 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 				$model = Mage::getModel('mundipagg/offlineretry');
 				$incrementId = $order->getIncrementId();
 				$offlineRetry = $model->loadByIncrementId($incrementId);
-				$offlineRetryData = $offlineRetry->getData();
 
-				if (!empty($offlineRetryData)) {
+				if (is_null($offlineRetry->getId()) === false) {
 					$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 					$helperLog->setLogLabel("Order #{$incrementId} canceled");
 
@@ -395,7 +394,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 
 	public function checkRecurrencyFrequency(Varien_Event_Observer $observer) {
 		$product = $observer->getProduct();
-		$recurrent = (boolean) $product->getData('mundipagg_recurrent');
+		$recurrent = (boolean)$product->getData('mundipagg_recurrent');
 		$frequency = $product->getData('mundipagg_frequency_enum');
 
 		if ($recurrent === true && $frequency == '0') {
