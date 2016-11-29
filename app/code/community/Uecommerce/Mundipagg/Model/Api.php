@@ -1320,7 +1320,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$mundiQueryResult = $this->getOrderTransactions($orderReference);
 				$processQueryResult = $this->processQueryResults($mundiQueryResult, $payment);
 
-				if($processQueryResult){
+				if ($processQueryResult) {
 					$this->removeIntegrationErrorInfo($order);
 				}
 			}
@@ -1369,38 +1369,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					if ($return instanceof Mage_Sales_Model_Order_Invoice) {
 						$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
-
 						$helperLog->info($returnMessage);
-					$this->removeIntegrationErrorInfo($order);
-
-					switch ($return) {
-						case self::TRANSACTION_ALREADY_CAPTURED:
-							$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_ALREADY_CAPTURED;
-							$helperLog->info($returnMessage);
 
 						return $returnMessage;
 					}
 
 					// cannot capture transaction
 					$returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
-
-					switch ($return) {
-						case self::ORDER_OVERPAID:
-							$returnMessage .= self::ORDER_OVERPAID;
-
-							$helperLog->info($returnMessage);
-							break;
-
-						case self::ORDER_UNDERPAID:
-							$returnMessage .= self::ORDER_UNDERPAID;
-
-							$helperLog->info($returnMessage);
-
-							break;
-
-						default:
-							$returnMessage .= self::UNEXPECTED_ERROR;
-					}
+					$returnMessage.= $return;
 
 					return $returnMessage;
 					break;
@@ -1488,18 +1464,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					break;
 
 				case 'notauthorized':
-					$orderIncrementId = $order->getIncrementId();
-					$offlineRetryModel = Mage::getModel('mundipagg/offlineretry');
-					$offlineRetry = $offlineRetryModel->loadByIncrementId($orderIncrementId);
-					$integrationError = $order->getPayment()->getAdditionalInformation('IntegrationError');
-
-					if (is_null($offlineRetry->getId()) && $integrationError == false) {
-						$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' received";
-						$helperLog->info($returnMessage);
-
-						return $returnMessage;
-					}
-
 					$helper = Mage::helper('mundipagg');
 					$grandTotal = $order->getGrandTotal();
 					$grandTotalInCents = $helper->formatPriceToCents($grandTotal);
@@ -1515,7 +1479,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					try {
 						$this->tryCancelOrder($order);
-						$this->removeIntegrationErrorInfo($order);
 
 					} catch (Exception $e) {
 						$returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
@@ -2159,7 +2122,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
 
-		if(is_null($timeoutLimit) === false){
+		if (is_null($timeoutLimit) === false) {
 			curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
 		}
 
@@ -2228,7 +2191,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
 
-		if(is_null($timeoutLimit) === false){
+		if (is_null($timeoutLimit) === false) {
 			curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
 		}
 
