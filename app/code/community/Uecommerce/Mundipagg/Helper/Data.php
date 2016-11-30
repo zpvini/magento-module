@@ -493,6 +493,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract {
 	public function priceFormatter($amountInCents) {
 		$number = round($amountInCents, 2, PHP_ROUND_HALF_DOWN);
 		$number = number_format($number, 2, ',', '');
+
 		return $number;
 	}
 
@@ -520,7 +521,7 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract {
 		$arrVal = explode('.', $value);
 		$cents = $arrVal[1];
 
-		if (strlen($cents) > 2 || !is_numeric($value)){
+		if (strlen($cents) > 2 || !is_numeric($value)) {
 			return false;
 		}
 
@@ -568,6 +569,13 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract {
 		}
 
 		return $antifraudProvider;
+	}
+
+	public function obfuscate($string) {
+		$qty = strlen($string);
+		$newString = str_repeat('*', $qty);
+
+		return $newString;
 	}
 
 }
