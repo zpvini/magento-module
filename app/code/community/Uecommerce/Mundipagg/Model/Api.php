@@ -2222,7 +2222,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_close($ch);
 
 		$responseData = json_decode($response, true);
-		$requestPretty = $this->helperUtil->jsonEncodePretty($data);
+		$requestObfuscated = $this->hideCustomerData($data);
+
+		$requestPretty = $this->helperUtil->jsonEncodePretty($requestObfuscated);
 		$responsePretty = $this->helperUtil->jsonEncodePretty($responseData);
 
 		$this->clearAntifraudDataFromSession();
@@ -2356,6 +2358,64 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		return $transactionFound;
 
+	}
+
+	public function hideCustomerData($data) {
+		$helper = Mage::helper('mundipagg');
+		$ccTxnsCollection = null;
+		$transactions = [];
+
+		// request json
+		$ccTxnsCollection = $helper->issetOr($data['CreditCardTransactionCollection']);
+
+		// if not a request json, check for an response json
+		if (is_null($ccTxnsCollection)) {
+			$ccTxnsCollection = $helper->issetOr($data['CreditCardTransactionResultCollection']);
+		}
+
+		// if none transaction collection found, nothing to do here
+		if (is_null($ccTxnsCollection)) {
+			return $data;
+		}
+
+		// for each transaction, check sensible fields and obfuscate them
+		foreach ($ccTxnsCollection as $transaction) {
+			$creditCard = $helper->issetOr($transaction['CreditCard']);
+			$ccSensibleFields = ['CreditCardNumber', 'SecurityCode', 'ExpMonth', 'ExpYear', 'InstantBuyKey'];
+
+			foreach ($ccSensibleFields as $idx) {
+				$fieldValue = $helper->issetOr($creditCard[$idx]);
+
+				if (is_null($fieldValue) === false) {
+					$transaction['CreditCard'][$idx] = $helper->obfuscate($fieldValue);
+				}
+			}
+
+			$transactions[] = $transaction;
+		}
+
+		$ccTransactionCollectionObfuscated = $transactions;
+		$data['CreditCardTransactionCollection'] = $ccTransactionCollectionObfuscated;
+
+		// Buyer node
+		$buyer = $helper->issetOr($data['Buyer']);
+
+		if (is_null($buyer)) {
+			return $data;
+		}
+
+		// check Buyer sensible fields and obfuscate them
+		$buyerSensibleFields = ['DocumentNumber', 'Email', 'HomePhone', 'MobilePhone'];
+
+		foreach ($buyerSensibleFields as $idx) {
+			$fieldValue = $helper->issetOr($buyer[$idx]);
+
+			if (is_null($fieldValue) === false) {
+				$data['Buyer'][$idx] = $helper->obfuscate($fieldValue);
+			}
+		}
+
+		return $data;
 	}
 
 }
