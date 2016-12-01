@@ -149,6 +149,11 @@
             <mundipagg>
                 <class>Uecommerce_Mundipagg_Helper</class>
             </mundipagg>
+            <core>
+                <rewrite>
+                    <unserializeArray>Uecommerce_Mundipagg_Helper_UnserializeArray</unserializeArray>
+                </rewrite>
+            </core>
         </helpers>
 
         <sales>
