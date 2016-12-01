@@ -1283,31 +1283,33 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				}
 			}
 
+			$payment = $order->getPayment();
+
 			// We check if transactionKey exists in database
-			$t = 0;
+			$t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
 
-			$transactions = Mage::getModel('sales/order_payment_transaction')
-				->getCollection()
-				->addAttributeToFilter('order_id', array('eq' => $order->getEntityId()));
+			if ($t <= 0) {
+				$helperLog->setLogLabel("Order #{$orderReference}");
+				$helperLog->info("TransactionKey {$transactionKey} not found on database for this order.");
+				$helperLog->info("Searching order history...");
+				$helperLog->setLogLabel("");
 
-			foreach ($transactions as $key => $transaction) {
-				$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
+				$mundiQueryResult = $this->getOrderTransactions($orderReference);
+				$processQueryResult = $this->processQueryResults($mundiQueryResult, $payment);
 
-				// transactionKey found
-				if ($orderTransactionKey == $transactionKey) {
-					$t++;
-					continue;
+				if ($processQueryResult) {
+					$this->removeIntegrationErrorInfo($order);
 				}
 			}
 
+			// We check if transactionKey exists in database again, after query MundiPagg transactions
+			$t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
+
 			if ($t <= 0) {
-				$helperLog->info("Order #{$orderReference} | TransactionKey {$transactionKey} not found on database for this order. Adding...");
+				$errMsg = "KO | Order #{$orderReference} | TransactionKey {$transactionKey} not found for this order";
+				$helperLog->info($errMsg);
 
-				$payment = $order->getPayment();
-				$transactionId = $transactionKey;
-				$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH;
-
-				$this->_addTransaction($payment, $transactionId, $transactionType, $transactionData);
+				return $errMsg;
 			}
 
 			$order->addStatusHistoryComment("Transaction update received: {$status}", false);
@@ -1344,7 +1346,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					if ($return instanceof Mage_Sales_Model_Order_Invoice) {
 						$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
-
 						$helperLog->info($returnMessage);
 
 						return $returnMessage;
@@ -1352,24 +1353,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					// cannot capture transaction
 					$returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
-
-					switch ($return) {
-						case self::ORDER_OVERPAID:
-							$returnMessage .= self::ORDER_OVERPAID;
-
-							$helperLog->info($returnMessage);
-							break;
-
-						case self::ORDER_UNDERPAID:
-							$returnMessage .= self::ORDER_UNDERPAID;
-
-							$helperLog->info($returnMessage);
-
-							break;
-
-						default:
-							$returnMessage .= self::UNEXPECTED_ERROR;
-					}
+					$returnMessage.= $return;
 
 					return $returnMessage;
 					break;
@@ -1457,17 +1441,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					break;
 
 				case 'notauthorized':
-					$orderIncrementId = $order->getIncrementId();
-					$offlineRetryModel = Mage::getModel('mundipagg/offlineretry');
-					$offlineRetry = $offlineRetryModel->loadByIncrementId($orderIncrementId);
-
-					if (is_null($offlineRetry->getId())) {
-						$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' received";
-						$helperLog->info($returnMessage);
-
-						return $returnMessage;
-					}
-
 					$helper = Mage::helper('mundipagg');
 					$grandTotal = $order->getGrandTotal();
 					$grandTotalInCents = $helper->formatPriceToCents($grandTotal);
@@ -1622,11 +1595,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 
 
-		} catch (Exception
-		$e) {
-			$returnMessage = "Internal server error | {
-				$e->getCode()} -ErrMsg: {
-				$e->getMessage()}";
+		} catch (Exception $e) {
+			$returnMessage = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
 
 			//Log error
 			$helperLog->error($e, true);
@@ -1634,8 +1604,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
 
-			return "KO | {
-				$returnMessage}";
+			return "KO | {$returnMessage}";
 		}
 	}
 
@@ -1659,12 +1628,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				return true;
 
 			} catch (Exception $e) {
-				throw new RuntimeException("Order cannot be canceled . Error reason: {
-				$e->getMessage()}");
+				throw new RuntimeException("Order cannot be canceled. Error reason: {$e->getMessage()}");
 			}
 
 		} else {
-			throw new RuntimeException("Order cannot be canceled . ");
+			throw new RuntimeException("Order cannot be canceled.");
 		}
 	}
 
@@ -2128,6 +2096,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRawJson);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
+		$timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
+
+		if (is_null($timeoutLimit) === false) {
+			curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
+		}
+
 		// Execute post
 		$_response = curl_exec($ch);
 
@@ -2190,6 +2164,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRaw);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		$timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
+
+		if (is_null($timeoutLimit) === false) {
+			curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
+		}
 
 		// Execute post
 		$response = curl_exec($ch);
@@ -2284,6 +2264,30 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 	}
 
+	public function getLocalTransactionsQty($orderId, $transactionKey) {
+		$qty = 0;
+
+		$transactions = Mage::getModel('sales/order_payment_transaction')
+			->getCollection()
+			->addAttributeToFilter('order_id', array('eq' => $orderId));
+
+		foreach ($transactions as $key => $transaction) {
+			$orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
+
+			// transactionKey found
+			if ($orderTransactionKey == $transactionKey) {
+				$qty++;
+				continue;
+			}
+		}
+
+		return $qty;
+	}
+
+	/**
+	 * @param string|int $orderReference
+	 * @return array
+	 */
 	public function getOrderTransactions($orderReference) {
 		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$log->setLogLabel("Order {$orderReference}");
@@ -2306,7 +2310,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$util = new Uecommerce_Mundipagg_Helper_Util();
 
-		$responseData = json_decode($responseRaw);
+		$responseData = json_decode($responseRaw, true);
 		$responseJSON = $util->jsonEncodePretty($responseData);
 
 		$log->info("Request: {$url}");
