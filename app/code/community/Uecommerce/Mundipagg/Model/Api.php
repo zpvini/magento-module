@@ -55,7 +55,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 */
 	public function creditCardTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard) {
 		$helper = Mage::helper('mundipagg');
-		$_logRequest = array();
 
 		try {
 			// Installments configuration
@@ -190,28 +189,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			if (is_array($nodeRequestData)) {
 				$_request['RequestData'] = $nodeRequestData;
-			}
-
-			if ($standard->getDebug() == 1) {
-				$_logRequest = $_request;
-
-				foreach ($_request["CreditCardTransactionCollection"] as $key => $paymentData) {
-					if (isset($_logRequest["CreditCardTransactionCollection"][$key]["CreditCard"]["CreditCardNumber"])) {
-						$_logRequest["CreditCardTransactionCollection"][$key]["CreditCard"]["CreditCardNumber"] = 'xxxxxxxxxxxxxxxx';
-					}
-
-					if (isset($_logRequest["CreditCardTransactionCollection"][$key]["CreditCard"]["SecurityCode"])) {
-						$_logRequest["CreditCardTransactionCollection"][$key]["CreditCard"]["SecurityCode"] = 'xxx';
-					}
-
-					if (isset($_logRequest["CreditCardTransactionCollection"][$key]["CreditCard"]["ExpMonth"])) {
-						$_logRequest["CreditCardTransactionCollection"][$key]["CreditCard"]["ExpMonth"] = 'xx';
-					}
-
-					if (isset($_logRequest["CreditCardTransactionCollection"][$key]["CreditCard"]["ExpYear"])) {
-						$_logRequest["CreditCardTransactionCollection"][$key]["CreditCard"]["ExpYear"] = 'xx';
-					}
-				}
 			}
 
 			// check anti fraud minimum value
@@ -2117,7 +2094,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	/**
 	 * Method to unify the transactions requests and his logs
 	 *
-	 * @author Ruan Azevedo <razvedo@mundipagg.com>
 	 * @since 05-24-2016
 	 * @param array  $dataToPost
 	 * @param string $url
