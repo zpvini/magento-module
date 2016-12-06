@@ -831,21 +831,29 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				switch ($resultPayment['message']) {
 					// Boleto
 					case 0:
-						$payment->setAdditionalInformation(
-							'BoletoUrl',
-							$resultPayment['result']['BoletoTransactionResultCollection']['BoletoTransactionResult']['BoletoUrl']
+						$boletoTransactionCollection = $helper->issetOr(
+							$resultPayment['result']['BoletoTransactionResultCollection'][0]
 						);
 
-						// In order to show "Print Boleto" link in order email
-						$order->getPayment()->setAdditionalInformation('BoletoUrl', $resultPayment['result']['BoletoTransactionResultCollection']['BoletoTransactionResult']['BoletoUrl']);
+						$boletoUrl = $helper->issetOr($boletoTransactionCollection['BoletoUrl']);
+
+						if (is_null($boletoUrl) === false) {
+							$payment->setAdditionalInformation('BoletoUrl', $boletoUrl);
+
+							// In order to show "Print Boleto" link in order email
+							$order->getPayment()->setAdditionalInformation('BoletoUrl', $boletoUrl);
+						}
+
+						$transactionKey = $helper->issetOr($boletoTransactionCollection['TransactionKey']);
+						$this->_addTransaction($payment, $transactionKey, $transactionType, $boletoTransactionCollection);
 
 						// We record transaction(s)
 						if (count($resultPayment['result']['BoletoTransactionResultCollection']) == 1) {
-							$trans = $resultPayment['result']['BoletoTransactionResultCollection']['BoletoTransactionResult'];
-
+							$trans = $boletoTransactionCollection;
 							$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
+
 						} else {
-							foreach ($resultPayment['result']['BoletoTransactionResultCollection']['BoletoTransactionResult'] as $key => $trans) {
+							foreach ($boletoTransactionCollection as $key => $trans) {
 								$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
 							}
 						}
@@ -1870,7 +1878,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				'PendingAuthorize'
 			);
 
-			if(in_array($ccTransactionStatus, $transactionOpenStatuses)){
+			if (in_array($ccTransactionStatus, $transactionOpenStatuses)) {
 				$transaction->setIsClosed(0);
 			} else {
 				$transaction->setIsClosed(1);
