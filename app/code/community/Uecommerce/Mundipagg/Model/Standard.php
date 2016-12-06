@@ -2102,6 +2102,12 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$log->setLogLabel("#{$order->getIncrementId()}");
 
+		$info = $order->getPayment()->getAdditionalInformation();
+
+		if (!isset($info['IntegrationError'])) {
+			return;
+		}
+
 		try {
 			$info = $order->getPayment()->getAdditionalInformation();
 

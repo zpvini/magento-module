@@ -1190,7 +1190,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * @param $data
 	 */
 	public function processOrder($postData) {
-		$standard = Mage::getModel('mundipagg/standard');
 		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 		$returnMessage = '';
 
@@ -1326,11 +1325,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$statusWithError = strtolower($statusWithError);
 
 			$lowerStatus = strtolower($status);
+			$amountToCapture = $capturedAmountInCents * 0.01;
 
 			switch ($lowerStatus) {
 				case 'captured':
-					$amountToCapture = $capturedAmountInCents * 0.01;
-
 					try {
 						$return = $this->captureTransaction($order, $amountToCapture, $transactionKey);
 
@@ -1353,7 +1351,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					// cannot capture transaction
 					$returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
-					$returnMessage.= $return;
+					$returnMessage .= $return;
 
 					return $returnMessage;
 					break;
@@ -1390,8 +1388,18 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 							$order->setTotalPaid($baseTotalPaid);
 						}
 
+						$accOrderGrandTotal = sprintf($order->getGrandTotal());
+						$accBaseTotalPaid = sprintf($baseTotalPaid);
+
 						// Can invoice only if total captured amount is equal to GrandTotal
-						if (abs($order->getGrandTotal() - $baseTotalPaid) < $epsilon) {
+						if ($accBaseTotalPaid == $accOrderGrandTotal) {
+							$result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
+
+							return $result;
+
+						} elseif ($accBaseTotalPaid > $accOrderGrandTotal) {
+							$order->setTotalPaid(0);
+
 							$result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
 
 							return $result;
@@ -1399,7 +1407,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						} else {
 							$order->save();
 
-							$returnMessage = "OK | {$returnMessageLabel} | Captured amount isn't equal to grand total, invoice not created. Transaction status '{$status}' received.";
+							$returnMessage = "OK | {$returnMessageLabel} | ";
+							$returnMessage .= "Captured amount isn't equal to grand total, invoice not created.";
+							$returnMessage .= "Transaction status '{$status}' received.";
+
+							$helperLog->info($returnMessage);
 
 							return $returnMessage;
 						}
@@ -1785,6 +1797,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		}
 
 		$order->setBaseTotalPaid($totalPaid);
+		$order->setTotalPaid($totalPaid);
 		$order->addStatusHistoryComment('Captured offline', false);
 
 		$payment = $order->getPayment();
@@ -1817,7 +1830,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$payment->save();
 
+		$newStatus = 'processing';
+
 		if (strtolower($status) == 'overpaid') {
+			$newStatus = 'overpaid';
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, 'overpaid');
 		} else {
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
@@ -1825,7 +1841,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		$order->save();
 
-		$returnMessage = "OK | {$returnMessageLabel} | invoice created and order status changed to processing.";
+		$returnMessage = "OK | {$returnMessageLabel} | invoice created and order state changed to {$newStatus}.";
 
 		$helperLog->info($returnMessage);
 
