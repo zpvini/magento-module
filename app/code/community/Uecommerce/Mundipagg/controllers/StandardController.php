@@ -196,23 +196,25 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 						$dataR = array();
 						$dataR = json_decode($json, true);
 
-						if (count($resultPayment['result']->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-							$trans = $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+						$transactions = $resultPayment['result']['CreditCardTransactionResultCollection'];
+
+						if (count($transactions) == 1) {
+							$trans = $dataR['CreditCardTransactionResultCollection'][0];
 
 							$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
 
 						} else {
-							$transactions = $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+							$transactions = $dataR['CreditCardTransactionResultCollection'];
 
 							foreach ($transactions as $key => $trans) {
 								$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
 							}
 
 							// We can capture only if anti fraud is disabled and payment action is "AuthorizeAndCapture"
-							$creditCardTransactionResultCollection = $resultPayment['result']->CreditCardTransactionResultCollection;
+							$creditCardTransactionResultCollection = $transactions;
 
 							if (
-								count($creditCardTransactionResultCollection->CreditCardTransactionResult) > 1 &&
+								count($creditCardTransactionResultCollection) > 1 &&
 								$onepage->getAntiFraud() == 0 &&
 								$onepage->getPaymentAction() == 'order'
 							) {

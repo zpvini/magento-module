@@ -312,11 +312,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				}
 
 			} elseif ($transactionsQty > 1) { // More than 1 transaction
-				$allTransactions = $creditCardTransactionResultCollection['CreditCardTransactionResult'];
+				$allTransactions = $creditCardTransactionResultCollection;
 
 				// We remove other transactions made before
 				$actualTransactions = count($data['payment']);
-				$totalTransactions = count($creditCardTransactionResultCollection['CreditCardTransactionResult']);
+				$totalTransactions = count($allTransactions);
 				$transactionsToDelete = $totalTransactions - $actualTransactions;
 
 				if ($totalTransactions > $actualTransactions) {
