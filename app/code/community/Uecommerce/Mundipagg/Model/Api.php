@@ -1325,7 +1325,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$statusWithError = strtolower($statusWithError);
 
 			$lowerStatus = strtolower($status);
-			$amountToCapture = $capturedAmountInCents * 0.01;
+
+			if (empty($capturedAmountInCents) === false) {
+				$amountToCapture = $capturedAmountInCents * 0.01;
+			} else {
+				$amountInCents = null;
+			}
 
 			switch ($lowerStatus) {
 				case 'captured':
