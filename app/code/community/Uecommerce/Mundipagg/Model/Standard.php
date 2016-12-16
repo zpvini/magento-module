@@ -586,59 +586,52 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				return $this->integrationTimeOut($order, $payment);
 			}
 
-			// We record transaction(s)
-			if (isset($resultPayment['result'])) {
-				$xml = $resultPayment['result'];
-				$json = json_encode($xml);
-
-				$resultPayment['result'] = array();
-				$resultPayment['result'] = json_decode($json, true);
-
-				if (isset($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult)) {
-					if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-						$trans = $resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
-
-						$transaction = $this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
-					} else {
-						foreach ($resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
-							$transaction = $this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans, $key);
-						}
-					}
-				}
-			}
-
 			// Return
 			if (isset($resultPayment['error'])) {
 				try {
 					$payment->setSkipOrderProcessing(true)->save();
 
 					Mage::throwException(Mage::helper('mundipagg')->__($resultPayment['ErrorDescription']));
+
 				} catch (Exception $e) {
 					Mage::logException($e);
 
 					return $this;
 				}
-			} else {
-				// Send new order email when not in admin
-				if (Mage::app()->getStore()->getCode() != 'admin') {
-					$order->sendNewOrderEmail();
+			}
+
+			$ccResultCollection = $helper->issetOr(
+				$resultPayment['result']['CreditCardTransactionResultCollection']
+			);
+
+			// Send new order email when not in admin
+			if (Mage::app()->getStore()->getCode() != 'admin') {
+				$order->sendNewOrderEmail();
+			}
+
+			if (is_null($ccResultCollection) === false) {
+
+				// We record transaction(s)
+				if (count($ccResultCollection) == 1) {
+					$trans = $ccResultCollection[0];
+					$this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
+
+				} else {
+					foreach ($ccResultCollection as $key => $trans) {
+						$this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans, $key);
+					}
 				}
 
-				if (isset($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult)) {
-					$creditCardTransactionResultCollection = $xml->CreditCardTransactionResultCollection->CreditCardTransactionResult;
-
-					// We can capture only if:
-					// 1. Multiple Credit Cards Payment
-					// 2. Anti fraud is disabled
-					// 3. Payment action is "AuthorizeAndCapture"
-					if (
-						count($creditCardTransactionResultCollection) > 1 &&
-						$this->getAntiFraud() == 0 &&
-						$this->getPaymentAction() == 'order' &&
-						$order->getPaymentAuthorizationAmount() == $order->getGrandTotal()
-					) {
-						$this->captureAndcreateInvoice($payment);
-					}
+				// We can capture only if:
+				// 1. Multiple Credit Cards Payment
+				// 2. Anti fraud is disabled
+				// 3. Payment action is "AuthorizeAndCapture"
+				if (count($ccResultCollection) > 1
+					&& $this->getAntiFraud() == 0
+					&& $this->getPaymentAction() == 'order'
+					&& $order->getPaymentAuthorizationAmount() == $order->getGrandTotal()
+				) {
+					$this->captureAndcreateInvoice($payment);
 				}
 			}
 
@@ -815,134 +808,133 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		// Return error
 		if (isset($resultPayment['error'])) {
 			return $this->paymentError($order, $resultPayment);
+		}
 
-		} else {
-			if (isset($resultPayment['message'])) {
+		if (isset($resultPayment['message'])) {
 
-				$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
+			$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
 
-				// Xml
-				$xml = $resultPayment['result'];
-				$json = json_encode($xml);
+			// Xml
+			$xml = $resultPayment['result'];
+			$json = json_encode($xml);
 
-				$resultPayment['result'] = array();
-				$resultPayment['result'] = json_decode($json, true);
+			$resultPayment['result'] = array();
+			$resultPayment['result'] = json_decode($json, true);
 
-				switch ($resultPayment['message']) {
-					// Boleto
-					case 0:
-						$boletoTransactionCollection = $helper->issetOr(
-							$resultPayment['result']['BoletoTransactionResultCollection'][0]
-						);
+			switch ($resultPayment['message']) {
+				// Boleto
+				case 0:
+					$boletoTransactionCollection = $helper->issetOr(
+						$resultPayment['result']['BoletoTransactionResultCollection'][0]
+					);
 
-						$boletoUrl = $helper->issetOr($boletoTransactionCollection['BoletoUrl']);
+					$boletoUrl = $helper->issetOr($boletoTransactionCollection['BoletoUrl']);
 
-						if (is_null($boletoUrl) === false) {
-							$payment->setAdditionalInformation('BoletoUrl', $boletoUrl);
+					if (is_null($boletoUrl) === false) {
+						$payment->setAdditionalInformation('BoletoUrl', $boletoUrl);
 
-							// In order to show "Print Boleto" link in order email
-							$order->getPayment()->setAdditionalInformation('BoletoUrl', $boletoUrl);
+						// In order to show "Print Boleto" link in order email
+						$order->getPayment()->setAdditionalInformation('BoletoUrl', $boletoUrl);
+					}
+
+					$transactionKey = $helper->issetOr($boletoTransactionCollection['TransactionKey']);
+					$this->_addTransaction($payment, $transactionKey, $transactionType, $boletoTransactionCollection);
+
+					// We record transaction(s)
+					if (count($resultPayment['result']['BoletoTransactionResultCollection']) == 1) {
+						$trans = $boletoTransactionCollection;
+						$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
+
+					} else {
+						foreach ($boletoTransactionCollection as $key => $trans) {
+							$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
+						}
+					}
+
+					$payment->setTransactionId($this->_transactionId);
+					$payment->save();
+
+					// Send new order email when not in admin
+					if (Mage::app()->getStore()->getCode() != 'admin') {
+						$order->sendNewOrderEmail();
+					}
+
+					break;
+
+				// Credit Card
+				case 1:
+					$creditCardTransactionResultCollection = $result['CreditCardTransactionResultCollection'];
+					$transactionsQty = count($creditCardTransactionResultCollection);
+
+					// We record transaction(s)
+					if ($transactionsQty == 1) {
+						$transaction = $creditCardTransactionResultCollection[0];
+
+						if (array_key_exists('TransactionKey', $transaction)) {
+							$this->_addTransaction($payment, $transaction['TransactionKey'], $transactionType, $transaction);
 						}
 
-						$transactionKey = $helper->issetOr($boletoTransactionCollection['TransactionKey']);
-						$this->_addTransaction($payment, $transactionKey, $transactionType, $boletoTransactionCollection);
-
-						// We record transaction(s)
-						if (count($resultPayment['result']['BoletoTransactionResultCollection']) == 1) {
-							$trans = $boletoTransactionCollection;
-							$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
-
-						} else {
-							foreach ($boletoTransactionCollection as $key => $trans) {
+					} else {
+						foreach ($creditCardTransactionResultCollection as $key => $trans) {
+							if (array_key_exists('TransactionKey', $trans)) {
 								$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
 							}
 						}
+					}
 
-						$payment->setTransactionId($this->_transactionId);
-						$payment->save();
+					// Send new order email when not in admin
+					if (Mage::app()->getStore()->getCode() != 'admin') {
+						$order->sendNewOrderEmail();
+					}
 
-						// Send new order email when not in admin
-						if (Mage::app()->getStore()->getCode() != 'admin') {
-							$order->sendNewOrderEmail();
-						}
+					// Invoice
+					$order = $payment->getOrder();
 
-						break;
+					if (!$order->canInvoice()) {
+						// Log error
+						Mage::logException(Mage::helper('core')->__('Cannot create an invoice.'));
+						Mage::throwException(Mage::helper('core')->__('Cannot create an invoice.'));
+					}
 
-					// Credit Card
-					case 1:
-						$creditCardTransactionResultCollection = $result['CreditCardTransactionResultCollection'];
-						$transactionsQty = count($creditCardTransactionResultCollection);
+					// Create invoice
+					$invoice = Mage::getModel('sales/service_order', $payment->getOrder())->prepareInvoice(array());
+					$invoice->register();
 
-						// We record transaction(s)
-						if ($transactionsQty == 1) {
-							$transaction = $creditCardTransactionResultCollection[0];
+					// Set capture case to offline and register the invoice.
+					$invoice->setTransactionId($this->_transactionId);
+					$invoice->setCanVoidFlag(true);
+					$invoice->getOrder()->setIsInProcess(true);
+					$invoice->setState(2);
 
-							if (array_key_exists('TransactionKey', $transaction)) {
-								$this->_addTransaction($payment, $transaction['TransactionKey'], $transactionType, $transaction);
-							}
+					// Send invoice if enabled
+					if (Mage::helper('sales')->canSendNewInvoiceEmail($order->getStoreId())) {
+						$invoice->setEmailSent(true);
+						$invoice->sendEmail();
+					}
 
-						} else {
-							foreach ($creditCardTransactionResultCollection as $key => $trans) {
-								if (array_key_exists('TransactionKey', $trans)) {
-									$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
-								}
-							}
-						}
+					$invoice->save();
 
-						// Send new order email when not in admin
-						if (Mage::app()->getStore()->getCode() != 'admin') {
-							$order->sendNewOrderEmail();
-						}
+					$order->setBaseTotalPaid($order->getBaseGrandTotal());
+					$order->setTotalPaid($order->getBaseGrandTotal());
+					$order->addStatusHistoryComment('Captured online amount of R$' . $order->getBaseGrandTotal(), false);
+					$order->save();
 
-						// Invoice
-						$order = $payment->getOrder();
+					$payment->setLastTransId($this->_transactionId);
+					$payment->save();
 
-						if (!$order->canInvoice()) {
-							// Log error
-							Mage::logException(Mage::helper('core')->__('Cannot create an invoice.'));
-							Mage::throwException(Mage::helper('core')->__('Cannot create an invoice.'));
-						}
+					break;
 
-						// Create invoice
-						$invoice = Mage::getModel('sales/service_order', $payment->getOrder())->prepareInvoice(array());
-						$invoice->register();
+				// Debit
+				case 4:
+					// We record transaction
+					$trans = $resultPayment['result'];
 
-						// Set capture case to offline and register the invoice.
-						$invoice->setTransactionId($this->_transactionId);
-						$invoice->setCanVoidFlag(true);
-						$invoice->getOrder()->setIsInProcess(true);
-						$invoice->setState(2);
-
-						// Send invoice if enabled
-						if (Mage::helper('sales')->canSendNewInvoiceEmail($order->getStoreId())) {
-							$invoice->setEmailSent(true);
-							$invoice->sendEmail();
-						}
-
-						$invoice->save();
-
-						$order->setBaseTotalPaid($order->getBaseGrandTotal());
-						$order->setTotalPaid($order->getBaseGrandTotal());
-						$order->addStatusHistoryComment('Captured online amount of R$' . $order->getBaseGrandTotal(), false);
-						$order->save();
-
-						$payment->setLastTransId($this->_transactionId);
-						$payment->save();
-
-						break;
-
-					// Debit
-					case 4:
-						// We record transaction
-						$trans = $resultPayment['result'];
-
-						$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
-						break;
-				}
+					$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
+					break;
 			}
-
-			return $this;
 		}
+
+		return $this;
 	}
 
 	/**
