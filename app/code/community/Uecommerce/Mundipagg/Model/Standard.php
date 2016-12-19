@@ -603,7 +603,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			if (isset($resultPayment['error'])) {
 				try {
 					$payment->setSkipOrderProcessing(true)->save();
-					Mage::throwException(Mage::helper('mundipagg')->__($resultPayment['ErrorDescription']));
+
+					if (empty($resultPayment['ErrorDescription']) === false) {
+						Mage::throwException(Mage::helper('mundipagg')->__($resultPayment['ErrorDescription']));
+					}
 
 				} catch (Exception $e) {
 					Mage::logException($e);
@@ -1129,7 +1132,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					foreach ($errorItemCollection as $i) {
 						$errorCode = $helper->issetOr($i['ErrorCode']);
 
-						if ($errorCode == '504') {
+						if ($errorCode == 504) {
 							$statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
 							Mage::getSingleton('checkout/session')->setApprovalRequestSuccess($statusWithError);
 
