@@ -1861,7 +1861,15 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				'PendingAuthorize'
 			);
 
-			if (in_array($ccTransactionStatus, $transactionOpenStatuses)) {
+			$order = $payment->getOrder();
+			$orderIncrementId = $order->getIncrementId();
+
+			$api = new Uecommerce_Mundipagg_Model_Api();
+			$orderInOfflineRetry = $api->orderIsInOfflineRetry($orderIncrementId);
+
+			if (in_array($ccTransactionStatus, $transactionOpenStatuses)
+				|| $orderInOfflineRetry
+			) {
 				$transaction->setIsClosed(0);
 			} else {
 				$transaction->setIsClosed(1);
