@@ -1126,8 +1126,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				if (isset($approvalRequest['ErrorItemCollection'])) {
 					$errorItemCollection = $approvalRequest['ErrorItemCollection'];
 
-					if (isset($errorItemCollection['ErrorItem']['ErrorCode'])) {
-						$errorCode = $errorItemCollection['ErrorItem']['ErrorCode'];
+					foreach ($errorItemCollection as $i) {
+						$errorCode = $helper->issetOr($i['ErrorCode']);
 
 						if ($errorCode == '504') {
 							$statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
@@ -1965,24 +1965,21 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 */
 	private function paymentError(Mage_Sales_Model_Order $order, $resultPayment) {
 		try {
-			// Xml
-			$xml = $resultPayment['result'];
-			$json = json_encode($xml);
-
-			$resultPayment['result'] = array();
-			$resultPayment['result'] = json_decode($json, true);
-
 			$payment = $order->getPayment();
 			$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
 
+			$helper = Mage::helper('mundipagg');
+			$result = $helper->issetOr($resultPayment['result']);
+			$ccTxnCollection = $helper->issetOr($result['CreditCardTransactionResultCollection']);
+
 			// We record transaction(s)
-			if (isset($resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
-				if (count($resultPayment['result']['CreditCardTransactionResultCollection']) == 1) {
-					$trans = $resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
+			if (is_null($ccTxnCollection) === false) {
+				if (count($ccTxnCollection) == 1) {
+					$trans = $ccTxnCollection[0];
 
 					$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans);
 				} else {
-					foreach ($resultPayment['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
+					foreach ($ccTxnCollection as $key => $trans) {
 						$this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
 					}
 				}
