@@ -578,39 +578,15 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			// Proceed to authorization on Gateway
 			$resultPayment = $this->doPayment($payment, $order);
-
 			$helper = Mage::helper('mundipagg');
 			$result = $helper->issetOr($resultPayment['result'], false);
+			$ccResultCollection = $helper->issetOr($result['CreditCardTransactionResultCollection']);
 
 			if ($result === false) {
 				return $this->integrationTimeOut($order, $payment);
 			}
 
-			// Return
-			if (isset($resultPayment['error'])) {
-				try {
-					$payment->setSkipOrderProcessing(true)->save();
-
-					Mage::throwException(Mage::helper('mundipagg')->__($resultPayment['ErrorDescription']));
-
-				} catch (Exception $e) {
-					Mage::logException($e);
-
-					return $this;
-				}
-			}
-
-			$ccResultCollection = $helper->issetOr(
-				$resultPayment['result']['CreditCardTransactionResultCollection']
-			);
-
-			// Send new order email when not in admin
-			if (Mage::app()->getStore()->getCode() != 'admin') {
-				$order->sendNewOrderEmail();
-			}
-
-			if (is_null($ccResultCollection) === false) {
-
+			if (is_null($result) === false) {
 				// We record transaction(s)
 				if (count($ccResultCollection) == 1) {
 					$trans = $ccResultCollection[0];
@@ -620,6 +596,24 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					foreach ($ccResultCollection as $key => $trans) {
 						$this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans, $key);
 					}
+				}
+			}
+
+			// Return
+			if (isset($resultPayment['error'])) {
+				try {
+					$payment->setSkipOrderProcessing(true)->save();
+					Mage::throwException(Mage::helper('mundipagg')->__($resultPayment['ErrorDescription']));
+
+				} catch (Exception $e) {
+					Mage::logException($e);
+
+					return $this;
+				}
+			} else {
+				// Send new order email when not in admin
+				if (Mage::app()->getStore()->getCode() != 'admin') {
+					$order->sendNewOrderEmail();
 				}
 
 				// We can capture only if:
@@ -682,9 +676,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				$TransactionReference = $transaction->getAdditionalInformation('TransactionReference');
 			}
 
-//			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
-//			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
-//			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
 			$orderkeys = (array)$payment->getAdditionalInformation('OrderKey');
 
 			foreach ($orderkeys as $orderkey) {
