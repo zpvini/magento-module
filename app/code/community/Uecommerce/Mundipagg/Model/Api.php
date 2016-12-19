@@ -234,8 +234,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				// Return errors
 				return array(
 					'error'               => 1,
-					'ErrorCode'           => '',
-					'ErrorDescription'    => '',
+					'ErrorCode'           => $helper->issetOr($errorItemCollection[0]['ErrorCode']),
+					'ErrorDescription'    => $helper->issetOr($errorItemCollection[0]['Description']),
 					'OrderKey'            => $orderKey,
 					'OrderReference'      => $orderReference,
 					'ErrorItemCollection' => $errorItemCollection,
