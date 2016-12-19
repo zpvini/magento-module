@@ -1340,7 +1340,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					} catch (Exception $e) {
 						$errMsg = $e->getMessage();
 
-						$returnMessage = "KO | #{$orderReference} | {$transactionKey} | ";
+						$returnMessage = "OK | #{$orderReference} | {$transactionKey} | ";
 						$returnMessage .= "Can't capture transaction: {$errMsg}";
 						$helperLog->info($returnMessage);
 
