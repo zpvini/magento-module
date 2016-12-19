@@ -1580,7 +1580,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					break;
 
 				case 'authorizedpendingcapture':
-					$returnMessage = "Order #{$order->getIncrementId()} | Transaction status '{$status}' received.";
+					$returnMessage = "OK | Order #{$order->getIncrementId()} | Transaction status '{$status}' received.";
 
 					$helperLog->info($returnMessage);
 
