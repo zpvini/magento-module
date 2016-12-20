@@ -1582,7 +1582,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					$helperLog->info($returnMessage);
 
-					return "OK | {$returnMessage}";
+					return $returnMessage;
 					break;
 
 				case $statusWithError:
