@@ -582,11 +582,11 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$result = $helper->issetOr($resultPayment['result'], false);
 			$ccResultCollection = $helper->issetOr($result['CreditCardTransactionResultCollection']);
 
-			if ($result === false) {
+			if (is_null($ccResultCollection)) {
 				return $this->integrationTimeOut($order, $payment);
 			}
 
-			if (is_null($result) === false) {
+			if (is_null($ccResultCollection) === false) {
 				// We record transaction(s)
 				if (count($ccResultCollection) == 1) {
 					$trans = $ccResultCollection[0];
