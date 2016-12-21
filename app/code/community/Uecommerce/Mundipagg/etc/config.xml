@@ -95,6 +95,15 @@
                     </delete_offline_retry_data_from_canceled_order>
                 </observers>
             </order_cancel_after>
+            <checkout_cart_save_after>
+                <observers>
+                    <mundipagg_cart_check_recurrency>
+                        <type>singleton</type>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>cartCheckRecurrency</method>
+                    </mundipagg_cart_check_recurrency>
+                </observers>
+            </checkout_cart_save_after>
         </events>
 
         <resources>

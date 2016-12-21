@@ -405,4 +405,44 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		}
 	}
 
+	public function cartCheckRecurrency($event) {
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
+		/* @var Mage_Checkout_Model_Cart $cart */
+		$cart = $event->getCart();
+
+		/* @var Mage_Eav_Model_Entity_Collection_Abstract $items */
+		$items = $cart->getItems();
+
+		if (count($items) < 1) {
+			$log->debug("carrinho vazio");
+			return;
+		}
+
+		$hasRecurrency = false;
+
+		foreach ($items as $item) {
+			/* @var Mage_Sales_Model_Quote_Item $item */
+			$product = $item->getProduct();
+
+			$log->debug("Produto '{$product->getName()}'");
+
+			if ($product->getMundipaggRecurrent()) {
+				$log->debug("tem recorrencia...");
+
+				$hasRecurrency = true;
+				Mage::getSingleton('checkout/session')->setData('mundipagg_recurrency', true);
+				continue;
+			}
+		}
+
+		if ($hasRecurrency === false) {
+			$log->debug("recorrencia: NAO");
+			Mage::getSingleton('checkout/session')->setData('mundipagg_recurrency', false);
+		} else {
+			$log->debug("recorrencia: SIM");
+		}
+
+	}
+
 }
