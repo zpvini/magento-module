@@ -2115,4 +2115,19 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 	}
 
+	/**
+	 * @param Mage_Sales_Model_Order $order
+	 * @param boolean $option
+	 */
+	public function setCanceledByNotificationFlag(&$order, $option){
+		$order->getPayment()->setAdditionalInformation('voided_by_mundi_notification', $option);
+	}
+
+	/**
+	 * @param Mage_Sales_Model_Order $order
+	 */
+	public function getCanceledByNotificationFlag($order){
+		return $order->getPayment()->getAdditionalInformation('voided_by_mundi_notification');
+	}
+
 }
