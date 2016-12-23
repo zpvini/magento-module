@@ -1269,6 +1269,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					}
 
 					try {
+						// set flag to prevent send back a cancelation to Mundi via API
+						$this->setCanceledByNotificationFlag($order, true);
+
 						$this->tryCancelOrder($order, "Transaction update received: {$status}");
 						$returnMessage = "OK | {$returnMessageLabel} | Canceled successfully";
 						$helperLog->info($returnMessage);
@@ -1472,6 +1475,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					}
 
 					try {
+						// set flag to prevent send back a cancelation to Mundi via API
+						$this->setCanceledByNotificationFlag($order, true);
+
 						$this->tryCancelOrder($order);
 
 					} catch (Exception $e) {
