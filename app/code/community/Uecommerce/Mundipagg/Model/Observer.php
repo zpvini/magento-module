@@ -202,28 +202,10 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 	 * Check if recurrency product is in cart in order to show only Mundipagg Credit Card payment
 	 */
 	public function checkForRecurrency($observer) {
-		$recurrent = 0;
-		$session = Mage::getSingleton('admin/session');
+		$session = Mage::getSingleton('checkout/session');
+		$recurrent = $session->getMundipaggRecurrency();
 
-		if ($session->isLoggedIn()) {
-			$quote = Mage::getSingleton('adminhtml/session_quote')->getQuote();
-		} else {
-			$quote = Mage::getSingleton('checkout/session')->getQuote();
-		}
-
-		$cartItems = $quote->getAllVisibleItems();
-
-		foreach ($cartItems as $item) {
-			$productId = $item->getProductId();
-
-			$product = Mage::getModel('catalog/product')->load($productId);
-
-			if ($product->getMundipaggRecurrent()) {
-				$recurrent++;
-			}
-		}
-
-		if ($recurrent > 0) {
+		if ($recurrent) {
 			$instance = $observer->getMethodInstance();
 			$result = $observer->getResult();
 
@@ -417,8 +399,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		/* @var Mage_Sales_Model_Resource_Quote_Item_Collection $items */
 		$items = $quote->getAllItems();
 
-		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-
 		/* @var Mage_Sales_Model_Quote_Item $item */
 		foreach ($items as $item) {
 
@@ -429,7 +409,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 				$product->load($product->getId());
 
 				if ($product->getMundipaggRecurrent()) {
-					$log->debug("produto '{$product->getName()}': tem recorrencia!");
 					$this->setQuoteRecurrencyFlag(true);
 
 					return;
@@ -437,7 +416,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 			}
 		}
 
-		$log->debug("sem recorrencia...");
 		$this->setQuoteRecurrencyFlag(false);
 	}
 
@@ -447,7 +425,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 	 */
 	private function setQuoteRecurrencyFlag($option) {
 		$session = Mage::getSingleton('checkout/session');
-		$session->setMundipaggRecyrrency($option);
+		$session->setMundipaggRecurrency($option);
 	}
 
 }
