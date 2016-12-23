@@ -84,6 +84,14 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 	}
 
 	private function cancelOrderViaApi(Mage_Sales_Model_Order $order) {
+		$standard = new Uecommerce_Mundipagg_Model_Standard();
+
+		if($standard->getCanceledByNotificationFlag($order)){
+			return;
+		} else {
+			unset($standard);
+		}
+
 		$payment = $order->getPayment();
 		$paymentMethod = $payment->getAdditionalInformation('PaymentMethod');
 		$allowedPaymentMethods = array(
