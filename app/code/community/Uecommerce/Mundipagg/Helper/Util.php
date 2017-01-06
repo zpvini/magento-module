@@ -2,6 +2,11 @@
 
 class Uecommerce_Mundipagg_Helper_Util extends Mage_Core_Helper_Abstract {
 
+	/**
+	 * @todo must be deprecated, remove code duplication with Uecommerce_Mundipagg_Helper_Data
+	 * @param $input
+	 * @return string
+	 */
 	public function jsonEncodePretty($input) {
 		$version = phpversion();
 		$version = explode('.', $version);

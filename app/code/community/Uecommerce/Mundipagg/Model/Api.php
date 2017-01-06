@@ -1185,6 +1185,57 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	}
 
 	/**
+	 * call MundiPagg endpoint '/Sale/Capture'
+	 *
+	 * @param $data
+	 * @return array
+	 */
+	public function capture($data) {
+		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
+		// Get Webservice URL
+		$url = "{$this->modelStandard->getURL()}Capture";
+
+		// Get store key
+		$key = $this->modelStandard->getmerchantKey();
+		$dataToPost = json_encode($data);
+
+		/* @var Uecommerce_Mundipagg_Helper_Data $helper */
+		$helper = Mage::helper('mundipagg');
+
+		$log->debug("Url: {$url}");
+		$log->info("Request:\n{$helper->jsonEncodePretty($data)}\n");
+
+		// Send payment data to MundiPagg
+		$ch = curl_init();
+
+		// Header
+		curl_setopt($ch, CURLOPT_HTTPHEADER, [
+			'Content-Type: application/json',
+			"MerchantKey: {$key}",
+			'Accept: application/json'
+		]);
+
+		// Set the url, number of POST vars, POST data
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+		// Execute post
+		$response = curl_exec($ch);
+		$response = json_decode($response, true);
+		$jsonPretty = $helper->jsonEncodePretty($response);
+
+		// Close connection
+		curl_close($ch);
+
+		$log->info("Response:\n{$jsonPretty}\n");
+
+		// Return
+		return $response;
+	}
+
+	/**
 	 * Process order
 	 * @param $order
 	 * @param $data

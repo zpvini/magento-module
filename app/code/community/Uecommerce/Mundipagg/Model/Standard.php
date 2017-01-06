@@ -683,12 +683,12 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			foreach ($orderkeys as $orderkey) {
 				$data['OrderKey'] = $orderkey;
-				$data['ManageOrderOperationEnum'] = 'Capture';
 
 				//Call Gateway Api
+				/* @var Uecommerce_Mundipagg_Model_Api $api */
 				$api = Mage::getModel('mundipagg/api');
-
-				$capture = $api->manageOrderRequest($data, $this);
+				$capture = $api->capture($data);
+//				$capture = $api->manageOrderRequest($data, $this);
 
 				// Xml
 				$xml = $capture['result'];
