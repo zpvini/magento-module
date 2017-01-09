@@ -648,7 +648,14 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 * @return Mage_Payment_Model_Abstract
 	 */
 	public function capture(Varien_Object $payment, $amount) {
-		$helper = Mage::helper('payment');
+		$helper = Mage::helper('mundipagg');
+
+		$captureCase = $helper->issetOr($_POST['invoice']['capture_case'], 'offline');
+
+		if($captureCase === 'online'){
+			$this->captureOnline($payment);
+			return $this;
+		}
 
 		if (!$this->canCapture()) {
 			Mage::throwException($helper->__('Capture action is not available.'));
@@ -728,6 +735,85 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			return false;
 		}
+	}
+
+	/**
+	 * Online capture payment abstract methodl
+	 *
+	 * @param Varien_Object $payment
+	 * @return $this
+	 */
+	public function captureOnline(Varien_Object $payment) {
+		/* @var Uecommerce_Mundipagg_Helper_Data $helper */
+		$helper = Mage::helper('mundipagg');
+
+		if (!$this->canCapture()) {
+			Mage::throwException($helper->__('Capture action is not available.'));
+		}
+
+		if ($payment->getAdditionalInformation('PaymentMethod') == 'mundipagg_boleto') {
+			Mage::throwException($helper->__('You cannot capture Boleto Bancário.'));
+		}
+
+		if ($this->getAntiFraud() == 1) {
+			Mage::throwException($helper->__('You cannot capture having anti fraud activated.'));
+		}
+
+		// Already captured
+		if ($payment->getAdditionalInformation('CreditCardTransactionStatusEnum') == 'Captured'
+			|| $payment->getAdditionalInformation('CreditCardTransactionStatus') == 'Captured'
+		) {
+			Mage::throwException($helper->__('Transactions already captured'));
+		}
+
+		$orderkeys = (array)$payment->getAdditionalInformation('OrderKey');
+
+		if (empty($orderkeys)) {
+			Mage::throwException(Mage::helper('mundipagg')->__('No OrderKey found.'));
+		}
+
+		$captureNotAllowedMsg = $helper->__('Capture was not authorized in MundiPagg');
+		$txnsNotAuthorized = 0;
+
+		foreach ($orderkeys as $orderkey) {
+			$data['OrderKey'] = $orderkey;
+
+			//Call Gateway Api
+			/* @var Uecommerce_Mundipagg_Model_Api $api */
+			$api = Mage::getModel('mundipagg/api');
+			$capture = $api->capture($data);
+
+			$ccTxnResultCollection = $helper->issetOr($capture['CreditCardTransactionResultCollection']);
+
+			if (!is_array($ccTxnResultCollection) || is_null($ccTxnResultCollection) || empty($ccTxnResultCollection)) {
+				Mage::throwException($captureNotAllowedMsg);
+			}
+
+			$txnsNotAuthorized = 0;
+
+			// Save transactions
+			foreach ($ccTxnResultCollection as $txn) {
+				$this->_addTransaction(
+					$payment,
+					$helper->issetOr($txn['TransactionKey']),
+					Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE,
+					$txn
+				);
+
+				$success = strtolower($helper->issetOr($txn['Success'], 'false'));
+
+				if ($success === 'false') {
+					$txnsNotAuthorized++;
+				}
+			}
+		}
+
+		if ($txnsNotAuthorized === 1) {
+			Mage::throwException($captureNotAllowedMsg);
+		} elseif ($txnsNotAuthorized > 1) {
+			Mage::throwException($helper->__('Capture partial authorized'));
+		}
+
 	}
 
 	/**
