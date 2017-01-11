@@ -1409,6 +1409,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
 					$returnMessage .= $return;
 
+					$helperLog->info($returnMessage);
+
 					return $returnMessage;
 					break;
 
