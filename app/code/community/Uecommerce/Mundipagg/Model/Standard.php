@@ -814,6 +814,22 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			Mage::throwException($helper->__('Capture partial authorized'));
 		}
 
+		/* @var Mage_Sales_Model_Order_Payment $payment */
+		$this->closeAuthorizationTxns($payment->getOrder());
+	}
+
+	public function closeAuthorizationTxns(Mage_Sales_Model_Order $order) {
+		$txnsCollection = Mage::getModel('sales/order_payment_transaction')
+			->getCollection()
+			->addAttributeToFilter('order_id', array('eq' => $order->getId()));
+
+		/* @var Mage_Paypal_Model_Payment_Transaction $txn */
+		foreach ($txnsCollection as $txn) {
+			if ($txn->getTxnType() === 'authorization') {
+				$txn->setOrderPaymentObject($order->getPayment());
+				$txn->setIsClosed(true)->save();
+			}
+		}
 	}
 
 	/**
