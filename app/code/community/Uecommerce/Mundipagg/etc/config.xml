@@ -26,6 +26,11 @@
                     </mundipagg_offline_retry>
                 </entities>
             </mundipagg_resource>
+            <sales>
+                <rewrite>
+                    <order_payment>Uecommerce_Mundipagg_Model_Payment</order_payment>
+                </rewrite>
+            </sales>
         </models>
 
         <events>
