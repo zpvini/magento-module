@@ -816,6 +816,12 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 		/* @var Mage_Sales_Model_Order_Payment $payment */
 		$this->closeAuthorizationTxns($payment->getOrder());
+
+		foreach ($payment->getOrder()->getInvoiceCollection() as $invoice){
+			$invoice->setBaseGrandTotal($payment->getOrder()->getBaseGrandTotal())
+				->setGrandTotal($payment->getOrder()->getGrandTotal())
+				->save();
+		}
 	}
 
 	public function closeAuthorizationTxns(Mage_Sales_Model_Order $order) {
