@@ -220,3 +220,5 @@
 "Integration timeout limit","Limite para timeout na integração"
 "Integration timeout limit must be an numeric value","Limite para timeout na integração precisa ser numérico"
 "In seconds","Em segundos"
+"Capture was not authorized in MundiPagg","Captura não foi autorizada na MundiPagg"
+"Transactions already captured","Transações já foram capturadas"
