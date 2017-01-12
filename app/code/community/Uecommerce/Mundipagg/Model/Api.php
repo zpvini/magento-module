@@ -2030,7 +2030,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	/**
 	 * Mail error to Mage::getStoreConfig('trans_email/ident_custom1/email')
 	 *
-	 * @author Ruan Azevedo <razevedo@mundipagg.com>
 	 * @since 31-05-2016
 	 * @param string $message
 	 */
@@ -2040,7 +2039,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$fromEmail = Mage::getStoreConfig('trans_email/ident_sales/email');
 		$toEmail = Mage::getStoreConfig('trans_email/ident_custom1/email');
 		$toName = Mage::getStoreConfig('trans_email/ident_custom1/name');
-		$bcc = array('razevedo@mundipagg.com');
+		$bcc = [];
 		$subject = 'Error Report - MundiPagg Magento Integration';
 		$body = "Error Report from: {$_SERVER['HTTP_HOST']}<br><br>{$message}";
 
