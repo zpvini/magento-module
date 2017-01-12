@@ -823,11 +823,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			/* @var Mage_Sales_Model_Order_Invoice $invoice */
 			$invoice = $payment->getOrder()->getInvoiceCollection()->getItems()[0];
-
-			$invoice->load($invoice->getId());
-			$invoice->setBaseGrandTotal($payment->getOrder()->getBaseGrandTotal())
-				->setGrandTotal($payment->getOrder()->getGrandTotal())
-				->save();
+			$this->equalizeInvoiceTotals($invoice);
 		}
 	}
 
@@ -2242,6 +2238,18 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 */
 	public function getCanceledByNotificationFlag($order){
 		return $order->getPayment()->getAdditionalInformation('voided_by_mundi_notification');
+	}
+
+	/**
+	 * Equalize invoice base_grand_total and base_total with order totals
+	 * Needed when order has 1 invoice and has credit card interests
+	 *
+	 * @param Mage_Sales_Model_Order_Invoice $invoice
+	 */
+	public function equalizeInvoiceTotals(Mage_Sales_Model_Order_Invoice &$invoice){
+		$invoice->setBaseGrandTotal($invoice->getOrder()->getBaseGrandTotal())
+			->setGrandTotal($invoice->getOrder()->getGrandTotal())
+			->save();
 	}
 
 }

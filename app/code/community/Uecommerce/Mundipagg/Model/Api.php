@@ -1277,7 +1277,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 				$helperLog->info("OrderReference: {$orderReference} | {$returnMessage}");
 
-				return "KO | {$returnMessage}";
+				return "OK | {$returnMessage}";
 			}
 
 			$transactionData = null;
@@ -1359,7 +1359,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
 
 			if ($t <= 0) {
-				$errMsg = "KO | Order #{$orderReference} | TransactionKey {$transactionKey} not found for this order";
+				$errMsg = "OK | Order #{$orderReference} | TransactionKey {$transactionKey} not found for this order";
 				$helperLog->info($errMsg);
 
 				return $errMsg;
@@ -1782,6 +1782,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						->setIsClosed(true)
 						->save();
 				}
+
+				$this->equalizeInvoiceTotals($invoice);
 
 				return $invoice;
 
