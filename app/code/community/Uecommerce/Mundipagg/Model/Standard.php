@@ -1342,10 +1342,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						if ($orderGrandTotal < $authorizedAmount) {
 							$interestInformation = $payment->getAdditionalInformation('mundipagg_interest_information');
 							$newInterestInformation = array();
+							$newInterest = 0;
 
 							if (count($interestInformation)) {
-								$newInterest = 0;
-
 								foreach ($interestInformation as $key => $ii) {
 									if (strpos($key, 'partial') !== false) {
 										if ($ii->hasValue()) {

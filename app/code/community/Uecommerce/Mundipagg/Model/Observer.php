@@ -210,29 +210,10 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 	 * Check if recurrency product is in cart in order to show only Mundipagg Credit Card payment
 	 */
 	public function checkForRecurrency($observer) {
-		$recurrent = 0;
+		$session = Mage::getSingleton('checkout/session');
+		$recurrent = $session->getMundipaggRecurrency();
 
-		$session = Mage::getSingleton('admin/session');
-
-		if ($session->isLoggedIn()) {
-			$quote = Mage::getSingleton('adminhtml/session_quote')->getQuote();
-		} else {
-			$quote = Mage::getSingleton('checkout/session')->getQuote();
-		}
-
-		$cartItems = $quote->getAllVisibleItems();
-
-		foreach ($cartItems as $item) {
-			$productId = $item->getProductId();
-
-			$product = Mage::getModel('catalog/product')->load($productId);
-
-			if ($product->getMundipaggRecurrent()) {
-				$recurrent++;
-			}
-		}
-
-		if ($recurrent > 0) {
+		if ($recurrent) {
 			$instance = $observer->getMethodInstance();
 			$result = $observer->getResult();
 
@@ -411,6 +392,48 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 
 			Mage::throwException($errMsg);
 		}
+	}
+
+	/**
+	 * @param Varien_Event $event
+	 */
+	public function cartCheckRecurrency($event) {
+		/* @var Mage_Checkout_Model_Cart $cart */
+		$cart = $event->getCart();
+
+		/* @var Mage_Sales_Model_Quote $quote */
+		$quote = $cart->getQuote();
+
+		/* @var Mage_Sales_Model_Resource_Quote_Item_Collection $items */
+		$items = $quote->getAllItems();
+
+		/* @var Mage_Sales_Model_Quote_Item $item */
+		foreach ($items as $item) {
+
+			/* @var Mage_Sales_Model_Quote_Item_Option $option */
+			foreach ($item->getOptions() as $option) {
+				/* @var Mage_Catalog_Model_Product $product */
+				$product = $option->getProduct();
+				$product->load($product->getId());
+
+				if ($product->getMundipaggRecurrent()) {
+					$this->setQuoteRecurrencyFlag(true);
+
+					return;
+				}
+			}
+		}
+
+		$this->setQuoteRecurrencyFlag(false);
+	}
+
+	/**
+	 * @param boolean $option
+	 *
+	 */
+	private function setQuoteRecurrencyFlag($option) {
+		$session = Mage::getSingleton('checkout/session');
+		$session->setMundipaggRecurrency($option);
 	}
 
 }
