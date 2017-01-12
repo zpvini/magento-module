@@ -1187,11 +1187,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	/**
 	 * call MundiPagg endpoint '/Sale/Capture'
 	 *
-	 * @param $data
+	 * @param array  $data
+	 * @param string $orderReference
 	 * @return array
 	 */
-	public function capture($data) {
+	public function saleCapture($data, $orderReference) {
 		$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$log->setLogLabel("#{$orderReference}");
 
 		// Get Webservice URL
 		$url = "{$this->modelStandard->getURL()}Capture";
