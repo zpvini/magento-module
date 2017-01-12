@@ -649,7 +649,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 */
 	public function capture(Varien_Object $payment, $amount) {
 		$helper = Mage::helper('mundipagg');
-
 		$captureCase = $helper->issetOr($_POST['invoice']['capture_case'], 'offline');
 
 		if ($captureCase === 'online') {
@@ -675,66 +674,40 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			return $this;
 		}
 
-		// Prepare data in order to capture
-		if ($payment->getAdditionalInformation('OrderKey')) {
-			$transactions = Mage::getModel('sales/order_payment_transaction')
-				->getCollection()
-				->addAttributeToFilter('order_id', array('eq' => $payment->getOrder()->getEntityId()))
-				->addAttributeToFilter('txn_type', array('eq' => 'authorization'));
+		/* @var Mage_Sales_Model_Order_Payment $payment */
+		$orderkeys = (array)$payment->getAdditionalInformation('OrderKey');
 
-			foreach ($transactions as $key => $transaction) {
-				$TransactionKey = $transaction->getAdditionalInformation('TransactionKey');
-				$TransactionReference = $transaction->getAdditionalInformation('TransactionReference');
-			}
-
-			$orderkeys = (array)$payment->getAdditionalInformation('OrderKey');
-
-			foreach ($orderkeys as $orderkey) {
-				$data['OrderKey'] = $orderkey;
-
-				//Call Gateway Api
-				/* @var Uecommerce_Mundipagg_Model_Api $api */
-				$api = Mage::getModel('mundipagg/api');
-				$capture = $api->capture($data);
-//				$capture = $api->manageOrderRequest($data, $this);
-
-				// Xml
-				$xml = $capture['result'];
-				$json = json_encode($xml);
-
-				$capture['result'] = array();
-				$capture['result'] = json_decode($json, true);
-
-				// Save transactions
-				if (isset($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'])) {
-					if (count($xml->CreditCardTransactionResultCollection->CreditCardTransactionResult) == 1) {
-						$trans = $capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'];
-
-						$this->_addTransaction($payment, $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
-					} else {
-						$CapturedAmountInCents = 0;
-
-						foreach ($capture['result']['CreditCardTransactionResultCollection']['CreditCardTransactionResult'] as $key => $trans) {
-							$TransactionKey = $trans['TransactionKey'];
-							$CapturedAmountInCents += $trans['CapturedAmountInCents'];
-						}
-
-						$trans = array();
-						$trans['CapturedAmountInCents'] = $CapturedAmountInCents;
-						$trans['Success'] = true;
-
-						$this->_addTransaction($payment, $TransactionKey, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE, $trans);
-					}
-				} else {
-					Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
-
-					return false;
-				}
-			}
-		} else {
+		if (empty($orderkeys)) {
 			Mage::throwException(Mage::helper('mundipagg')->__('No OrderKey found.'));
 
 			return false;
+		}
+
+		foreach ($orderkeys as $orderkey) {
+			/* @var Uecommerce_Mundipagg_Model_Api $api */
+			$api = Mage::getModel('mundipagg/api');
+			//Call Gateway Api
+			$capture = $api->saleCapture(['OrderKey' => $orderkey], $payment->getOrder()->getIncrementId());
+			$ccTxnResultCollection = $helper->issetOr($capture['CreditCardTransactionResultCollection']);
+
+			if (!is_array($ccTxnResultCollection)
+				|| is_null($ccTxnResultCollection)
+				|| empty($ccTxnResultCollection)
+			) {
+				Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
+
+				return false;
+			}
+
+			// Save transactions
+			foreach ($ccTxnResultCollection as $txn){
+				$this->_addTransaction(
+					$payment,
+					$txn['TransactionKey'],
+					Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE,
+					$txn
+				);
+			}
 		}
 	}
 
@@ -767,6 +740,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			Mage::throwException($helper->__('Transactions already captured'));
 		}
 
+		/* @var Mage_Sales_Model_Order_Payment $payment */
 		$orderkeys = (array)$payment->getAdditionalInformation('OrderKey');
 
 		if (empty($orderkeys)) {
@@ -782,7 +756,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			//Call Gateway Api
 			/* @var Uecommerce_Mundipagg_Model_Api $api */
 			$api = Mage::getModel('mundipagg/api');
-			$capture = $api->capture($data);
+			$capture = $api->saleCapture($data, $payment->getOrder()->getIncrementId());
 
 			$ccTxnResultCollection = $helper->issetOr($capture['CreditCardTransactionResultCollection']);
 
@@ -801,9 +775,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					$txn
 				);
 
-				$success = strtolower($helper->issetOr($txn['Success'], 'false'));
+				$success = $helper->issetOr($txn['Success'], false);
 
-				if ($success === 'false') {
+				if ($success === false) {
 					$txnsNotAuthorized++;
 				}
 			}
@@ -815,7 +789,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			Mage::throwException($helper->__('Capture partial authorized'));
 		}
 
-		/* @var Mage_Sales_Model_Order_Payment $payment */
 		$this->closeAuthorizationTxns($payment->getOrder());
 
 		// if has just 1 invoice, update his grand total, adding the credit cards interests
@@ -2227,16 +2200,16 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 	/**
 	 * @param Mage_Sales_Model_Order $order
-	 * @param boolean $option
+	 * @param boolean                $option
 	 */
-	public function setCanceledByNotificationFlag(&$order, $option){
+	public function setCanceledByNotificationFlag(&$order, $option) {
 		$order->getPayment()->setAdditionalInformation('voided_by_mundi_notification', $option);
 	}
 
 	/**
 	 * @param Mage_Sales_Model_Order $order
 	 */
-	public function getCanceledByNotificationFlag($order){
+	public function getCanceledByNotificationFlag($order) {
 		return $order->getPayment()->getAdditionalInformation('voided_by_mundi_notification');
 	}
 
@@ -2246,7 +2219,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	 *
 	 * @param Mage_Sales_Model_Order_Invoice $invoice
 	 */
-	public function equalizeInvoiceTotals(Mage_Sales_Model_Order_Invoice &$invoice){
+	public function equalizeInvoiceTotals(Mage_Sales_Model_Order_Invoice &$invoice) {
 		$invoice->setBaseGrandTotal($invoice->getOrder()->getBaseGrandTotal())
 			->setGrandTotal($invoice->getOrder()->getGrandTotal())
 			->save();
