@@ -652,8 +652,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 		$captureCase = $helper->issetOr($_POST['invoice']['capture_case'], 'offline');
 
-		if($captureCase === 'online'){
+		if ($captureCase === 'online') {
 			$this->captureOnline($payment);
+
 			return $this;
 		}
 
@@ -817,7 +818,13 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		/* @var Mage_Sales_Model_Order_Payment $payment */
 		$this->closeAuthorizationTxns($payment->getOrder());
 
-		foreach ($payment->getOrder()->getInvoiceCollection() as $invoice){
+		// if has just 1 invoice, update his grand total, adding the credit cards interests
+		if (count($payment->getOrder()->getInvoiceCollection()) === 1) {
+
+			/* @var Mage_Sales_Model_Order_Invoice $invoice */
+			$invoice = $payment->getOrder()->getInvoiceCollection()->getItems()[0];
+
+			$invoice->load($invoice->getId());
 			$invoice->setBaseGrandTotal($payment->getOrder()->getBaseGrandTotal())
 				->setGrandTotal($payment->getOrder()->getGrandTotal())
 				->save();
