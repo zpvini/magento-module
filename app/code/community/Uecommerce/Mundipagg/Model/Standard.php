@@ -709,6 +709,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				);
 			}
 		}
+
+		return true;
 	}
 
 	/**
@@ -852,6 +854,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		$order->setTotalPaid($order->getBaseGrandTotal());
 		$order->addStatusHistoryComment('Captured online amount of R$' . $order->getBaseGrandTotal(), false);
 		$order->save();
+
+		$this->closeAuthorizationTxns($order);
 
 		return $this;
 	}
