@@ -1767,7 +1767,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$invoice = null;
 
 				try {
+					$order->setBaseTotalPaid(null)
+						->setTotalPaid(null)
+						->save();
+
 					$invoice = $orderPayment->createInvoice($order);
+
 				} catch (Exception $e) {
 					Mage::throwException($e->getMessage());
 				}
@@ -1805,7 +1810,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// order underpaid
 			case $accTotalPaid < $accGrandTotal:
 				try {
-					$orderPayment->orderUnderPaid($order);
+					$orderPayment->orderUnderPaid($order, $amountToCapture);
 				} catch (Exception $e) {
 					Mage::throwException("Cannot set order to underpaid: {$e->getMessage()}");
 				}
@@ -1818,10 +1823,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				Mage::throwException(self::UNEXPECTED_ERROR);
 				break;
 		}
-
-	}
-
-	private function queryTransactions() {
 
 	}
 

@@ -56,10 +56,17 @@ class Uecommerce_Mundipagg_Model_Order_Payment {
 		}
 	}
 
-	public function orderUnderPaid(Mage_Sales_Model_Order $order) {
+	public function orderUnderPaid(Mage_Sales_Model_Order $order, $amountToPaid = null) {
 		try {
-			$order->setStatus('underpaid')
-				->save();
+			$order->setStatus('underpaid');
+
+			if (is_null($amountToPaid) === false) {
+				$order->setBaseTotalPaid($amountToPaid)
+					->setTotalPaid($amountToPaid);
+			}
+
+			$order->save();
+
 		} catch (Exception $e) {
 			Mage::throwException($e);
 		}
