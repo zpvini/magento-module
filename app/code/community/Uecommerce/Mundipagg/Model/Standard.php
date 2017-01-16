@@ -623,14 +623,18 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					$order->sendNewOrderEmail();
 				}
 
+				$accPaymentAuthorizationAmount = sprintf($order->getPaymentAuthorizationAmount());
+				$accGrandTotal = sprintf($order->getGrandTotal());
+
 				// We can capture only if:
 				// 1. Multiple Credit Cards Payment
 				// 2. Anti fraud is disabled
 				// 3. Payment action is "AuthorizeAndCapture"
+				// 4. Authorization amount is equal to grand_total
 				if (count($ccResultCollection) > 1
 					&& $this->getAntiFraud() == 0
 					&& $this->getPaymentAction() == 'order'
-					&& $order->getPaymentAuthorizationAmount() == $order->getGrandTotal()
+					&& $accPaymentAuthorizationAmount == $accGrandTotal
 				) {
 					$this->captureAndcreateInvoice($payment);
 				}
@@ -861,6 +865,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		$order->save();
 
 		$this->closeAuthorizationTxns($order);
+		$this->equalizeInvoiceTotals($invoice);
 
 		return $this;
 	}
