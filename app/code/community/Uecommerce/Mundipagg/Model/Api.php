@@ -57,21 +57,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		$helper = Mage::helper('mundipagg');
 
 		try {
-			// Installments configuration
-			$installment = $standard->getParcelamento();
-			$qtdParcelasMax = $standard->getParcelamentoMax();
-
-			// Get Webservice URL
-			$url = $standard->getURL();
-
 			// Set Data
 			$_request = array();
 			$_request["Order"] = array();
 			$_request["Order"]["OrderReference"] = $order->getIncrementId();
-
-//			if ($standard->getEnvironment() != 'production') {
-//				$_request["Order"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
-//			}
 
 			/*
 			* Append transaction (multi credit card payments)
@@ -86,7 +75,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			/* @var $recurrencyModel Uecommerce_Mundipagg_Model_Recurrency */
 			$recurrencyModel = Mage::getModel('mundipagg/recurrency');
-
 			$creditcardTransactionCollection = array();
 
 			// Partial Payment (we use this reference in order to authorize the rest of the amount)
@@ -97,10 +85,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$baseGrandTotal = str_replace(',', '.', $order->getBaseGrandTotal());
 			$amountInCentsVar = intval(strval(($baseGrandTotal * 100)));
 
-			// CreditCardOperationEnum : if more than one payment method we use AuthOnly and then capture if all are ok
-
 			$num = $helper->getCreditCardsNumber($data['payment_method']);
-
 			$installmentCount = 1;
 
 			if ($num > 1) {
