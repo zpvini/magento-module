@@ -88,7 +88,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$num = $helper->getCreditCardsNumber($data['payment_method']);
 			$installmentCount = 1;
 
-			if ($num > 1) {
+			$approvalRequest = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
+
+			if ($num > 1 || $approvalRequest === 'partial') {
 				$creditCardOperationEnum = 'AuthOnly';
 			} else {
 				$creditCardOperationEnum = $standard->getCreditCardOperationEnum();
@@ -106,8 +108,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					if ($token->getId() && $token->getEntityId() == $order->getCustomerId()) {
 						$creditcardTransactionData->CreditCard->InstantBuyKey = $token->getToken();
 						$creditcardTransactionData->CreditCard->CreditCardBrand = $token->getCcType();
-						$creditcardTransactionData->CreditCardOperation = $creditCardOperationEnum;
 						/** Tipo de operação: AuthOnly | AuthAndCapture | AuthAndCaptureWithDelay  */
+						$creditcardTransactionData->CreditCardOperation = $creditCardOperationEnum;
 						$creditcardTransactionData->AmountInCents = intval(strval(($paymentData['AmountInCents']))); // Valor da transação
 						$creditcardTransactionData->InstallmentCount = $paymentData['InstallmentCount']; // Nº de parcelas
 						$creditcardTransactionData->Options->CurrencyIso = "BRL"; //Moeda do pedido

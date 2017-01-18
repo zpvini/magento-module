@@ -191,9 +191,11 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 
 						$info = $order->getPayment();
 
+						/**
+						 * @todo refact this json_encode/json_decode
+						 */
 						// We record transaction(s)
 						$json = json_encode($resultPayment['result']);
-						$dataR = array();
 						$dataR = json_decode($json, true);
 
 						$transactions = $resultPayment['result']['CreditCardTransactionResultCollection'];
@@ -239,12 +241,6 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 								Mage::throwException("Unexpected approvalRequestSuccess: {$approvalRequestSuccess}");
 						}
 
-//						// Redirect
-//						if ($approvalRequestSuccess == 'success') {
-//							$this->_redirect('mundipagg/standard/success');
-//						} else {
-//							$this->_redirect('mundipagg/standard/partial');
-//						}
 					}
 				}
 			} catch (Exception $e) {
