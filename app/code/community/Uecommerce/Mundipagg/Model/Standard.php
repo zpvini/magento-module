@@ -362,16 +362,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					}
 
 					$epsilon = 0.00001;
-
-//					$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-//					$helperLog->info("totalInstallments: {$totalInstallments}");
-//					$helperLog->info("grandTotal: {$grandTotal}");
-//					$helperLog->info("getPaymentInterest: {$info->getPaymentInterest()}");
-//					$helperLog->info("epsilon: {$epsilon}");
-
-//					if ($totalInstallments > 0 && ($grandTotal - $totalInstallments - $info->getPaymentInterest())) {
-//						Mage::throwException(Mage::helper('payment')->__('Installments does not match with quote.'));
-//					}
 				}
 			} else {
 				if (isset($mundipagg['method'])) {
@@ -1380,10 +1370,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 						}
 					}
 
-					// Transaction
-//					$transactionKey = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['TransactionKey'] : null;
-//					$creditCardTransactionStatusEnum = isset($dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus']) ? $dataR['CreditCardTransactionResultCollection']['CreditCardTransactionResult']['CreditCardTransactionStatus'] : null;
-
 					$transactionKey = $transaction['TransactionKey'];
 					$creditCardTransactionStatusEnum = $transaction['CreditCardTransactionStatus'];
 
@@ -1551,18 +1537,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				$TransactionReference = $transaction->getAdditionalInformation('TransactionReference');
 			}
 
-//			$data['CreditCardTransactionCollection']['AmountInCents'] = $payment->getOrder()->getBaseGrandTotal() * 100;
-//			$data['CreditCardTransactionCollection']['TransactionKey'] = $TransactionKey;
-//			$data['CreditCardTransactionCollection']['TransactionReference'] = $TransactionReference;
-//			$data['OrderKey'] = $payment->getAdditionalInformation('OrderKey');
 			$orderkeys = $payment->getAdditionalInformation('OrderKey');
 
 			if (!is_array($orderkeys)) {
-//				$errMsg = "Impossible to capture: orderkeys must be an array";
-//				$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-//
-//				$helperLog->error($errMsg);
-//				Mage::throwException($errMsg);
 				$orderkeys = array($orderkeys);
 			}
 
@@ -2025,11 +2002,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 			$helperLog->info($message);
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
-
-		}/* else {
-			$helperLog->info("{$logLabel} | Payment not authorized and order is not on offline retry.");
-			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
-		}*/
+		}
 	}
 
 	/**

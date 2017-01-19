@@ -354,7 +354,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 		} catch (Exception $e) {
 			//Redirect to Cancel page
-
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 
 			//Log error
@@ -443,15 +442,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$helper = Mage::helper('mundipagg');
 
 			// Set Data
-			$_request = array();
-			$_request["Order"] = array();
+			$_request = [];
+			$_request["Order"] = [];
 			$_request["Order"]["OrderReference"] = $order->getIncrementId();
-
-//			if ($standard->getEnvironment() != 'production') {
-//				$_request["Order"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
-//			}
-
-			$_request["BoletoTransactionCollection"] = array();
+			$_request["BoletoTransactionCollection"] = [];
 
 			$boletoTransactionCollection = new stdclass();
 
