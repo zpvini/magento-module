@@ -189,39 +189,21 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 							}
 						}
 
-						$info = $order->getPayment();
+						/* @var Uecommerce_Mundipagg_Helper_Data $helper */
+						$helper = Mage::helper('mundipagg');
+						$txns = $helper->issetOr($resultPayment['result']['CreditCardTransactionResultCollection']);
 
-						/**
-						 * @todo refact this json_encode/json_decode
-						 */
-						// We record transaction(s)
-						$json = json_encode($resultPayment['result']);
-						$dataR = json_decode($json, true);
+						foreach ($txns as $txn) {
+							$onepage->_addTransaction(
+								$order->getPayment(),
+								$helper->issetOr($txn['TransactionKey']),
+								Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
+								$txn
+							);
+						}
 
-						$transactions = $resultPayment['result']['CreditCardTransactionResultCollection'];
-
-						if (count($transactions) == 1) {
-							$trans = $dataR['CreditCardTransactionResultCollection'][0];
-
-							$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
-
-						} else {
-							$transactions = $dataR['CreditCardTransactionResultCollection'];
-
-							foreach ($transactions as $key => $trans) {
-								$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
-							}
-
-							// We can capture only if anti fraud is disabled and payment action is "AuthorizeAndCapture"
-							$creditCardTransactionResultCollection = $transactions;
-
-							if (
-								count($creditCardTransactionResultCollection) > 1 &&
-								$onepage->getAntiFraud() == 0 &&
-								$onepage->getPaymentAction() == 'order'
-							) {
-								$resultCapture = $onepage->captureAndcreateInvoice($info);
-							}
+						if ($onepage->getAntiFraud() == 0 && $onepage->getPaymentAction() === 'order') {
+							$onepage->captureAndcreateInvoice($order->getPayment());
 						}
 
 						switch ($approvalRequestSuccess) {
@@ -243,8 +225,8 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 
 					}
 				}
-			} catch (Exception $e) {
-				//Log error
+			} catch
+			(Exception $e) {
 				Mage::logException($e);
 			}
 		} else {
@@ -255,7 +237,8 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 	/**
 	 * Cancel page
 	 */
-	public function cancelAction() {
+	public
+	function cancelAction() {
 		$this->cancelOrder();
 
 		//Render
@@ -267,7 +250,8 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 	/**
 	 * Force Cancel page
 	 */
-	public function fcancelAction() {
+	public
+	function fcancelAction() {
 		$this->cancelOrder();
 
 		//Render
@@ -279,7 +263,8 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 	/*
 	* Cancel order and set quote as inactive
 	*/
-	private function cancelOrder() {
+	private
+	function cancelOrder() {
 		$session = Mage::getSingleton('checkout/session');
 
 		if (!$session->getLastSuccessQuoteId()) {
@@ -311,7 +296,8 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 	/**
 	 * Success page (also used for Mundipagg return page for payments like "debit" and "boleto")
 	 */
-	public function successAction() {
+	public
+	function successAction() {
 		$session = Mage::getSingleton('checkout/session');
 		$approvalRequestSuccess = $session->getApprovalRequestSuccess();
 		$statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
@@ -320,10 +306,10 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 			$lastOrderId = Mage::getSingleton('checkout/session')->getLastOrderId();
 			$order = Mage::getModel('sales/order')->load($lastOrderId);
 
-			try{
+			try {
 				Uecommerce_Mundipagg_Model_Standard::transactionWithError($order);
 
-			} catch (Exception $e){
+			} catch (Exception $e) {
 				$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 				$log->error($e->getMessage());
 			}
@@ -388,7 +374,8 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 		}
 	}
 
-	public function installmentsandinterestAction() {
+	public
+	function installmentsandinterestAction() {
 		$post = $this->getRequest()->getPost();
 		$result = array();
 		$installmentsHelper = Mage::helper('mundipagg/installments');
@@ -416,7 +403,8 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 	/**
 	 * Get max number of installments for a value
 	 */
-	public function installmentsAction() {
+	public
+	function installmentsAction() {
 		$val = $this->getRequest()->getParam('val');
 
 		if (is_numeric($val)) {
@@ -468,4 +456,14 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 			$this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
 		}
 	}
+
+	public function indexAction(){
+		/* @var Uecommerce_Mundipagg_Helper_Log $log */
+		$log = Mage::helper('mundipagg/log');
+
+		$log->setMethod(__METHOD__)
+			->setLogLabel("LABEL")
+			->debug("TESTE 123");
+	}
+
 }
