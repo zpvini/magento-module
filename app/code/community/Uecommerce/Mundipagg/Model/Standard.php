@@ -698,7 +698,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			}
 
 			// Save transactions
-			foreach ($ccTxnResultCollection as $txn){
+			foreach ($ccTxnResultCollection as $txn) {
 				$this->_addTransaction(
 					$payment,
 					$txn['TransactionKey'],
@@ -831,6 +831,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		// Error
 		if (!$capture) {
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
+
 			return $this;
 		}
 
@@ -2210,6 +2211,130 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		$invoice->setBaseGrandTotal($invoice->getOrder()->getBaseGrandTotal())
 			->setGrandTotal($invoice->getOrder()->getGrandTotal())
 			->save();
+	}
+
+	/**
+	 * @param Mage_Checkout_Model_Type_Onepage $onepage
+	 * @param array                            $postData
+	 * @return null|string $redirectRoute
+	 * @throws Exception
+	 */
+	public function retryAuthorization(Mage_Checkout_Model_Type_Onepage &$onepage, $postData) {
+		$redirectRoute = null;
+
+		/* @var Uecommerce_Mundipagg_Helper_CheckoutSession $session */
+		$session = Mage::helper('mundipagg/checkoutSession');
+		$lastQuoteId = $session->getInstance()->getLastSuccessQuoteId();
+		$session->getInstance()->setQuoteId($lastQuoteId);
+
+		/* @var Mage_Sales_Model_Quote $quote */
+		$quote = Mage::getModel('sales/quote')->load($lastQuoteId);
+		$quote->setIsActive(true);
+
+		$onepage->setQuote($quote);
+
+		// Get Reserved Order Id
+		$reservedOrderId = $quote->getReservedOrderId();
+		if ($reservedOrderId == false) {
+			return $redirectRoute;
+		}
+
+		$session->setApprovalRequest('partial');
+
+		$order = Mage::getModel('sales/order')->loadByIncrementId($reservedOrderId);
+
+		/* @var Uecommerce_Mundipagg_Helper_Data $helper */
+		$helper = Mage::helper('mundipagg');
+
+		if ($order->getStatus() === 'pending' || $order->getStatus() === 'payment_review') {
+			if (empty($postData)) {
+				throw new Exception($helper->__('Invalid data'));
+//				Mage::throwException($helper->__('Invalid data'));
+//				return array('error' => -1, 'message' => Mage::helper('checkout')->__('Invalid data'));
+			}
+
+			$paymentMethod = $helper->issetOr($postData['method']);
+
+			if ($quote->isVirtual()) {
+				$quote->getBillingAddress()->setPaymentMethod($paymentMethod);
+			} else {
+				$quote->getShippingAddress()->setPaymentMethod($paymentMethod);
+			}
+
+			$payment = $quote->getPayment();
+			$payment->importData($postData);
+
+			$quote->save();
+
+			switch ($paymentMethod) {
+				case 'mundipagg_creditcardoneinstallment':
+					$standard = Mage::getModel('mundipagg/creditcardoneinstallment');
+					break;
+				case 'mundipagg_creditcard':
+					$standard = Mage::getModel('mundipagg/creditcard');
+					break;
+
+				case 'mundipagg_twocreditcards':
+					$standard = Mage::getModel('mundipagg/twocreditcards');
+					break;
+
+				case 'mundipagg_threecreditcards':
+					$standard = Mage::getModel('mundipagg/threecreditcards');
+					break;
+
+				case 'mundipagg_fourcreditcards':
+					$standard = Mage::getModel('mundipagg/fourcreditcards');
+					break;
+
+				case 'mundipagg_fivecreditcards':
+					$standard = Mage::getModel('mundipagg/fivecreditcards');
+					break;
+
+				default:
+					return 'mundipagg/standard/partial';
+					break;
+			}
+
+			/* @var Uecommerce_Mundipagg_Model_Standard $standard */
+			$resultPayment = $standard->doPayment($payment, $order);
+			$txns = $helper->issetOr($resultPayment['result']['CreditCardTransactionResultCollection']);
+
+			foreach ($txns as $txn) {
+				$standard->_addTransaction(
+					$order->getPayment(),
+					$helper->issetOr($txn['TransactionKey']),
+					Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
+					$txn
+				);
+			}
+
+			if ($standard->getAntiFraud() == 0 && $standard->getPaymentAction() === 'order') {
+				$standard->captureAndcreateInvoice($order->getPayment());
+			}
+
+			switch ($session->getApprovalRequest()) {
+				case 'success':
+					// Send new order email when not in admin and payment is success
+					if (Mage::app()->getStore()->getCode() !== 'admin') {
+						$order->sendNewOrderEmail();
+					}
+					$redirectRoute = 'mundipagg/standard/success';
+					break;
+
+				case 'partial':
+					$redirectRoute = 'mundipagg/standard/partial';
+					break;
+
+				case 'cancel':
+					$redirectRoute = 'mundipagg/standard/cancel';
+					break;
+
+				default:
+					throw new Exception("Unexpected approvalRequestSuccess: {$session->getApprovalRequest()}");
+			}
+		}
+
+		return $redirectRoute;
 	}
 
 }
