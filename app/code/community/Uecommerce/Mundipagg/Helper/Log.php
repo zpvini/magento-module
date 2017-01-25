@@ -14,10 +14,12 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract {
 
 	public function setMethod($method) {
 		$this->method = $method;
+		return $this;
 	}
 
 	public function setLogLabel($logLabel) {
 		$this->logLabel = $logLabel;
+		return $this;
 	}
 
 	public function getLogLabel() {

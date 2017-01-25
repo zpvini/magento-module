@@ -70,10 +70,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 	 * Partial payment
 	 */
 	public function partialAction() {
-		$paymentMethod = Mage::helper('payment')->getMethodInstance('mundipagg_creditcard');
-
 		$session = Mage::getSingleton('checkout/session');
-
 		$approvalRequestSuccess = $session->getApprovalRequestSuccess();
 
 		if (!$session->getLastSuccessQuoteId() && $approvalRequestSuccess != 'partial') {
@@ -83,11 +80,9 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 		}
 
 		$lastQuoteId = $session->getLastSuccessQuoteId();
-
 		$session->setQuoteId($lastQuoteId);
 
 		$quote = Mage::getModel('sales/quote')->load($lastQuoteId);
-
 		$this->getOnepage()->setQuote($quote);
 		$this->getOnepage()->getQuote()->setIsActive(true);
 		$this->getOnepage()->getQuote()->save();
@@ -114,145 +109,29 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 	 * Partial payment Post
 	 */
 	public function partialPostAction() {
-		$session = Mage::getSingleton('checkout/session');
+		$postData = $this->getRequest()->getPost('payment', []);
 
-		// Post
-		if ($data = $this->getRequest()->getPost('payment', array())) {
-			try {
-				$lastQuoteId = $session->getLastSuccessQuoteId();
-
-				$session->setQuoteId($lastQuoteId);
-
-				$quote = Mage::getModel('sales/quote')->load($lastQuoteId);
-
-				$this->getOnepage()->setQuote($quote);
-				$this->getOnepage()->getQuote()->setIsActive(true);
-
-				// Get Reserved Order Id
-				if ($reservedOrderId = $this->getOnepage()->getQuote()->getReservedOrderId()) {
-					$session->setApprovalRequestSuccess('partial');
-
-					$order = Mage::getModel('sales/order')->loadByIncrementId($reservedOrderId);
-
-					if ($order->getStatus() == 'pending' OR $order->getStatus() == 'payment_review') {
-						if (empty($data)) {
-							return array('error' => -1, 'message' => Mage::helper('checkout')->__('Invalid data'));
-						}
-
-						if ($this->getOnepage()->getQuote()->isVirtual()) {
-							$quote->getBillingAddress()->setPaymentMethod(isset($data['method']) ? $data['method'] : null);
-						} else {
-							$quote->getShippingAddress()->setPaymentMethod(isset($data['method']) ? $data['method'] : null);
-						}
-
-						$payment = $quote->getPayment();
-						$payment->importData($data);
-
-						$quote->save();
-
-						switch ($data['method']):
-							case 'mundipagg_creditcardoneinstallment':
-								$onepage = Mage::getModel('mundipagg/creditcardoneinstallment');
-								break;
-							case 'mundipagg_creditcard':
-								$onepage = Mage::getModel('mundipagg/creditcard');
-								break;
-
-							case 'mundipagg_twocreditcards':
-								$onepage = Mage::getModel('mundipagg/twocreditcards');
-								break;
-
-							case 'mundipagg_threecreditcards':
-								$onepage = Mage::getModel('mundipagg/threecreditcards');
-								break;
-
-							case 'mundipagg_fourcreditcards':
-								$onepage = Mage::getModel('mundipagg/fourcreditcards');
-								break;
-
-							case 'mundipagg_fivecreditcards':
-								$onepage = Mage::getModel('mundipagg/fivecreditcards');
-								break;
-
-							default:
-								$this->_redirect('mundipagg/standard/partial');
-								break;
-						endswitch;
-
-						$resultPayment = $onepage->doPayment($payment, $order);
-						$approvalRequestSuccess = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
-
-						// Send new order email when not in admin and payment is success
-						if ($approvalRequestSuccess == 'success') {
-							if (Mage::app()->getStore()->getCode() != 'admin') {
-								$order->sendNewOrderEmail();
-							}
-						}
-
-						$info = $order->getPayment();
-
-						// We record transaction(s)
-						$json = json_encode($resultPayment['result']);
-						$dataR = array();
-						$dataR = json_decode($json, true);
-
-						$transactions = $resultPayment['result']['CreditCardTransactionResultCollection'];
-
-						if (count($transactions) == 1) {
-							$trans = $dataR['CreditCardTransactionResultCollection'][0];
-
-							$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
-
-						} else {
-							$transactions = $dataR['CreditCardTransactionResultCollection'];
-
-							foreach ($transactions as $key => $trans) {
-								$onepage->_addTransaction($order->getPayment(), $trans['TransactionKey'], Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH, $trans);
-							}
-
-							// We can capture only if anti fraud is disabled and payment action is "AuthorizeAndCapture"
-							$creditCardTransactionResultCollection = $transactions;
-
-							if (
-								count($creditCardTransactionResultCollection) > 1 &&
-								$onepage->getAntiFraud() == 0 &&
-								$onepage->getPaymentAction() == 'order'
-							) {
-								$resultCapture = $onepage->captureAndcreateInvoice($info);
-							}
-						}
-
-						switch ($approvalRequestSuccess) {
-							case 'success':
-								$this->_redirect('mundipagg/standard/success');
-								break;
-
-							case 'partial':
-								$this->_redirect('mundipagg/standard/partial');
-								break;
-
-							case 'cancel':
-								$this->_redirect('mundipagg/standard/cancel');
-								break;
-
-							default:
-								Mage::throwException("Unexpected approvalRequestSuccess: {$approvalRequestSuccess}");
-						}
-
-//						// Redirect
-//						if ($approvalRequestSuccess == 'success') {
-//							$this->_redirect('mundipagg/standard/success');
-//						} else {
-//							$this->_redirect('mundipagg/standard/partial');
-//						}
-					}
-				}
-			} catch (Exception $e) {
-				//Log error
-				Mage::logException($e);
-			}
-		} else {
+		if ($postData == false) {
 			$this->_redirect();
+
+			return;
+		}
+
+		/* @var Uecommerce_Mundipagg_Model_Standard $standard */
+		$standard = Mage::getModel('mundipagg/standard');
+
+		try {
+			$route = $standard->retryAuthorization($this->getOnepage(), $postData);
+			$this->_redirect($route);
+		} catch (Exception $e) {
+			/* @var Uecommerce_Mundipagg_Helper_CheckoutSession $session */
+			$sessionHelper = Mage::helper('mundipagg/checkoutSession');
+			$sessionHelper->getInstance()->addError($sessionHelper->__('Unable to authorize'));
+
+			$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+			$log->debug($e->getMessage());
+
+			$this->_redirect('/checkout/onepage/');
 		}
 	}
 
@@ -324,10 +203,10 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 			$lastOrderId = Mage::getSingleton('checkout/session')->getLastOrderId();
 			$order = Mage::getModel('sales/order')->load($lastOrderId);
 
-			try{
+			try {
 				Uecommerce_Mundipagg_Model_Standard::transactionWithError($order);
 
-			} catch (Exception $e){
+			} catch (Exception $e) {
 				$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 				$log->error($e->getMessage());
 			}
@@ -472,4 +351,12 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 			$this->getResponse()->setBody(Mage::helper('core')->jsonEncode($result));
 		}
 	}
+
+	public function indexAction() {
+		/* @var Uecommerce_Mundipagg_Helper_CheckoutSession $sessionHelper */
+		$sessionHelper = Mage::helper('mundipagg/checkoutSession');
+
+		var_dump(Mage::getSingleton('checkout/session')->getData());
+	}
+
 }
