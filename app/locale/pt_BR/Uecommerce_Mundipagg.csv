@@ -222,3 +222,8 @@
 "In seconds","Em segundos"
 "Capture was not authorized in MundiPagg","Captura não foi autorizada na MundiPagg"
 "Transactions already captured","Transações já foram capturadas"
+"Masked number","Número mascarado"
+"Amount","Valor"
+"Authorization code","Código da autorização"
+"Transaction ID","ID da transação"
+"Acquirer message","Retorno da adquirente"

@@ -50,11 +50,6 @@ endif;
 
 $standard = Mage::getModel('mundipagg/standard');
 
-$paymentAction = $standard->getPaymentAction();
-
-if ($paymentAction == 'authorize') {
-	$paymentAction = 'authorization';
-}
 ?>
 <div>
 	<p>
@@ -88,7 +83,8 @@ if ($paymentAction == 'authorize') {
 		// Informations about transaction
 		$transaction = Mage::getModel('sales/order_payment_transaction')->getCollection()
 			->addAttributeToFilter('order_id', array('eq' => $_order->getEntityId()))
-			->addAttributeToFilter('txn_type', array('eq' => $paymentAction));
+			->addAttributeToFilter('txn_type', array('eq' => 'authorization'));
+
 		$authCode = '';
 		$tid = '';
 		$ccNumber = '';
@@ -97,7 +93,7 @@ if ($paymentAction == 'authorize') {
 		$count=1;
 		$transaction_lenght = count($transaction);
 
-		if ($PaymentMethod == '1CreditCards' || $PaymentMethod == 'mundipagg_creditcard'):
+		if ($PaymentMethod === '1CreditCards' || $PaymentMethod === 'mundipagg_creditcard'):
 			// Token
 			$token = $this->getInfo()->getAdditionalInformation('mundipagg_creditcard_token_1_1');
 
@@ -105,7 +101,7 @@ if ($paymentAction == 'authorize') {
 				echo $helper->__('Credit Card Issuer') . ': ';
 				echo $this->getInfo()->getAdditionalInformation('CreditCardBrandEnum_mundipagg_creditcard_token_1_1');
 				echo '<br/>';
-				if ($ccNumber) echo 'Numeração: ' . $ccNumber . '<br>';
+				if ($ccNumber) echo "{$helper->__('Masked number')} : {$ccNumber}<br>";
 
 				if ($this->getInfo()->getAdditionalInformation('mundipagg_creditcard_credito_parcelamento_1_1')):
 					echo $helper->__('InstallmentsCount') . ': ';
@@ -116,7 +112,7 @@ if ($paymentAction == 'authorize') {
 				echo $helper->__('Credit Card Issuer') . ': ';
 				echo $this->getInfo()->getAdditionalInformation('mundipagg_creditcard_1_1_cc_type');
 				echo '<br/>';
-				if ($ccNumber) echo 'Numeração: ' . $ccNumber . '<br>';
+				if ($ccNumber) echo "{$helper->__('Masked number')}: {$ccNumber}<br>";
 
 				if ($this->getInfo()->getAdditionalInformation('mundipagg_creditcard_new_credito_parcelamento_1_1')):
 					echo $helper->__('InstallmentsCount') . ': ';
@@ -126,15 +122,15 @@ if ($paymentAction == 'authorize') {
 			endif;
 
 			if ($authCode):
-				echo 'Autorização: <b>' . $authCode . '</b><br/>';
+			    echo "{$helper->__('Authorization code')}: {$authCode}<br/>";
 			endif;
 
 			if ($tid):
-				echo 'ID da Transação: ' . $tid . '<br/>';
+				echo "{$helper->__('Transaction ID')}: {$tid}";
 			endif;
 
 			if ($message):
-				echo 'Retorno adquirente: ' . $message . '<br/>';
+				echo "{$helper->__('Acquirer message')}: {$message}<br/>";
 			endif;
 
 			if ($CreditCardTransactionStatusEnum = $_order->getPayment()->getAdditionalInformation('1_CreditCardTransactionStatusEnum')):
@@ -168,12 +164,12 @@ if ($paymentAction == 'authorize') {
 
 				if ($token && $token != 'new'):
 					echo $helper->__('Credit Card Issuer') . ': ';
-					echo $this->getInfo()->getAdditionalInformation('CreditCardBrandEnum_mundipagg_creditcard_token_1_1');
+					echo $this->getInfo()->getAdditionalInformation("CreditCardBrandEnum_{$PaymentMethod}_token_{$transaction_lenght}_{$count}");
 					echo '<br/>';
-					if ($ccNumber) echo 'Numeração: ' . $ccNumber . '<br>';
+					if ($ccNumber) echo "{$helper->__('Masked number')} : {$ccNumber}<br>";
 
 					if ($this->getInfo()->getAdditionalInformation($PaymentMethod.'_value_'.$transaction_lenght.'_'.$count)):
-						echo $helper->__('Valor') . ': ';
+						echo $helper->__('Amount') . ': ';
 						echo $this->getInfo()->getAdditionalInformation($PaymentMethod.'_value_'.$transaction_lenght.'_'.$count);
 						echo '<br/>';
 					endif;
@@ -187,10 +183,10 @@ if ($paymentAction == 'authorize') {
 					echo $helper->__('Credit Card Issuer') . ': ';
 					echo $this->getInfo()->getAdditionalInformation($PaymentMethod.'_'.$transaction_lenght.'_'.$count.'_cc_type');
 					echo '<br/>';
-					if ($ccNumber) echo 'Numeração: ' . $ccNumber . '<br>';
+					if ($ccNumber) echo "{$helper->__('Masked number')} : {$ccNumber}<br>";
 
 					if ($this->getInfo()->getAdditionalInformation($PaymentMethod.'_new_value_'.$transaction_lenght.'_'.$count)):
-						echo $helper->__('Valor') . ': ';
+						echo $helper->__('Amount') . ': ';
 						echo $this->getInfo()->getAdditionalInformation($PaymentMethod.'_new_value_'.$transaction_lenght.'_'.$count);
 						echo '<br/>';
 					endif;
@@ -204,15 +200,15 @@ if ($paymentAction == 'authorize') {
 
 
 				if ($authCode):
-					echo 'Autorização: <b>' . $authCode . '</b><br/>';
+					echo "{$helper->__('Authorization code')}: {$authCode}<br/>";
 				endif;
 
 				if ($tid):
-					echo 'ID da Transação: ' . $tid . '<br/>';
+					echo "{$helper->__('Transaction ID')}: {$tid}<br/>";
 				endif;
 
 				if ($message):
-					echo 'Retorno adquirente: ' . $message . '<br/>';
+					echo "{$helper->__('Acquirer message')}: {$message}<br/>";
 				endif;
 
 				if ($CreditCardTransactionStatusEnum = $_order->getPayment()->getAdditionalInformation('1_CreditCardTransactionStatusEnum')):
@@ -247,7 +243,7 @@ if ($paymentAction == 'authorize') {
 			endif;
 
 			if ($authCode):
-				echo $helper->__('Autorização') . ': ' . $authCode . '<br/>';
+				echo "{$helper->__('Authorization code')}: {$authCode}<br/>";
 			endif;
 
 			if ($tid):
@@ -255,7 +251,7 @@ if ($paymentAction == 'authorize') {
 			endif;
 
 			if ($message):
-				echo 'Retorno adquirente: ' . $message . '<br/>';
+				echo "{$helper->__('Acquirer message')}: {$message}<br/>";
 			endif;
 
 			if ($CreditCardTransactionStatusEnum = $_order->getPayment()->getAdditionalInformation('1_CreditCardTransactionStatusEnum')):
