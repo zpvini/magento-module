@@ -353,10 +353,10 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 	}
 
 	public function indexAction() {
-		/* @var Uecommerce_Mundipagg_Helper_CheckoutSession $sessionHelper */
-		$sessionHelper = Mage::helper('mundipagg/checkoutSession');
+		$order = Mage::getModel('sales/order')->loadByIncrementId(100000055);
+		$payment = $order->getPayment();
 
-		var_dump(Mage::getSingleton('checkout/session')->getData());
+		var_dump($payment->getData());
 	}
 
 }

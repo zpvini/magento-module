@@ -1391,6 +1391,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						return $returnMessage;
 					}
 
+					if ($return === self::TRANSACTION_CAPTURED) {
+						$returnMessage = "OK | #{$orderReference} | {$transactionKey} | Transaction captured.";
+						$helperLog->info($returnMessage);
+
+						return $returnMessage;
+					}
+
 					// cannot capture transaction
 					$returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
 					$returnMessage .= $return;
@@ -1724,7 +1731,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$orderTransactionKey = $i->getAdditionalInformation('TransactionKey');
 
 			// transactionKey found
-			if ($orderTransactionKey == $transactionKey) {
+			if ($orderTransactionKey === $transactionKey) {
 				$transaction = $i;
 				break;
 			}
@@ -1758,20 +1765,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					Mage::throwException($e->getMessage());
 				}
 
-				// close transaction
-				$transactionToClose = $this->getOrderTxnByTransactionKey($order->getId(), $transactionKey);
-
-				if (is_null($transactionToClose)) {
-					$log->warning("Transaction not found");
-				} else {
-					$payment = $order->getPayment();
-
-					$transactionToClose->setOrderPaymentObject($payment)
-						->setIsClosed(true)
-						->save();
-				}
-
 				$this->equalizeInvoiceTotals($invoice);
+				$this->closeAuthorizationTxns($order);
 
 				return $invoice;
 
@@ -1796,7 +1791,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					Mage::throwException("Cannot set order to underpaid: {$e->getMessage()}");
 				}
 
-				return self::ORDER_UNDERPAID;
+				$transaction->setOrderPaymentObject($order->getPayment());
+				$transaction->setIsClosed(true)->save();
+
+				if ($order->getPayment()->getMethod() === 'mundipagg_twocreditcards') {
+					return self::TRANSACTION_CAPTURED;
+				} else {
+					return self::ORDER_UNDERPAID;
+				}
 				break;
 
 			// unexpected situation
