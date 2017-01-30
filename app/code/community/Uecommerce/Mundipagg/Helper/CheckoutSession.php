@@ -14,7 +14,7 @@ class Uecommerce_Mundipagg_Helper_CheckoutSession extends Mage_Core_Helper_Abstr
 	 * @return null|string
 	 */
 	public function getApprovalRequest() {
-		$this->getInstance()->getApprovalRequestSuccess();
+		return $this->getInstance()->getApprovalRequestSuccess();
 	}
 
 	/**
