@@ -2308,7 +2308,13 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				);
 			}
 
-			if ($standard->getAntiFraud() == 0 && $standard->getPaymentAction() === 'order') {
+			$accAuthorizedAmount = sprintf($order->getData('payment_authorization_amount'));
+			$accGrandTotal = sprintf($order->getData('grand_total'));
+
+			if ($standard->getAntiFraud() == 0 &&
+				$standard->getPaymentAction() === 'order' &&
+				$accAuthorizedAmount == $accGrandTotal
+			) {
 				$standard->captureAndcreateInvoice($order->getPayment());
 			}
 
