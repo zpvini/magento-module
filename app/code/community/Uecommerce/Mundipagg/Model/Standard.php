@@ -890,7 +890,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 		// Return error
 		if (isset($resultPayment['error'])) {
-			return $this->paymentError($order, $resultPayment);
+			return $this->paymentError($payment, $resultPayment);
 		}
 
 		if (isset($resultPayment['message'])) {
@@ -1198,6 +1198,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				case $type:
 					$approvalRequest = $api->creditCardTransaction($order, $data, $this);
 					break;
+
+				default:
+					$approvalRequest = false;
 			}
 
 			if ($approvalRequest === false) {
@@ -1402,7 +1405,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				$orderKeys = (array)$orderPayment->getAdditionalInformation('OrderKey');
 
 				if (is_null($orderKeys) || !is_array($orderKeys)) {
-					$orderKeys = array();
+					$orderKeys = [];
 				}
 
 				if (!in_array($newOrderKey, $orderKeys)) {
@@ -2033,15 +2036,13 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	}
 
 	/**
-	 * @param Mage_Sales_Model_Order $order
-	 * @param                        $resultPayment
+	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param                                $resultPayment
 	 * @return $this
 	 */
-	private function paymentError(Mage_Sales_Model_Order $order, $resultPayment) {
+	private function paymentError(Mage_Sales_Model_Order_Payment $payment, $resultPayment) {
 		try {
-			$payment = $order->getPayment();
 			$transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER;
-
 			$helper = Mage::helper('mundipagg');
 			$result = $helper->issetOr($resultPayment['result']);
 			$ccTxnCollection = $helper->issetOr($result['CreditCardTransactionResultCollection']);
@@ -2076,13 +2077,12 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$payment->setSkipOrderProcessing(true)->save();
 
 			if (isset($resultPayment['ErrorDescription'])) {
-				$order->addStatusHistoryComment(Mage::helper('mundipagg')->__(htmlspecialchars_decode($resultPayment['ErrorDescription'])));
-				$order->save();
-
 				Mage::throwException(Mage::helper('mundipagg')->__($resultPayment['ErrorDescription']));
+
 			} else {
-				Mage::throwException(Mage::helper('mundipagg')->__('Erro'));
+				Mage::throwException(Mage::helper('mundipagg')->__('Error'));
 			}
+
 		} catch (Exception $e) {
 			return $this;
 		}
@@ -2235,6 +2235,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 		// Get Reserved Order Id
 		$reservedOrderId = $quote->getReservedOrderId();
+
 		if ($reservedOrderId == false) {
 			return $redirectRoute;
 		}
@@ -2242,6 +2243,22 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		$session->setApprovalRequest('partial');
 
 		$order = Mage::getModel('sales/order')->loadByIncrementId($reservedOrderId);
+
+		//
+		$additionalInfo = $order->getPayment()->getAdditionalInformation();
+		$num = 1;
+
+		if ($additionalInfo['2_Success']) {
+			$num++;
+		}
+
+		$idxToken = "mundipagg_twocreditcards_token_2_{$num}";
+
+		switch (true) {
+			case isset($additionalInfo[$idxToken]) :
+				$order->getPayment()->setAdditionalInformation();
+				break;
+		}
 
 		/* @var Uecommerce_Mundipagg_Helper_Data $helper */
 		$helper = Mage::helper('mundipagg');
@@ -2304,9 +2321,15 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					$order->getPayment(),
 					$helper->issetOr($txn['TransactionKey']),
 					Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
-					$txn
+					$txn,
+					$num - 1
 				);
 			}
+
+			$teste = $order->getPayment();
+			$order->getPayment()->save();
+
+//			$this->replaceNotAuthorizedCcInfo($txns[0], $order->getPayment());
 
 			$accAuthorizedAmount = sprintf($order->getData('payment_authorization_amount'));
 			$accGrandTotal = sprintf($order->getData('grand_total'));
@@ -2341,6 +2364,79 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		}
 
 		return $redirectRoute;
+	}
+
+	/**
+	 * Replace the not authorized payment additional information
+	 */
+	public function replaceNotAuthorizedCcInfo($mundiResponse, Mage_Sales_Model_Order_Payment &$payment) {
+		$info = $payment->getAdditionalInformation();
+		$ccQty = $info['mundipagg_type'][0];
+		$keys = array_keys($info);
+		$ccsData = [];
+		$otherData = [];
+
+		// separate credit cards payment additional information
+		foreach ($keys as $key) {
+			$idxTwoInitialLetters = $key[0] . $key[1];
+			$value = $info[$key];
+
+			if ($idxTwoInitialLetters === '1_') {
+				$ccsData[1][$key] = $value;
+			} elseif ($idxTwoInitialLetters === '2_') {
+				$ccsData[2][$key] = $value;
+			} else {
+				$otherData[$key] = $value;
+			}
+		}
+
+		$notAuthorizedCc = null;
+
+		// get just the not authorized credit card data
+		for ($i = 1; $i <= $ccQty; $i++) {
+			$idx = "{$i}_Success";
+			$success = $ccsData[$i][$idx];
+
+			if ($success) {
+//				$notAuthorizedCc = $i === 1 ? 1 : 2;
+				if ($i === 1) {
+					$notAuthorizedCc = 1;
+				} else {
+					$notAuthorizedCc = 2;
+				}
+				break;
+			}
+		}
+
+		$responseKeys = $this->extractTxnKeys($mundiResponse);
+		$key = null;
+
+		foreach ($responseKeys as $key => $val) {
+			$idx = "{$notAuthorizedCc}_{$val}";
+			$ccsData[$idx] = isset($ccsData[$idx]) ? $ccsData[$idx] : null;
+		}
+
+		$data = $otherData + $ccsData[1] + $ccsData[2];
+
+		$payment->setAdditionalInformation($data)->save();
+	}
+
+	public function extractTxnKeys($txn) {
+		$keys = [];
+
+		foreach ($txn as $key => $val) {
+			if (is_array($txn[$key]) && !empty($txn[$key])) {
+
+				foreach ($txn[$key] as $subKey => $subVal) {
+					$keys[] = $subKey;
+				}
+
+			} else {
+				$keys[] = $key;
+			}
+		}
+
+		return $keys;
 	}
 
 }
