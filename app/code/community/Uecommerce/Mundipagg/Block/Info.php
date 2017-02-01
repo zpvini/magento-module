@@ -118,4 +118,24 @@ class Uecommerce_Mundipagg_Block_Info extends Mage_Payment_Block_Info {
 		return $installments;
 	}
 
+	public function getAuthorizationCode($ccPos) {
+		$authCode = $this->getInfo()->getAdditionalInformation("{$ccPos}_AuthorizationCode");
+
+		if (empty($authCode)) {
+			$authCode = "N/A";
+		}
+
+		return $authCode;
+	}
+
+	public function getTransactionId($ccPos) {
+		$txnId = $this->getInfo()->getAdditionalInformation("{$ccPos}_TransactionIdentifier");
+
+		if (empty($txnId)) {
+			$txnId = "N/A";
+		}
+
+		return $txnId;
+	}
+
 }
