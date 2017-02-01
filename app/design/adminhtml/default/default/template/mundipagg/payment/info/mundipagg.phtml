@@ -90,10 +90,10 @@ $standard = Mage::getModel('mundipagg/standard');
 		        $txnId = $this->getTransactionId();
 
 				echo "<p>";
-				echo "{$helper->__('Credit card issuer')}: {$this->getCcBrand($ccQty, $i)}<br/>";
+				echo "{$helper->__('Credit card issuer')}: {$this->getCcBrand($i)}<br/>";
 				echo "{$helper->__('Masked number')}: {$info->getAdditionalInformation("{$i}_MaskedCreditCardNumber")}<br/>";
-				echo "{$helper->__('Amount')}: {$this->getCcValue($ccQty, $i)}<br/>";
-				echo "{$helper->__('Installments')}: {$this->getInstallmentsNumber($ccQty, $i)}<br/>";
+				echo "{$helper->__('Amount')}: {$this->getCcValue($i)}<br/>";
+				echo "{$helper->__('Installments')}: {$this->getInstallmentsNumber($i)}<br/>";
 				echo "{$helper->__('Authorization code')}: {$authorizationCode}<br/>";
 				echo "{$helper->__('Transaction ID')}: {$txnId}<br/>";
 				echo "{$helper->__('Acquirer message')}: {$info->getAdditionalInformation("{$i}_AcquirerMessage")}<br/>";

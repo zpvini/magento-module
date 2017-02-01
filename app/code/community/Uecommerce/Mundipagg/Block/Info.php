@@ -73,35 +73,12 @@ class Uecommerce_Mundipagg_Block_Info extends Mage_Payment_Block_Info {
 	 * @param $ccPos credit card position
 	 * @return array|mixed|null
 	 */
-	public function getCcBrand($ccQty, $ccPos) {
-		if ($ccQty == 1) {
-			$ccBrand = $this->getInfo()
-				->getAdditionalInformation("mundipagg_twocreditcards_{$ccQty}_{$ccPos}__cc_type");
-
-			if (empty($ccBrand)) {
-				$ccBrand = $this->getInfo()
-					->getAdditionalInformation("CreditCardBrandEnum_mundipagg_creditcard_token_{$ccQty}_{$ccPos}");
-			}
-		} else {
-			$ccBrand = $this->getInfo()
-				->getAdditionalInformation("mundipagg_twocreditcards_{$ccQty}_{$ccPos}_cc_type");
-
-			if (empty($ccBrand)) {
-				$ccBrand = $this->getInfo()
-					->getAdditionalInformation("CreditCardBrandEnum_mundipagg_twocreditcards_token_{$ccQty}_{$ccPos}");
-			}
-		}
-
-		return $ccBrand;
+	public function getCcBrand($ccPos) {
+		return $this->getInfo()->getAdditionalInformation("{$ccPos}_CreditCardBrand");
 	}
 
-	public function getCcValue($ccQty, $ccPos) {
-		if ($ccQty == 1) {
-			$value = (float)$this->getInfo()->getAdditionalInformation("1_AmountInCents") * 0.01;
-
-		} else {
-			$value = $this->getInfo()->getAdditionalInformation("mundipagg_twocreditcards_value_{$ccQty}_{$ccPos}");
-		}
+	public function getCcValue($ccPos) {
+		$value = $this->getInfo()->getAdditionalInformation("{$ccPos}_AmountInCents") * 0.01;
 
 		return Mage::helper('core')->currency($value, true, false);
 	}
@@ -113,6 +90,8 @@ class Uecommerce_Mundipagg_Block_Info extends Mage_Payment_Block_Info {
 			$installments = $this->getInfo()
 				->getAdditionalInformation("mundipagg_twocreditcards_credito_parcelamento_{$ccQty}_{$ccPos}");
 		}
+
+
 		$installments .= "x";
 
 		return $installments;
