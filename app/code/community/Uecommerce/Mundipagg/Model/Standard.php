@@ -572,12 +572,13 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$result = $helper->issetOr($resultPayment['result'], false);
 			$ccResultCollection = $helper->issetOr($result['CreditCardTransactionResultCollection']);
 
-			/**
-			 * @todo: Refact this. Integration time out message must be setted only if the API response is false
-			 * 'CreditCardTransactionResultCollection' null or empty is not a timeout
-			 */
-			if (is_null($ccResultCollection)) {
+			if ($result === false) {
 				return $this->integrationTimeOut($order, $payment);
+			}
+
+			// Return error
+			if (isset($resultPayment['error'])) {
+				return $this->paymentError($payment, $resultPayment);
 			}
 
 			if (is_null($ccResultCollection) === false) {

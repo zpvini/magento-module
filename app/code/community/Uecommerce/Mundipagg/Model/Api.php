@@ -288,10 +288,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$result['CreateDate'] = $createDate;
 					}
 
-					/**
-					 * @TODO precisa refatorar isto, pois deste jeito esta gravando offlineretry pra que qualquer pedido
-					 * com mais de 1 cartao
-					 */
 					// save offline retry statements if this feature is enabled
 					$this->saveOfflineRetryStatements($orderReference, new DateTime($createDate));
 

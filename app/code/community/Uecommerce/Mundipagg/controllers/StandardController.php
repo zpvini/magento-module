@@ -352,4 +352,13 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 		}
 	}
 
+	public function indexAction(){
+		$order = Mage::getModel('sales/order')->loadByIncrementId($this->getRequest()->getParam('order'));
+		$payment = $order->getPayment();
+		$info = $payment->getAdditionalInformation();
+
+		var_dump($info);
+
+	}
+
 }

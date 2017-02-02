@@ -56,6 +56,17 @@ $standard = Mage::getModel('mundipagg/standard');
     <p>
 		<?php
 		$info = $this->getInfo();
+
+		$errorCode = $info->getAdditionalInformation('ErrorCode');
+		$errorDescription = $info->getAdditionalInformation('ErrorDescription');
+
+		if ($errorCode >= 400 && $errorDescription) {
+			echo "<b>[{$helper->__('Integration error')}]</b><br/>";
+			echo "{$helper->__('Error code')}: {$errorCode}<br/>";
+			echo "{$helper->__('Error description')}: {$errorDescription}<br/><br/>";
+			return;
+		}
+
 		$PaymentMethod = $info->getAdditionalInformation('PaymentMethod');
 		$integrationError = $info->getAdditionalInformation('IntegrationError');
 
@@ -86,8 +97,8 @@ $standard = Mage::getModel('mundipagg/standard');
 
 		if ($ccQty > 0):
 			for ($i = 1; $i <= $ccQty; $i++) {
-		        $authorizationCode = $this->getAuthorizationCode();
-		        $txnId = $this->getTransactionId();
+		        $authorizationCode = $this->getAuthorizationCode($i);
+		        $txnId = $this->getTransactionId($i);
 
 				echo "<p>";
 				echo "{$helper->__('Credit card issuer')}: {$this->getCcBrand($i)}<br/>";
@@ -149,24 +160,5 @@ $standard = Mage::getModel('mundipagg/standard');
 	endif;
 	?>
     </p>
-
-	<?php
-	// Integration Error
-	if ($info->getAdditionalInformation('IntegrationError')):
-		echo "<p class='error'>{$helper->__('Integration error')}: {$info->getAdditionalInformation('IntegrationError')}</p>";
-	endif;
-
-	$errorCode = $info->getAdditionalInformation('ErrorCode');
-	$errorDescription = $info->getAdditionalInformation('ErrorDescription');
-
-	if ($errorCode >= 400 && $errorDescription) {
-		echo "<p>";
-		echo "<b>[{$helper->__('Integration error')}]</b><br/>";
-		echo "{$helper->__('Error code')}: {$errorCode}<br/>";
-		echo "{$helper->__('Error description')}: {$errorDescription}<br/>";
-		echo "</p>";
-	}
-
-	?>
 
 </div>
