@@ -2342,6 +2342,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         private function closeOrder($order){
             $order->setData('state', Mage_Sales_Model_Order::STATE_CLOSED);
             $order->setStatus(Mage_Sales_Model_Order::STATE_CLOSED);
+            $order->addStatusHistoryComment( "Transaction update received: " . Mage_Sales_Model_Order::STATE_CLOSED, Mage_Sales_Model_Order::STATE_CLOSED);
+            $order->sendOrderUpdateEmail();
             if($order->save()){
                 return true;
             }else{
