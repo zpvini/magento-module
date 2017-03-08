@@ -1556,7 +1556,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					}
 
 					// Refund invoices and Credit Memo
-					if (!empty($invoices)) {
+					if (!empty($invoices) || !empty($canceledInvoices)) {
 						$service = Mage::getModel('sales/service_order', $order);
 
 						foreach ($invoices as $invoice) {
@@ -1565,25 +1565,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						}
 
 						$this->closeOrder($order);
-						$success = true;
-					}
-
-					// Credit Memo
-					if (!empty($canceledInvoices)) {
-						$service = Mage::getModel('sales/service_order', $order);
-
-						foreach ($invoices as $invoice) {
-							$creditmemo = $service->prepareInvoiceCreditmemo($invoice);
-							$creditmemo->setOfflineRequested(true);
-							$creditmemo->register()->save();
-						}
-
-						// Close order
-						$order->setData('state', Mage_Sales_Model_Order::STATE_CLOSED);
-						$order->setStatus(Mage_Sales_Model_Order::STATE_CLOSED);
-						$order->save();
-
-						// Return
 						$success = true;
 					}
 
@@ -2359,8 +2340,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
          * @return boolean
          */
         private function closeOrder($order){
-            $order->setData('state', 'closed');
-            $order->setStatus('closed');
+            $order->setData('state', Mage_Sales_Model_Order::STATE_CLOSED);
+            $order->setStatus(Mage_Sales_Model_Order::STATE_CLOSED);
             if($order->save()){
                 return true;
             }else{
