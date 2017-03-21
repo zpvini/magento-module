@@ -1292,7 +1292,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					$orderResult = $helper->issetOr($result['OrderResult']);
 					$creditCardTransactionResultCollection = $result['CreditCardTransactionResultCollection'];
 					$transactionsQty = count($creditCardTransactionResultCollection);
-
+                                        
 					if ($transactionsQty == 1) {
 						$transaction = $creditCardTransactionResultCollection[0];
 						$success = $transaction['Success'];
@@ -1306,7 +1306,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 							if ($success === true) {
 								$authorizedAmount += $transaction['AuthorizedAmountInCents'] * 0.01;
-							}
+							}else{
+                                                            $unauthorizedCreditCardMaskedNumber = $transaction['MaskedCreditCardNumber'];
+                                                        }
 						}
 					}
 

@@ -132,6 +132,7 @@
 "Order partially authorized","Pedido parcialmente autorizado"
 "Order total:","Valor total do pedido:"
 "Amount authorized:","Total autorizado:"
+"One of your payment methods is invalid","Um dos seus métodos de pagamento não foi autorizado."
 "Rest to pay:","Falta a autorizar:"
 "on Credit Card nº","no Cartão de Crédito nº"
 "authorized","autorizado"

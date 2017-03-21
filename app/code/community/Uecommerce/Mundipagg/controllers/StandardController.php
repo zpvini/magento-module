@@ -68,6 +68,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 
 	/**
 	 * Partial payment
+         * 
 	 */
 	public function partialAction() {
 		$session = Mage::getSingleton('checkout/session');
@@ -91,7 +92,6 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('partial');
 
 			$order = Mage::getModel('sales/order')->loadByIncrementId($session->getLastRealOrderId());
-
 			if ($order->getId()) {
 				//Render
 				$this->loadLayout();

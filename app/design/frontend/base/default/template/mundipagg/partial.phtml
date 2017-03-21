@@ -39,7 +39,11 @@ $restToPay = 0;
 
 // Session
 $authorizedAmount = $order->getPaymentAuthorizationAmount();
-
+echo "<pre>";
+$payments = $order->getPayment();
+print_r($payments['additional_information']['1_success']);
+print_r($payments['additional_information']['2_MaskedCreditCardNumber']);
+echo "<pre>";
 $restToPay = $orderGrandTotal - $authorizedAmount;
 
 //Return Standard model
@@ -71,6 +75,9 @@ $ccs = $this->getCcs();
     var lastPrice;
 //]]>
 </script>
+<h3>
+	<?php echo $this->__('One of your payment methods is invalid') ?>
+</h3>
 <p>
 	<b><?php echo $this->__('Order total:') ?></b> <?php echo $_coreHelper->currency($orderGrandTotal, true, false); ?>
 </p>
@@ -82,56 +89,10 @@ $ccs = $this->getCcs();
 </p>
 
 <div class="page-title">
-	<h2><?php echo $this->__('Choose a payment method above to complete your order');?></h2>
 </div>
 
 <form action="<?php echo $this->getUrl('mundipagg/standard/partialPost') ?>" id="co-payment-form" method="post">
-	<dl class="sp-methods" id="checkout-payment-method-load">
-	<?php
-	    $methods = $this->getMethods();
-	    $oneMethod = count($methods) <= 1;
-	?>
-	<?php
-	    foreach ($methods as $_method):
-	        $_code = $_method->getCode();
-	?>
-	    <dt>
-	    <?php if(!$oneMethod): ?>
-	        <input id="p_method_<?php echo $_code ?>" value="<?php echo $_code ?>" type="radio" name="payment[method]" title="<?php echo $this->htmlEscape($_method->getTitle()) ?>" onclick="payment.switchMethod('<?php echo $_code ?>')"<?php if($this->getSelectedMethodCode()==$_code): ?> checked="checked"<?php endif; ?> class="radio" />
-	    <?php else: ?>
-	        <span class="no-display"><input id="p_method_<?php echo $_code ?>" value="<?php echo $_code ?>" type="radio" name="payment[method]" checked="checked" class="radio" /></span>
-	        <?php $oneMethod = $_code; ?>
-	    <?php endif; ?>
-	        <label for="p_method_<?php echo $_code ?>"><?php echo $this->escapeHtml($this->getMethodTitle($_method)) ?> <?php echo $this->getMethodLabelAfterHtml($_method) ?></label>
-	    </dt>
-	    <?php if ($html = $this->getPaymentMethodFormHtml($_method)): ?>
-	    <dd>
-	        <?php echo $html; ?>
-	    </dd>
-	    <?php endif; ?>
-	<?php endforeach; ?>
-	</dl>
-	<?php echo $this->getChildChildHtml('additional'); ?>
-	<script type="text/javascript">
-	//<![CDATA[
-	<?php echo $this->getChildChildHtml('scripts'); ?>
-	payment.init();
-	<?php if (is_string($oneMethod)): ?>
-	    payment.switchMethod('<?php echo $oneMethod ?>');
-	<?php endif; ?>
-	//]]>
-	</script>
-	<div class="buttons-set" id="payment-buttons-container">
-		<div class="float-left cancel">
-			<button type="button" class="button" onclick="setLocation('<?php echo $this->getUrl('mundipagg/standard/fcancel') ?>');"><span><span><?php echo $this->__('Cancel') ?></span></span></button>
-		</div>
-		<div>
-			<button id="confirm" type="button" class="button" onclick="paymentFormSubmit(this);"><span><span><?php echo $this->__('Confirm') ?></span></span></button>
-			<span class="please-wait" id="payment-please-wait" style="display:none;">
-		        <img src="<?php echo $this->getSkinUrl('images/opc-ajax-loader.gif') ?>" alt="<?php echo $this->__('Loading next step...') ?>" title="<?php echo $this->__('Loading next step...') ?>" class="v-middle" /> <?php echo $this->__('Loading next step...') ?>
-		    </span>
-		</div>	
-	</div>
+	
 </form>
 <script type="text/javascript">
 //<![CDATA[
