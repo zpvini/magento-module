@@ -39,11 +39,8 @@ $restToPay = 0;
 
 // Session
 $authorizedAmount = $order->getPaymentAuthorizationAmount();
-echo "<pre>";
 $payments = $order->getPayment();
-print_r($payments['additional_information']['1_success']);
-print_r($payments['additional_information']['2_MaskedCreditCardNumber']);
-echo "<pre>";
+
 $restToPay = $orderGrandTotal - $authorizedAmount;
 
 //Return Standard model
@@ -87,6 +84,14 @@ $ccs = $this->getCcs();
 <p>
 	<b><?php echo $this->__('Rest to pay:') ?></b> <?php echo $_coreHelper->currency($restToPay, true, false); ?>
 </p>
+<?php
+if($payments['additional_information']['1_Success'] != 1){
+    echo "<p><b>Cartão não autorizado: </b>" . $payments['additional_information']['1_MaskedCreditCardNumber'] . "</p>";
+}
+if($payments['additional_information']['2_Success'] != 1){
+    echo "<p><b>Cartão não autorizado: </b>" . $payments['additional_information']['2_MaskedCreditCardNumber'] . "</p>";
+}
+?>
 
 <div class="page-title">
 </div>
