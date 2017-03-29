@@ -616,9 +616,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
 				$accPaymentAuthorizationAmount = sprintf($order->getPaymentAuthorizationAmount());
 				$accGrandTotal = sprintf($order->getGrandTotal());
-                                        $a = count($ccResultCollection);
-					$b = $this->getAntiFraud();
-					$c = $this->getPaymentAction();
 					
 				// We can capture only if:
 				// 1. Multiple Credit Cards Payment
@@ -633,8 +630,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				) {
 					$this->captureAndcreateInvoice($payment);
 				}else if ($accPaymentAuthorizationAmount != $accGrandTotal){
-                                    
-                                    
                                     $order->cancel();
                                     $order->setState(Mage_Sales_Model_Order::STATE_CANCELED, true)->save();                                    
                                     $order->setStatus(Mage_Sales_Model_Order::STATE_CANCELED);
