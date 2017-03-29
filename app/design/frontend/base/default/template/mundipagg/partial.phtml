@@ -72,6 +72,7 @@ $ccs = $this->getCcs();
     var lastPrice;
 //]]>
 </script>
+
 <h3>
 	<?php echo $this->__('One of your payment methods is invalid') ?>
 </h3>
@@ -81,17 +82,19 @@ $ccs = $this->getCcs();
 <p>
 	<b><?php echo $this->__('Amount authorized:') ?></b> <?php echo $_coreHelper->currency($authorizedAmount, true, false) ?>
 </p>
-<p>
-	<b><?php echo $this->__('Rest to pay:') ?></b> <?php echo $_coreHelper->currency($restToPay, true, false); ?>
-</p>
+
 <?php
 if($payments['additional_information']['1_Success'] != 1){
     echo "<p><b>Cartão não autorizado: </b>" . $payments['additional_information']['1_MaskedCreditCardNumber'] . "</p>";
 }
 if($payments['additional_information']['2_Success'] != 1){
-    echo "<p><b>Cartão não autorizado: </b>" . $payments['additional_information']['2_MaskedCreditCardNumber'] . "</p>";
+    echo "<p><b>" . $this->__('Not authorized credit card') . ": </b>" . $payments['additional_information']['2_MaskedCreditCardNumber'] . "</p>";
 }
 ?>
+<br>
+<p>
+    <a href="<?php echo $this->getUrl('checkout/cart', ['_secure' => true]); ?>"><?php echo $this->__('Back to shopping cart'); ?>
+</p>
 
 <div class="page-title">
 </div>
