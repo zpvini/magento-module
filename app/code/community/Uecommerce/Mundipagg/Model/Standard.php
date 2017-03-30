@@ -609,14 +609,14 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					return $this;
 				}
 			} else {
+				$accPaymentAuthorizationAmount = sprintf($order->getPaymentAuthorizationAmount());
+				$accGrandTotal = sprintf($order->getGrandTotal());
+                                
 				// Send new order email when not in admin
-				if (Mage::app()->getStore()->getCode() != 'admin') {
+				if ((Mage::app()->getStore()->getCode() != 'admin') && ($accPaymentAuthorizationAmount == $accGrandTotal)) {
 					$order->sendNewOrderEmail();
 				}
 
-				$accPaymentAuthorizationAmount = sprintf($order->getPaymentAuthorizationAmount());
-				$accGrandTotal = sprintf($order->getGrandTotal());
-					
 				// We can capture only if:
 				// 1. Multiple Credit Cards Payment
 				// 2. Anti fraud is disabled
