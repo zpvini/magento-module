@@ -1281,7 +1281,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$capturedAmountInCents = $data['OnlineDebitTransaction']['AmountPaidInCents'];
 				$transactionData = $data['OnlineDebitTransaction'];
 			}
-
 			$returnMessageLabel = "Order #{$order->getIncrementId()}";
 
 			if (isset($data['OrderStatus'])) {
@@ -1873,6 +1872,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, 'overpaid');
 		} else {
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
+                        $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_PROCESSING, $comment = 'Boleto pago', true);
 		}
 
 		$order->save();
