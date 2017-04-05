@@ -2138,7 +2138,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 	/**
 	 * Check if order is in offline retry time
-	 *
+	 * @deprecated since version 2.9.20
 	 * @author Ruan Azevedo <razevedo@mundipagg.com>
 	 * @since 2016-06-20
 	 * @param string $orderIncrementId
