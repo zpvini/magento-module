@@ -1956,9 +1956,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$api = new Uecommerce_Mundipagg_Model_Api();
 			$orderInOfflineRetry = $api->orderIsInOfflineRetry($orderIncrementId);
 
-			if (in_array($ccTransactionStatus, $transactionOpenStatuses)
-				|| $orderInOfflineRetry
-			) {
+			if (in_array($ccTransactionStatus, $transactionOpenStatuses)) {
 				$transaction->setIsClosed(0);
 			} else {
 				$transaction->setIsClosed(1);
@@ -2011,8 +2009,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
 			return;
 		}
-                
-		
 	}
 
 	/**

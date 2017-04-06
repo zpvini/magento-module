@@ -284,13 +284,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						'result'           => $response
 					);
 
-					if (is_null($createDate) === false) {
-						$result['CreateDate'] = $createDate;
-					}
-
-					// save offline retry statements if this feature is enabled
-					$this->saveOfflineRetryStatements($orderReference, new DateTime($createDate));
-
 					return $result;
 				}
 
@@ -1490,7 +1483,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$order->save();
 
 					$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' processed. Order status updated.";
-
 					$helperLog->info($returnMessage);
 
 					return $returnMessage;
@@ -2165,6 +2157,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	 * If the Offline Retry feature is enabled, save order offline retry statements
 	 *
 	 * @author Ruan Azevedo <razevedo@mundipagg.com>
+         * @deprecated since version 2.9.20
 	 * @since 2016-06-23
 	 * @param string   $orderIncrementId
 	 * @param DateTime $createDate
