@@ -43,11 +43,13 @@ if ($quote->isVirtual()) {
 	$data = $quote->getShippingAddress();
 }
 
-$orderGrandTotal = $standard->getQuote()->getBaseGrandTotal();
 
 // Partial payment?
 $isPartial = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
 
+$this->getInstallments();
+
+$orderGrandTotal = $standard->getQuote()->getBaseGrandTotal();
 if ($isPartial === 'partial'):
 	$order = $this->loadOrder();
 	$authorizedAmount = $order->getPaymentAuthorizationAmount();
@@ -150,35 +152,34 @@ $_code = $this->getMethodCode();
                                     <label class="required"><?php echo $this->__('Select a Credit Card or add a new one') ?>
                                         <span class="required">*</span></label>
                                     <div class="input-box">
-
                                         <select id="<?php echo $_code; ?>_token_<?php echo $num; ?>_<?php echo $c; ?>"
                                                 data="group_<?php echo $num; ?>_<?php echo $c; ?>"
                                                 name="payment[<?php echo $_code; ?>_token_<?php echo $num; ?>_<?php echo $c; ?>]"
                                                 class="required-entry tokens group_<?php echo $num; ?>_<?php echo $c; ?>"
                                                 onchange="token_or_not(<?php echo $num; ?>,<?php echo $c; ?>,this)">
                                             <option value="">...</option>
-											<?php
-											$selected = '';
+                                            <?php
+                                            $selected = '';
 
-											if ($countCcs == 1):
-												$selected = 'selected="selected"';
-											endif;
+                                            if ($countCcs == 1):
+                                                    $selected = 'selected="selected"';
+                                            endif;
 
-											foreach ($ccs as $id => $cc):
+                                            foreach ($ccs as $id => $cc):
 
-												if ($countCcs == 1) {
-													$currentSelectedToken = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
-												}
-												$dataType = $currentSelectedToken ? $currentSelectedToken : Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
-												echo '<option value="' . $cc->getId() . '" ' . $selected . ' data="' . $dataType . '">' . $cc->getCcType() . ' ' . $cc->getCreditCardMask() . '</option>';
-											endforeach;
-											?>
+                                                    if ($countCcs == 1) {
+                                                            $currentSelectedToken = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
+                                                    }
+                                                    $dataType = $currentSelectedToken ? $currentSelectedToken : Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
+                                                    echo '<option value="' . $cc->getId() . '" ' . $selected . ' data="' . $dataType . '">' . $cc->getCcType() . ' ' . $cc->getCreditCardMask() . '</option>';
+                                            endforeach;
+                                            ?>
                                             <option value="new"><?php echo $this->__('New Credit Card') ?></option>
                                         </select>
                                     </div>
                                 </div>
                             </li>
-							<?php if ($num != 1): ?>
+                            <?php if ($num != 1): ?>
                                 <div id="value_<?php echo $num; ?>_<?php echo $c; ?>">
                                     <li class="fields" style="margin-bottom: 5px;">
                                         <div class="field">
@@ -196,28 +197,29 @@ $_code = $this->getMethodCode();
                                         </div>
                                     </li>
                                 </div>
-							<?php endif; ?>
-							<?php if ($installmentsHelper->isInstallmentsEnabled() && $_code != 'mundipagg_creditcardoneinstallment'): ?>
-                                <div id="parcelamento_<?php echo $num; ?>_<?php echo $c; ?>"
-								     <?php if ($countCcs > 1): ?>style="display:none"<?php endif ?>>
-                                    <li class="fields" style="margin-bottom: 5px;">
-                                        <div class="field">
-                                            <label class="required"><?php echo $this->__('Credit options') ?>
-												<?php if ($num == 2): ?><!--<a href="javascript:void(0);" onclick="javascript:void(0);">(<?php /*echo $this->__('click to update') */ ?>)</a>--><?php endif ?></label>
-                                            <div class="input-box">
-                                                <select id="<?php echo $_code; ?>_credito_parcelamento_<?php echo $num; ?>_<?php echo $c; ?>"
-                                                        name="payment[<?php echo $_code; ?>_credito_parcelamento_<?php echo $num; ?>_<?php echo $c; ?>]"
-                                                        class="required-entry installment-token group_<?php echo $num; ?>_<?php echo $c; ?>">
-													<?php foreach ($this->getInstallments($currentSelectedToken) as $key => $parcel): ?>
-                                                        <option value="<?php echo $key ?>"><?php echo $parcel ?></option>
-													<?php endforeach ?>
-                                                </select>
+				<?php endif; ?>
+				<?php if ($installmentsHelper->isInstallmentsEnabled() && $_code != 'mundipagg_creditcardoneinstallment'): ?>
+                                    <div id="parcelamento_<?php echo $num; ?>_<?php echo $c; ?>"
+                                                                         <?php if ($countCcs > 1): ?>style="display:none"<?php endif ?>>
+                                        <li class="fields" style="margin-bottom: 5px;">
+                                            <div class="field">
+                                                <label class="required"><?php echo $this->__('Credit options') ?>
+                                                                                                    <?php if ($num == 2): ?><!--<a href="javascript:void(0);" onclick="javascript:void(0);">(<?php /*echo $this->__('click to update') */ ?>)</a>--><?php endif ?></label>
+                                                <div class="input-box">
+                                                    <?php $this->getInstallments(); ?>
+                                                    <select id="<?php echo $_code; ?>_credito_parcelamento_<?php echo $num; ?>_<?php echo $c; ?>"
+                                                            name="payment[<?php echo $_code; ?>_credito_parcelamento_<?php echo $num; ?>_<?php echo $c; ?>]"
+                                                            class="required-entry installment-token group_<?php echo $num; ?>_<?php echo $c; ?>">
+                                                            <?php foreach ($this->getInstallments($currentSelectedToken) as $key => $parcel): ?>
+                                                                <option value="<?php echo $key ?>"><?php echo $parcel ?></option>
+                                                            <?php endforeach ?>
+                                                    </select>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </li>
-                                </div>
-							<?php endif; ?>
-						<?php endif; ?>
+                                        </li>
+                                    </div>
+                                <?php endif; ?>
+                        <?php endif; ?>
                         <div class="division"></div>
                         <div id="<?php echo $_code; ?>_new_credit_card_<?php echo $num; ?>_<?php echo $c; ?>"
 						     <?php if ($countCcs > 0) { ?>style="display:none"<?php } ?>>
@@ -373,11 +375,12 @@ $_code = $this->getMethodCode();
                                             <select id="<?php echo $_code; ?>_new_credito_parcelamento_<?php echo $num; ?>_<?php echo $c; ?>"
                                                     name="payment[<?php echo $_code; ?>_new_credito_parcelamento_<?php echo $num; ?>_<?php echo $c; ?>]"
                                                     onchange="checkInstallments(this, '<?php echo Mage::getUrl('', array('_secure' => true)); ?>');">
-												<?php foreach ($this->getInstallments() as $key => $parcel): ?>
-                                                    <option value="<?php echo $key ?>"><?php echo $parcel ?></option>
-												<?php endforeach ?>
+                                                        <?php foreach ($this->getInstallments() as $key => $parcel): ?>
+                                                            <option value="<?php echo $key ?>"><?php echo $parcel ?></option>
+                                                        <?php endforeach ?>
                                             </select>
                                         </div>
+                                        
                                     </div>
                                 </li>
 							<?php endif; ?>
@@ -425,7 +428,9 @@ $_code = $this->getMethodCode();
 
 
 <script type="text/javascript">
+    
     //<![CDATA[
+
     Validation.addAllThese([
         ['validate-cc-exp-new', '<?php echo $this->jsQuoteEscape(Mage::helper('mundipagg')->__('Incorrect credit card expiration date.'))?>', function (v, elm) {
             var ccExpMonth = v;

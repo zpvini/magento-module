@@ -57,27 +57,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$state = $order->getState();
 
 		if ($state == Mage_Sales_Model_Order::STATE_CANCELED) {
-
-			// if a order is canceled successfuly, offline retry data must be deleted if exists
-			if (Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled()) {
-				$model = Mage::getModel('mundipagg/offlineretry');
-				$incrementId = $order->getIncrementId();
-				$offlineRetry = $model->loadByIncrementId($incrementId);
-
-				if (is_null($offlineRetry->getId()) === false) {
-					$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-					$helperLog->setLogLabel("Order #{$incrementId} canceled");
-
-					try {
-						$offlineRetry->delete();
-						$helperLog->info("Offline retry data deleted successfully.");
-
-					} catch (Exception $e) {
-						$helperLog->info("Offline retry data cannot be deleted: {$e}");
-					}
-				}
-			}
-
 			//cancel Mundi transactions via API
 			$this->cancelOrderViaApi($order);
 		}
