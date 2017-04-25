@@ -233,7 +233,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// Transactions colllection
 			$creditCardTransactionResultCollection = $helper->issetOr($response['CreditCardTransactionResultCollection']);
 			$transactionsQty = count($creditCardTransactionResultCollection);
-
 			// Only 1 transaction
 			if (count($creditCardTransactionResultCollection) == 1) {
 				$creditCardTransaction = $creditCardTransactionResultCollection[0];
@@ -288,6 +287,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				}
 
 			} elseif ($transactionsQty > 1) { // More than 1 transaction
+                            
+                                $transactionFailed = $this->ifOneOrMoreTransactionFailed($creditCardTransactionResultCollection);
+                                if($transactionFailed){
+                                    $transactionFailed['OrderKey'] = $orderKey;
+                                    $transactionFailed['OrderReference'] = $orderReference;
+                                    $transactionFailed['result'] = $response;
+                                    return $transactionFailed;
+                                }
 				$allTransactions = $creditCardTransactionResultCollection;
 
 				// We remove other transactions made before
@@ -2368,6 +2375,24 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 return true;
             }else{
                 return false;
+            }
+        }
+        
+        /**
+         * 
+         * @param Array $transactionCollectionArray
+         * @return Array Not authorized transaction
+         */
+        private function ifOneOrMoreTransactionFailed($transactionCollectionArray){
+            foreach ($transactionCollectionArray as $transaction) {
+                if(!isset($transaction['Success']) || $transaction['Success'] == 0){
+                    $notAuthorizedTransaction = array(
+                            'error'            => 1,
+                            'ErrorCode'        => $transaction['AcquirerReturnCode'],
+                            'ErrorDescription' => urldecode($transaction['AcquirerMessage'])
+                    );
+                    return $notAuthorizedTransaction;
+                }
             }
         }
 
