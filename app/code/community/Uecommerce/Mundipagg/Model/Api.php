@@ -1284,7 +1284,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$returnMessageLabel = "Order #{$order->getIncrementId()}";
                         
                         //If is reccurency order and it status is processing or canceled stop the execution
-                        if(($order->getState() == Mage_Sales_Model_Order::STATE_PROCESSING || $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) && $transactionData['IsReccurrency']){
+                        if(($order->getState() == Mage_Sales_Model_Order::STATE_PROCESSING || $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) && $transactionData['IsReccurrency']){ 
                             $returnMessage = "OK | Order #{$orderReference} | This is a reccurency order and it status is already processing. ";
                             $helperLog->info($returnMessage);
                             return $returnMessage;
