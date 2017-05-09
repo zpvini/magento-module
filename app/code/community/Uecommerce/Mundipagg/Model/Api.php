@@ -1283,13 +1283,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			}
 			$returnMessageLabel = "Order #{$order->getIncrementId()}";
                         
-                        //If is reccurency order and it status is processing or canceled stop the execution
-                        if(($order->getState() == Mage_Sales_Model_Order::STATE_PROCESSING || $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) && $transactionData['IsReccurrency']){ 
-                            $returnMessage = "OK | Order #{$orderReference} | This is a reccurency order and it status is already processing. ";
+                        //If is recurrency order and it status is processing or canceled stop the execution
+                        if(($order->getState() == Mage_Sales_Model_Order::STATE_PROCESSING || $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) && $transactionData['IsRecurrency']){ 
+                            $returnMessage = "OK | Order #{$orderReference} | This is a recurrency order and its status is already " . $order->getState();
                             $helperLog->info($returnMessage);
                             return $returnMessage;
                         }
-                        
 			if (isset($data['OrderStatus'])) {
 				$orderStatus = $data['OrderStatus'];
 				//if Magento order is not processing and MundiPagg order status is canceled, cancel the order on Magento
