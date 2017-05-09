@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Uecommerce_Mundipagg>
-            <version>2.9.20</version>
+            <version>2.10.02</version>
         </Uecommerce_Mundipagg>
     </modules>
 
@@ -109,7 +109,9 @@
                     </mundipagg_cart_check_recurrency>
                 </observers>
             </checkout_cart_save_after>
+            
         </events>
+        
 
         <resources>
             <mundipagg_setup>
@@ -269,6 +271,17 @@
                 </mundipagg>
             </updates>
         </layout>
+        <events>
+            <admin_session_user_login_success>
+                <observers>
+                    <unique_name>
+                        <type>singleton</type>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>checkModuleVersion</method>
+                    </unique_name>
+                </observers>
+            </admin_session_user_login_success>
+        </events>
     </adminhtml>
     <admin>
         <routers>

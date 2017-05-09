@@ -233,7 +233,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// Transactions colllection
 			$creditCardTransactionResultCollection = $helper->issetOr($response['CreditCardTransactionResultCollection']);
 			$transactionsQty = count($creditCardTransactionResultCollection);
-
 			// Only 1 transaction
 			if (count($creditCardTransactionResultCollection) == 1) {
 				$creditCardTransaction = $creditCardTransactionResultCollection[0];
@@ -288,6 +287,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				}
 
 			} elseif ($transactionsQty > 1) { // More than 1 transaction
+                            
+                                $transactionFailed = $this->ifOneOrMoreTransactionFailed($creditCardTransactionResultCollection);
+                                if($transactionFailed){
+                                    $transactionFailed['OrderKey'] = $orderKey;
+                                    $transactionFailed['OrderReference'] = $orderReference;
+                                    $transactionFailed['result'] = $response;
+                                    return $transactionFailed;
+                                }
 				$allTransactions = $creditCardTransactionResultCollection;
 
 				// We remove other transactions made before
@@ -1275,7 +1282,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$transactionData = $data['OnlineDebitTransaction'];
 			}
 			$returnMessageLabel = "Order #{$order->getIncrementId()}";
-
+                        
+                        //If is recurrency order and it status is processing or canceled stop the execution
+                        if(($order->getState() == Mage_Sales_Model_Order::STATE_PROCESSING || $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) && $transactionData['IsRecurrency']){ 
+                            $returnMessage = "OK | Order #{$orderReference} | This is a recurrency order and its status is already " . $order->getState();
+                            $helperLog->info($returnMessage);
+                            return $returnMessage;
+                        }
 			if (isset($data['OrderStatus'])) {
 				$orderStatus = $data['OrderStatus'];
 				//if Magento order is not processing and MundiPagg order status is canceled, cancel the order on Magento
@@ -2370,5 +2383,22 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 return false;
             }
         }
-
+        
+        /**
+         * 
+         * @param Array $transactionCollectionArray
+         * @return Array Not authorized transaction
+         */
+        private function ifOneOrMoreTransactionFailed($transactionCollectionArray){
+            foreach ($transactionCollectionArray as $transaction) {
+                if(!isset($transaction['Success']) || $transaction['Success'] == 0){
+                    $notAuthorizedTransaction = array(
+                            'error'            => 1,
+                            'ErrorCode'        => $transaction['AcquirerReturnCode'],
+                            'ErrorDescription' => urldecode($transaction['AcquirerMessage'])
+                    );
+                    return $notAuthorizedTransaction;
+                }
+            }
+        }
 }
