@@ -57,27 +57,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$state = $order->getState();
 
 		if ($state == Mage_Sales_Model_Order::STATE_CANCELED) {
-
-			// if a order is canceled successfuly, offline retry data must be deleted if exists
-			if (Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled()) {
-				$model = Mage::getModel('mundipagg/offlineretry');
-				$incrementId = $order->getIncrementId();
-				$offlineRetry = $model->loadByIncrementId($incrementId);
-
-				if (is_null($offlineRetry->getId()) === false) {
-					$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-					$helperLog->setLogLabel("Order #{$incrementId} canceled");
-
-					try {
-						$offlineRetry->delete();
-						$helperLog->info("Offline retry data deleted successfully.");
-
-					} catch (Exception $e) {
-						$helperLog->info("Offline retry data cannot be deleted: {$e}");
-					}
-				}
-			}
-
 			//cancel Mundi transactions via API
 			$this->cancelOrderViaApi($order);
 		}
@@ -435,5 +414,68 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$session = Mage::getSingleton('checkout/session');
 		$session->setMundipaggRecurrency($option);
 	}
+        
+        public function checkModuleVersion()
+        {
+            Mage::log("TESTE 3 ", Zend_Log::ALERT, "test");
+            $localModuleVersion = $this->readModuleVersion();
+            $repoVersion = $this->getRepoVersion();
+            if(version_compare($localModuleVersion, $repoVersion, "<") == 1){
+                $this->insertOldVersionNotification($localModuleVersion, $repoVersion);
+            }
+        }
+        
+        private function insertOldVersionNotification($oldVersion, $newVersion){
+            $notification = mage::getModel("adminnotification/inbox");
+            $data = [
+                'severity'=>Mage_AdminNotification_Model_Inbox::SEVERITY_MINOR
+                ,'title'=> 'Nova versão do módulo de integração Mundipagg disponível.'
+                ,'description'=> 
+                    "Você está utilizando uma versão antiga do módulo de interação Mundipagg(v" . $oldVersion . "). Atualize para a versão v" . $newVersion . "<br>
+                    <a href='https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html' target='_blank'>Download Magento Connect</a><br>
+                    <a href='https://github.com/mundipagg/Magento.Integracao' target='_blank'>GitHub</a>
+                    "
+                ,'url' =>"https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html"
+                ,'is_read' => 0
+                ,'is_remove'=>0
+                ,'date_added'=> now()
+            ];
+            $notification->setData($data);
+            $notification->save();
+        }
+
+        private function readModuleVersion(){
+            $configXml = Mage::getBaseDir('app') . "/code/community/Uecommerce/Mundipagg/etc/config.xml";
+            if (file_exists($configXml)) {
+                $xmlObj = simplexml_load_file($configXml);
+                return $xmlObj->modules->Uecommerce_Mundipagg->version[0];
+            }else{
+                return 0;
+            }
+        }
+
+        private function getRepoVersion(){
+            $url = "https://api.github.com/repos/mundipagg/Magento.Integracao/releases";
+            $ch = curl_init();
+
+            // Header
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+            curl_setopt($ch,CURLOPT_USERAGENT,'Mundipagg');
+            // Set the url, number of POST vars, POST data
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            // Execute post
+            $_response = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                $helperLog->info(curl_error($ch));
+                //Mage::log(curl_error($ch), null, 'Uecommerce_Mundipagg.log');
+            }
+            $response = (json_decode($_response));
+            return str_replace("v", "",$response[0]->tag_name);
+
+        }
+
+        
 
 }

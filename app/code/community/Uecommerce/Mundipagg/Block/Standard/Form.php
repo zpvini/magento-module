@@ -76,7 +76,7 @@ class Uecommerce_Mundipagg_Block_Standard_Form extends Mage_Payment_Block_Form
         if ($session->isLoggedIn()) {
             $quote = Mage::getSingleton('adminhtml/session_quote')->getQuote();
         } else {
-            $quote =(Mage::getModel('checkout/type_onepage') !== false)? Mage::getModel('checkout/type_onepage')->getQuote(): Mage::getModel('checkout/session')->getQuote();;
+            $quote =(Mage::getModel('checkout/type_onepage') !== false)? Mage::getModel('checkout/type_onepage')->getQuote(): Mage::getModel('checkout/session')->getQuote();
         }
 
         $quote->setMundipaggInterest(0.0);
