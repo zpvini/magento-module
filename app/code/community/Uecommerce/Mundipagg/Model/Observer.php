@@ -417,7 +417,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         
         public function checkModuleVersion()
         {
-            Mage::log("TESTE 3 ", Zend_Log::ALERT, "test");
             $localModuleVersion = $this->readModuleVersion();
             $repoVersion = $this->getRepoVersion();
             if(version_compare($localModuleVersion, $repoVersion, "<") == 1){
@@ -469,13 +468,10 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 
             if (curl_errno($ch)) {
                 $helperLog->info(curl_error($ch));
-                //Mage::log(curl_error($ch), null, 'Uecommerce_Mundipagg.log');
             }
             $response = (json_decode($_response));
             return str_replace("v", "",$response[0]->tag_name);
 
         }
-
-        
 
 }

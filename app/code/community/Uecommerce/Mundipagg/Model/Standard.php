@@ -2328,7 +2328,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 				);
 			}
 
-			$teste = $order->getPayment();
 			$order->getPayment()->save();
 
 //			$this->replaceNotAuthorizedCcInfo($txns[0], $order->getPayment());
