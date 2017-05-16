@@ -1989,6 +1989,31 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	}
 
 	/**
+	 * Cancel order or not if is in offline retry time
+	 *
+	 * @author Ruan Azevedo <razevedo@mundipagg.com>
+	 * @since 2016-06-21
+	 * @param string $orderIncrementId
+	 */
+	private function offlineRetryCancelOrSuccessOrder($orderIncrementId) {
+		$offlineRetryIsEnabled = Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled();
+		$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+		$logLabel = "Order #{$orderIncrementId}";
+
+		if ($offlineRetryIsEnabled) {
+                    $api = new Uecommerce_Mundipagg_Model_Api();
+                    $message = "{$logLabel} | payment not authorized but order is in offline retry yet, not cancel.";
+                    $helperLog->info($message);
+                    Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
+                    
+                }else{
+			$helperLog->info("{$logLabel} | Payment not authorized and store don't have offline retry, order will be canceled.");
+			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
+			return;
+		}
+	}
+
+	/**
 	 * @param Mage_Sales_Model_Order $order
 	 * @throws Exception
 	 */
