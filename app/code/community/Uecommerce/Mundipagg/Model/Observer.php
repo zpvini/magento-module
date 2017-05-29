@@ -122,17 +122,19 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 	public function sessionUpdate($observer) {
 		$action = $observer['controller_action']->getFullActionName();
 
-		if (
-			$action != 'mundipagg_standard_redirect'
-			&& $action != 'mundipagg_standard_installments'
-			&& $action != 'mundipagg_standard_installmentsandinterest'
-			&& $action != 'mundipagg_standard_partial'
-			&& $action != 'mundipagg_standard_partialPost'
-			&& $action != 'mundipagg_standard_success'
-		) {
-			Mage::getSingleton('checkout/session')->unsetData('approval_request_success');
-			Mage::getSingleton('checkout/session')->unsetData('authorized_amount');
-		}
+        if (Mage::getStoreConfig('payment/mundipagg_standard/overwrite_magento_flags')) {
+		    if (
+			    $action != 'mundipagg_standard_redirect'
+			    && $action != 'mundipagg_standard_installments'
+			    && $action != 'mundipagg_standard_installmentsandinterest'
+			    && $action != 'mundipagg_standard_partial'
+			    && $action != 'mundipagg_standard_partialPost'
+			    && $action != 'mundipagg_standard_success'
+		    ) {
+			    Mage::getSingleton('checkout/session')->unsetData('approval_request_success');
+			    Mage::getSingleton('checkout/session')->unsetData('authorized_amount');
+		    }
+        }
 	}
 
 	/**
