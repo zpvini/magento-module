@@ -154,11 +154,6 @@
                     <order_creditmemo_totals>Uecommerce_Mundipagg_Block_Sales_Order_Creditmemo_Totals</order_creditmemo_totals>
                 </rewrite>
             </sales>
-            <checkout>
-                <rewrite>
-                    <onepage_payment_methods>Uecommerce_Mundipagg_Block_Checkout_Onepage_Payment_Methods</onepage_payment_methods>
-                </rewrite>
-            </checkout>
         </blocks>
 
         <helpers>
