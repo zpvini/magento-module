@@ -307,6 +307,7 @@
                 <antifraud_minimum_fcontrol>0.00</antifraud_minimum_fcontrol>
                 <antifraud_minimum_stone>0.00</antifraud_minimum_stone>
                 <integration_timeout_limit>30</integration_timeout_limit>
+                <overwrite_magento_flags>1</overwrite_magento_flags>
             </mundipagg_standard>
             <mundipagg_creditcardoneinstallment>
                 <model>mundipagg/creditcardoneinstallment</model>
