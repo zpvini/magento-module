@@ -5,6 +5,7 @@ https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html
 
 ## System requirements ##
 PHP 5.4
+Magento 1.9.3.x
 
 ## Installation with modgit ##
 modgit: https://github.com/jreinke/modgit
