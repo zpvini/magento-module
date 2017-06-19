@@ -84,8 +84,6 @@ class Uecommerce_Mundipagg_Block_Info extends Mage_Payment_Block_Info {
 	}
 
 	public function getInstallmentsNumber($ccQty, $ccPos) {
-        echo '<pre>';
-
 		if ($ccQty == 1) {
 			$installments = $this
                 ->getInfo()
