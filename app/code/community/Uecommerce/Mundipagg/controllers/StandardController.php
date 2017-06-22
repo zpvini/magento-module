@@ -209,6 +209,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 			} catch (Exception $e) {
 				$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 				$log->error($e->getMessage());
+                $log->info("Current order status: " . $order->getStatusLabel());
 			}
 
 			$approvalRequestSuccess = 'success';
