@@ -1380,6 +1380,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$returnMessage = "OK | #{$orderReference} | {$transactionKey} | ";
 						$returnMessage .= "Can't capture transaction: {$errMsg}";
 						$helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						return $returnMessage;
 					}
@@ -1387,6 +1388,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					if ($return instanceof Mage_Sales_Model_Order_Invoice) {
 						$returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
 						$helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						return $returnMessage;
 					}
@@ -1394,6 +1396,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					if ($return === self::TRANSACTION_CAPTURED) {
 						$returnMessage = "OK | #{$orderReference} | {$transactionKey} | Transaction captured.";
 						$helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						return $returnMessage;
 					}
@@ -1403,6 +1406,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$returnMessage .= $return;
 
 					$helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 					return $returnMessage;
 					break;
@@ -1412,12 +1416,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					if ($order->canUnhold()) {
 						$order->unhold();
 						$helperLog->info("{$returnMessageLabel} | unholded.");
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 					}
 
 					if (!$order->canInvoice()) {
 						$returnMessage = "OK | {$returnMessageLabel} | Can't create invoice. Transaction status '{$status}' processed.";
 
 						$helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						return $returnMessage;
 					}
@@ -1463,6 +1469,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 							$returnMessage .= "Transaction status '{$status}' received.";
 
 							$helperLog->info($returnMessage);
+                            $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 							return $returnMessage;
 						}
@@ -1478,6 +1485,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$returnMessage = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
 
 					$helperLog->error($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 					return "KO | {$returnMessage}";
 
@@ -1497,6 +1505,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					$returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' processed. Order status updated.";
 					$helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 					return $returnMessage;
 
@@ -1512,6 +1521,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					if (sprintf($amountInCents) != sprintf($grandTotalInCents)) {
 						$returnMessage = "OK | {$returnMessageLabel} | Order grand_total not equal to transaction AmountInCents";
 						$helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						return $returnMessage;
 					}
@@ -1525,12 +1535,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					} catch (Exception $e) {
 						$returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
 						$helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						return $returnMessage;
 					}
 
 					$returnMessage = "OK | {$returnMessageLabel} | Order canceled: total amount not authorized";
 					$helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 					return $returnMessage;
 					break;
@@ -1576,6 +1588,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						// Cancel order
 						$order->cancel()->save();
 						$helperLog->info("{$returnMessageLabel} | Order canceled.");
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						// Return
 						$success = true;
@@ -1584,6 +1597,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					if ($success) {
 						$returnMessage = "{$returnMessageLabel} | Order status '{$status}' processed.";
 						$helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						return "OK | {$returnMessage}";
 
@@ -1591,6 +1605,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$returnMessage = "{$returnMessageLabel} | Unable to process transaction status '{$status}'.";
 
 						$helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 						return "KO | {$returnMessage}";
 					}
@@ -1598,9 +1613,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					break;
 
 				case 'authorizedpendingcapture':
-					$returnMessage = "OK | Order #{$order->getIncrementId()} | Transaction status '{$status}' received.";
+					$returnMessage = "OK | Order #{$order->getIncrementId()} | Transaction status '{$status}' received from post notification.";
 
 					$helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 					return $returnMessage;
 					break;
@@ -1615,6 +1631,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					}
 
 					$helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 					return $returnMessage;
 
