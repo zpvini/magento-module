@@ -52,34 +52,6 @@ class Uecommerce_Mundipagg_Model_Debit extends Uecommerce_Mundipagg_Model_Standa
     protected $_allowCurrencyCode = array('BRL', 'USD', 'EUR');
     protected $_isInitializeNeeded = true;
 
-    public function __construct()
-    {
-        $standard = Mage::getModel('mundipagg/standard');
-
-        switch ($standard->getEnvironment())
-        {
-            case 'localhost':
-            case 'development':
-            case 'staging':
-            default:
-                $this->setmerchantKey(trim($standard->getConfigData('merchantKeyStaging')));
-                $this->setUrl(trim($this->getConfigData('apiDebitStagingUrl')));
-                $this->setPaymentMethodCode(1);
-                $this->setDebug($standard->getConfigData('debug'));
-                $this->setEnvironment($standard->getConfigData('environment'));
-                $this->setDebitTypes($this->getConfigData('debit_types'));
-                break;
-
-            case 'production':
-                $this->setmerchantKey(trim($standard->getConfigData('merchantKeyProduction')));
-                $this->setUrl(trim($this->getConfigData('apiDebitUrl')));
-                $this->setDebug($standard->getConfigData('debug'));
-                $this->setEnvironment($standard->getConfigData('environment'));
-                $this->setDebitTypes($this->getConfigData('debit_types'));
-                break;
-        }
-    }
-
     /**
      * Armazena as informações passadas via formulário no frontend
      * @access public
