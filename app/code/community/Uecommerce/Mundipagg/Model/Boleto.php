@@ -52,43 +52,20 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
     protected $_allowCurrencyCode = array('BRL', 'USD', 'EUR');
     protected $_isInitializeNeeded = true;
 
-    public function __construct()
+    public function __construct($Store = null)
     {
-        $standard = Mage::getModel('mundipagg/standard');
+        if (!($Store instanceof Mage_Core_Model_Store)) {
+            $Store = null;
+        }
+        parent::__construct($Store);
         
-        $validadeBoleto = $this->getConfigData('dias_validade_boleto');
+        $validadeBoleto = $this->getConfigData('dias_validade_boleto', $Store);
         
         if(empty($validadeBoleto) || $validadeBoleto == ' ' || is_null($validadeBoleto) || $validadeBoleto == ''){
             $validadeBoleto = '3';
         }
-
-        switch ($standard->getEnvironment())
-        {
-            case 'localhost':
-            case 'development':
-            case 'staging':
-            default:
-                $this->setmerchantKey(trim($standard->getConfigData('merchantKeyStaging')));
-                $this->setUrl(trim($standard->getConfigData('apiUrlStaging')));
-                $this->setAntiFraud($standard->getConfigData('antifraud'));
-                $this->setPaymentMethodCode(1);
-                $this->setBankNumber(341);
-                $this->setDebug($standard->getConfigData('debug'));
-                $this->setDiasValidadeBoleto(trim($validadeBoleto));
-                $this->setInstrucoesCaixa(trim($this->getConfigData('instrucoes_caixa')));
-                $this->setEnvironment($standard->getConfigData('environment'));
-                break;
-
-            case 'production':
-                $this->setmerchantKey(trim($standard->getConfigData('merchantKeyProduction')));
-                $this->setUrl(trim($standard->getConfigData('apiUrlProduction')));
-                $this->setAntiFraud($standard->getConfigData('antifraud'));
-                $this->setDebug($standard->getConfigData('debug'));
-                $this->setDiasValidadeBoleto(trim($validadeBoleto));
-                $this->setInstrucoesCaixa(trim($this->getConfigData('instrucoes_caixa')));
-                $this->setEnvironment($standard->getConfigData('environment'));
-                break;
-        }
+        $this->setDiasValidadeBoleto(trim($validadeBoleto));
+        $this->setInstrucoesCaixa(trim($this->getConfigData('instrucoes_caixa', $Store)));
     }
 
     /**

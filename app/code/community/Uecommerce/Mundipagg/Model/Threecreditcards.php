@@ -52,43 +52,6 @@ class Uecommerce_Mundipagg_Model_Threecreditcards extends Uecommerce_Mundipagg_M
     protected $_allowCurrencyCode = array('BRL', 'USD', 'EUR');
     protected $_isInitializeNeeded = true;
 
-    public function __construct()
-    {
-        $standard = Mage::getModel('mundipagg/standard');
-
-        switch ($standard->getEnvironment())
-        {
-            case 'localhost':
-            case 'development':
-            case 'staging':
-            default:
-                $this->setmerchantKey(trim($standard->getConfigData('merchantKeyStaging')));
-                $this->setUrl(trim($standard->getConfigData('apiUrlStaging')));
-                $this->setAntiFraud($standard->getConfigData('antifraud'));
-                $this->setPaymentMethodCode(1);
-                $this->setBankNumber(341);
-                $this->setParcelamento($standard->getConfigData('parcelamento'));
-                $this->setParcelamentoMax($standard->getConfigData('parcelamento_max'));
-                $this->setPaymentAction($standard->getConfigData('payment_action'));
-                $this->setDebug($standard->getConfigData('debug'));
-                $this->setEnvironment($standard->getConfigData('environment'));
-                $this->setCieloSku($standard->getConfigData('cielo_sku'));
-                break;
-
-            case 'production':
-                $this->setmerchantKey(trim($standard->getConfigData('merchantKeyProduction')));
-                $this->setUrl(trim($standard->getConfigData('apiUrlProduction')));
-                $this->setAntiFraud($standard->getConfigData('antifraud'));
-                $this->setParcelamento($standard->getConfigData('parcelamento'));
-                $this->setParcelamentoMax($standard->getConfigData('parcelamento_max'));
-                $this->setPaymentAction($standard->getConfigData('payment_action'));
-                $this->setDebug($standard->getConfigData('debug'));
-                $this->setEnvironment($standard->getConfigData('environment'));
-                $this->setCieloSku($standard->getConfigData('cielo_sku'));
-                break;
-        }
-    }
-
     /**
      * Armazena as informações passadas via formulário no frontend
      * @access public
