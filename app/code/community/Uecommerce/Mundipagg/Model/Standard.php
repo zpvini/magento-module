@@ -173,38 +173,48 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		return $this->cieloSku;
 	}
 
-	public function __construct() {
-		$this->setEnvironment($this->getConfigData('environment'));
-		$this->setPaymentAction($this->getConfigData('payment_action'));
-
-		switch ($this->getConfigData('environment')) {
+	public function __construct($Store = null) {
+		if (!($Store instanceof Mage_Core_Model_Store)) {
+			$Store = null;
+		}
+		$this->setEnvironment($this->getConfigData('environment', $Store));
+		switch ($this->getEnvironment()) {
 			case 'localhost':
 			case 'development':
 			case 'staging':
 			default:
-				$this->setmerchantKey(trim($this->getConfigData('merchantKeyStaging')));
-				$this->setUrl(trim($this->getConfigData('apiUrlStaging')));
-				$this->setAntiFraud($this->getConfigData('antifraud'));
+				$environment = 'Staging';
 				$this->setPaymentMethodCode(1);
 				$this->setBankNumber(341);
-				$this->setParcelamento($this->getConfigData('parcelamento'));
-				$this->setParcelamentoMax($this->getConfigData('parcelamento_max'));
-				$this->setDebug($this->getConfigData('debug'));
-				$this->setEnvironment($this->getConfigData('environment'));
-				$this->setCieloSku($this->getConfigData('cielo_sku'));
 				break;
-
 			case 'production':
-				$this->setmerchantKey(trim($this->getConfigData('merchantKeyProduction')));
-				$this->setUrl(trim($this->getConfigData('apiUrlProduction')));
-				$this->setAntiFraud($this->getConfigData('antifraud'));
-				$this->setParcelamento($this->getConfigData('parcelamento'));
-				$this->setParcelamentoMax($this->getConfigData('parcelamento_max'));
-				$this->setDebug($this->getConfigData('debug'));
-				$this->setEnvironment($this->getConfigData('environment'));
-				$this->setCieloSku($this->getConfigData('cielo_sku'));
+				$environment = 'Production';
 				break;
 		}
+		$this->setmerchantKey(trim($this->getConfigData('merchantKey'.$environment, $Store)));
+		$this->setUrl(trim($this->getConfigData('apiUrl'.$environment, $Store)));
+		$this->setPaymentAction($this->getConfigData('payment_action', $Store));
+		$this->setAntiFraud($this->getConfigData('antifraud', $Store));
+		$this->setParcelamento($this->getConfigData('parcelamento', $Store));
+		$this->setParcelamentoMax($this->getConfigData('parcelamento_max', $Store));
+		$this->setDebug($this->getConfigData('debug', $Store));
+		$this->setEnvironment($this->getConfigData('environment', $Store));
+		$this->setCieloSku($this->getConfigData('cielo_sku', $Store));
+	}
+
+	public function getConfigData($field, $storeId = null)
+	{
+	    if (null === $storeId) {
+	        $storeId = $this->getStore();
+	    }
+	    $code = $this->getCode();
+	    $path = 'payment/'.$code.'/'.$field;
+	    $data = Mage::getStoreConfig($path, $storeId);
+	    if(!$data && $code != 'mundipagg_standard') {
+	        $path = 'payment/mundipagg_standard/'.$field;
+	        $data = Mage::getStoreConfig($path, $storeId);
+	    }
+	    return $data;
 	}
 
 	/**

@@ -63,7 +63,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 	}
 
 	private function cancelOrderViaApi(Mage_Sales_Model_Order $order) {
-		$standard = new Uecommerce_Mundipagg_Model_Standard();
+	    $standard = new Uecommerce_Mundipagg_Model_Standard($order->getStore());
 
 		if($standard->getCanceledByNotificationFlag($order)){
 			return;
@@ -87,7 +87,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		}
 
 		$logHelper = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-		$api = new Uecommerce_Mundipagg_Model_Api();
+		$api = new Uecommerce_Mundipagg_Model_Api($order->getStore());
 		$url = "{$this->getUrl()}/Cancel";
 
 		$incrementId = $order->getIncrementId();

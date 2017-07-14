@@ -52,34 +52,27 @@ class Uecommerce_Mundipagg_Model_Debit extends Uecommerce_Mundipagg_Model_Standa
     protected $_allowCurrencyCode = array('BRL', 'USD', 'EUR');
     protected $_isInitializeNeeded = true;
 
-    public function __construct()
+    public function __construct($Store = null)
     {
-        $standard = Mage::getModel('mundipagg/standard');
-
-        switch ($standard->getEnvironment())
-        {
+        if (!($Store instanceof Mage_Core_Model_Store)) {
+            $Store = null;
+        }
+        parent::__construct($Store);
+        switch ($this->getEnvironment()) {
             case 'localhost':
             case 'development':
             case 'staging':
             default:
-                $this->setmerchantKey(trim($standard->getConfigData('merchantKeyStaging')));
-                $this->setUrl(trim($this->getConfigData('apiDebitStagingUrl')));
-                $this->setPaymentMethodCode(1);
-                $this->setDebug($standard->getConfigData('debug'));
-                $this->setEnvironment($standard->getConfigData('environment'));
-                $this->setDebitTypes($this->getConfigData('debit_types'));
+                $environment = 'Staging';
                 break;
-
             case 'production':
-                $this->setmerchantKey(trim($standard->getConfigData('merchantKeyProduction')));
-                $this->setUrl(trim($this->getConfigData('apiDebitUrl')));
-                $this->setDebug($standard->getConfigData('debug'));
-                $this->setEnvironment($standard->getConfigData('environment'));
-                $this->setDebitTypes($this->getConfigData('debit_types'));
+                $environment = 'Production';
                 break;
         }
+        $this->setUrl(trim($this->getConfigData('apiDebit'.$environment.'Url', $Store)));
+        $this->setDebitTypes($this->getConfigData('debit_types', $Store));
     }
-
+    
     /**
      * Armazena as informações passadas via formulário no frontend
      * @access public
@@ -113,10 +106,5 @@ class Uecommerce_Mundipagg_Model_Debit extends Uecommerce_Mundipagg_Model_Standa
         $order = $payment->getOrder();
 
         parent::order($payment, $order->getBaseTotalDue());
-    }
-
-    public function getConfigData($key, $storeId = null)
-    {
-        return Mage::getStoreConfig('payment/mundipagg_debit/' . $key, $storeId);
     }
 }
