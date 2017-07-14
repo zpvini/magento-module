@@ -174,25 +174,25 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 	}
 
 	public function __construct($Store = null) {
-	    if (!($Store instanceof Mage_Core_Model_Store)) {
-	        $Store = null;
-	    }
-	    $this->setEnvironment($this->getConfigData('environment', $Store));
-	    switch ($this->getEnvironment()) {
+		if (!($Store instanceof Mage_Core_Model_Store)) {
+			$Store = null;
+		}
+		$this->setEnvironment($this->getConfigData('environment', $Store));
+		switch ($this->getEnvironment()) {
 			case 'localhost':
 			case 'development':
 			case 'staging':
 			default:
-			    $environment = 'Staging';
-			    $this->setPaymentMethodCode(1);
-			    $this->setBankNumber(341);
-			    break;
-			case 'production':
-			    $environment = 'Production';
+				$environment = 'Staging';
+				$this->setPaymentMethodCode(1);
+				$this->setBankNumber(341);
 				break;
-	    }
-	    $this->setmerchantKey(trim($this->getConfigData('merchantKey'.$environment, $Store)));
-	    $this->setUrl(trim($this->getConfigData('apiUrl'.$environment, $Store)));
+			case 'production':
+				$environment = 'Production';
+				break;
+		}
+		$this->setmerchantKey(trim($this->getConfigData('merchantKey'.$environment, $Store)));
+		$this->setUrl(trim($this->getConfigData('apiUrl'.$environment, $Store)));
 		$this->setPaymentAction($this->getConfigData('payment_action', $Store));
 		$this->setAntiFraud($this->getConfigData('antifraud', $Store));
 		$this->setParcelamento($this->getConfigData('parcelamento', $Store));
@@ -200,6 +200,21 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 		$this->setDebug($this->getConfigData('debug', $Store));
 		$this->setEnvironment($this->getConfigData('environment', $Store));
 		$this->setCieloSku($this->getConfigData('cielo_sku', $Store));
+	}
+
+	public function getConfigData($field, $storeId = null)
+	{
+	    if (null === $storeId) {
+	        $storeId = $this->getStore();
+	    }
+	    $code = $this->getCode();
+	    $path = 'payment/'.$code.'/'.$field;
+	    $data = Mage::getStoreConfig($path, $storeId);
+	    if(!$data && $code != 'mundipagg_standard') {
+	        $path = 'payment/mundipagg_standard/'.$field;
+	        $data = Mage::getStoreConfig($path, $storeId);
+	    }
+	    return $data;
 	}
 
 	/**
