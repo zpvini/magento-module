@@ -42,7 +42,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	private $debugEnabled;
 	private $moduleVersion;
 
-	public function __construct($Store) {
+	public function __construct($Store = null) {
 		$this->helperUtil = new Uecommerce_Mundipagg_Helper_Util();
 		$this->modelStandard = new Uecommerce_Mundipagg_Model_Standard($Store);
 		$this->moduleVersion = Mage::helper('mundipagg')->getExtensionVersion();
