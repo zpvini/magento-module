@@ -25,7 +25,7 @@
                     <element name="cc_ss_issue" type="xsd:string" minOccurs="0"/>
                     <element name="po_number" type="xsd:string" minOccurs="0"/>
                     <element name="additional_data" type="xsd:string" minOccurs="0"/>
-                    <element name="additional_information" type="xsd:string" minOccurs="0"/>
+                    <element name="additional_information" type="typens:ArrayOfString" minOccurs="0"/>
                     <element name="mundipagg_type" type="xsd:string" minOccurs="0"/>
                     <element name="mundipagg_creditcard_cc_holder_name_1_1" type="xsd:string" minOccurs="0"/>
                     <element name="mundipagg_creditcard_1_1_cc_number" type="xsd:string" minOccurs="0"/>
