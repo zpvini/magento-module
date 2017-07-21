@@ -203,9 +203,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 				case 'mundipagg_debit':
 				case 'mundipagg_creditcardoneinstallment':
 				case 'mundipagg_twocreditcards':
-				case 'mundipagg_threecreditcards':
-				case 'mundipagg_fourcreditcards':
-				case 'mundipagg_fivecreditcards':
 					$result->isAvailable = false;
 					break;
 				case 'mundipagg_creditcard':
