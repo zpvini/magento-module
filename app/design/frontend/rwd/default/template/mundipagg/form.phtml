@@ -1,34 +1,4 @@
 <?php
-/**
- * Uecommerce
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Uecommerce EULA.
- * It is also available through the world-wide-web at this URL:
- * http://www.uecommerce.com.br/
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade the extension
- * to newer versions in the future. If you wish to customize the extension
- * for your needs please refer to http://www.uecommerce.com.br/ for more information
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
- * @license    http://www.uecommerce.com.br/
- */
-
-/**
- * Mundipagg Payment module
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @author     Uecommerce Dev Team
- */
-//Return Standard model
-/* @var Uecommerce_Mundipagg_Block_Standard_Form $standard */
 $standard = $this->getStandard();
 
 // Get Quote
@@ -78,7 +48,6 @@ $countCcs = count($ccs);
 $_code = $this->getMethodCode();
 ?>
 
-
 <ul id="payment_form_<?php echo $_code ?>" style="display:none;">
     <div>
         <input type="hidden" id="baseGrandTotal" name="baseGrandTotal"
@@ -111,23 +80,12 @@ $_code = $this->getMethodCode();
 			$paymentMethodLabel = $this->__('Pay with 2 Credit Cards');
 			break;
 
-		case 'mundipagg_threecreditcards':
-			$num = 3;
-			$paymentMethod = '3CreditCards';
-			$paymentMethodLabel = $this->__('Pay with 3 Credit Cards');
+		case 'mundipagg_recurrencepayment':
+			$num = 1;
+			$paymentMethod = '1CreditCards';
+			$paymentMethodLabel = $this->__('Credit Card');
 			break;
 
-		case 'mundipagg_fourcreditcards':
-			$num = 4;
-			$paymentMethod = '4CreditCards';
-			$paymentMethodLabel = $this->__('Pay with 4 Credit Cards');
-			break;
-
-		case 'mundipagg_fivecreditcards':
-			$num = 5;
-			$paymentMethod = '5CreditCards';
-			$paymentMethodLabel = $this->__('Pay with 5 Credit Cards');
-			break;
 	endswitch;
 	?>
     <li>
@@ -140,7 +98,13 @@ $_code = $this->getMethodCode();
                 </div>
                 <p></p>
 			<?php endif ?>
-			<?php if ($_code == 'mundipagg_creditcardoneinstallment' || $_code == 'mundipagg_creditcard' || $_code == 'mundipagg_twocreditcards' || $_code == 'mundipagg_threecreditcards' || $_code == 'mundipagg_fourcreditcards' || $_code == 'mundipagg_fivecreditcards'): ?>
+			<?php 
+                if (
+                    $_code == 'mundipagg_creditcardoneinstallment' ||
+                    $_code == 'mundipagg_creditcard' ||
+                    $_code == 'mundipagg_twocreditcards' ||
+                    $_code == 'mundipagg_recurrencepayment'
+                ): ?>
                 <ul>
 					<?php for ($c = 1; $c <= $num; $c++): ?>
                         <input type="hidden" id="mundipagg_type" name="payment[mundipagg_type]"
