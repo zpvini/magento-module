@@ -1071,16 +1071,21 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$data['customer_id'] = $order->getCustomerId();
 			$data['address_id'] = $order->getBillingAddress()->getCustomerAddressId();
 			$data['payment_method'] = isset($postData['payment']['method']) ? $postData['payment']['method'] : $mundipaggData['method'];
-			$type = $data['payment_method'];
+            $method = $data['payment_method'];
 
 			// 1 or more Credit Cards Payment
-			if ($data['payment_method'] != 'mundipagg_boleto' && $data['payment_method'] != 'mundipagg_debit') {
-				$num = $helper->getCreditCardsNumber($type);
-				$method = $helper->getPaymentMethod($num);
+			if (
+                $method != 'mundipagg_boleto' &&
+                $method != 'mundipagg_debit'
+            ) {
+				$num = $helper->getCreditCardsNumber($method);
 
 				if ($num == 0) {
 					$num = 1;
 				}
+                if ($num > 1) {
+                    $method = $helper->getPaymentMethod($num);
+                }
 
 				for ($i = 1; $i <= $num; $i++) {
 					// New Credit Card
@@ -1291,7 +1296,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
 			// Get approval request from gateway
-			switch ($type) {
+			switch ($method) {
 				case 'mundipagg_boleto':
 					$approvalRequest = $api->boletoTransaction($order, $data, $this);
 					break;
@@ -1300,7 +1305,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					$approvalRequest = $api->debitTransaction($order, $data, $this);
 					break;
 
-				case $type:
+				case $method:
 					$approvalRequest = $api->creditCardTransaction($order, $data, $this);
 					break;
 

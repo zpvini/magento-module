@@ -2,7 +2,7 @@
 
 class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_Model_Standard
 {
-    /**
+   /**
      * Availability options
      */
     protected $_code = 'mundipagg_recurrencepayment';
@@ -33,38 +33,27 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
     public function assignData($data)
     {
         $info = $this->getInfoInstance();
+
+        // Reset interests first
         $this->resetInterest($info);
 
-        parent::assignData($data);
-
-        $cctype1 = $data[$this->_code.'_1_1_cc_type'];
-
-        if (isset($data[$this->_code.'_token_1_1']) && $data[$this->_code.'_token_1_1'] != 'new') {
-            $parcelsNumber1 = $data[$this->_code.'_credito_parcelamento_1_1'];
+        $cctype = $data[$this->_code.'_1_1_cc_type'];
+        $parcelsNumber = 1;
+        if (
+            isset($data[$this->_code.'_token_1_1']) &&
+            $data[$this->_code.'_token_1_1'] != 'new'
+        ) {
             $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($data[$this->_code.'_token_1_1']);
-            $cctype1 = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cardonFile->getCcType());
-            $value1 = $data[$this->_code.'_value_1_1'];
-        } else {
-            $parcelsNumber1 = $data[$this->_code.'_new_credito_parcelamento_1_1'];
-            $value1 = $data[$this->_code.'_new_value_1_1'];
+            $cctype = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cardonFile->getCcType());
         }
 
-
-        $interest = 0;
+        /**
+         * @var $interest Uecommerce_Mundipagg_Helper_Installments
+         */
+        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber , $cctype);
         $interestInformation = array();
-
-        if(Mage::app()->getRequest()->getActionName() == 'partialPost'){
-            $keyCode = $this->_code.'_partial';
-            $interestInformation = $info->getAdditionalInformation('mundipagg_interest_information');
-        }else{
-            $keyCode = $this->_code;
-        }
-
-        if($cctype1) {
-            $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber1 , $cctype1, $value1);
-            $interestInformation[$keyCode.'_1_1'] = new Varien_Object();
-            $interestInformation[$keyCode.'_1_1']->setInterest(str_replace(',','.',$interest))->setValue(str_replace(',','.',$value1));
-        }
+        $interestInformation[$this->_code.'_1_1'] = new Varien_Object();
+        $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',','.',$interest));
 
         if ($interest > 0) {
             $info->setAdditionalInformation('mundipagg_interest_information', array());
@@ -76,7 +65,7 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
             $this->resetInterest($info);
         }
 
-        return $this;
+        parent::assignData($data);
     }
 
     /**
@@ -97,11 +86,47 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
      */
     public function initialize($paymentAction, $stateObject)
     {
-        $this->setCreditCardOperationEnum('AuthAndCapture');
+        $standard = Mage::getModel('mundipagg/standard');
+
+        switch($standard->getConfigData('payment_action')) {
+            case 'order':
+                $this->setCreditCardOperationEnum('AuthAndCapture');
+
+                $paymentAction = $orderAction = 'order';
+                break;
+
+            case 'authorize':
+                $this->setCreditCardOperationEnum('AuthOnly');
+
+                $paymentAction = $orderAction = 'authorize';
+                break;
+
+            case 'authorize_capture':
+                $this->setCreditCardOperationEnum('AuthAndCaptureWithDelay');
+
+                $paymentAction = $orderAction = 'authorize_capture';
+                break;
+        }
 
         $payment = $this->getInfoInstance();
         $order = $payment->getOrder();
 
-        parent::authorize($payment, $order->getBaseTotalDue());
+        switch ($paymentAction) {
+            case Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE:
+                parent::authorize($payment, $order->getBaseTotalDue());
+                break;
+
+            case Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE_CAPTURE:
+                parent::authorize($payment, $order->getBaseTotalDue());
+                break;
+
+            case $orderAction:
+                parent::order($payment, $order->getBaseTotalDue());
+                break;
+
+            default:
+                parent::order($payment, $order->getBaseTotalDue());
+                break;
+        }
     }
 }
