@@ -110,6 +110,14 @@ class Uecommerce_Mundipagg_Block_Standard_Partial extends Mage_Checkout_Block_On
     {
         return Mage::getModel('mundipagg/fivecreditcards');
     }
+    
+    /**
+     * Return recurrence payment model
+     */
+    public function getRecurrencePayment()
+    {
+        return Mage::getModel('mundipagg/recurrencepayment');
+    }
 
     /**
     * Get last quote that is in session

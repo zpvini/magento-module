@@ -2321,6 +2321,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 					$standard = Mage::getModel('mundipagg/fivecreditcards');
 					break;
 
+				case 'mundipagg_recurrencepayment':
+					$standard = Mage::getModel('mundipagg/recurrencepayment');
+					break;
+
 				default:
 					return 'mundipagg/standard/partial';
 					break;
