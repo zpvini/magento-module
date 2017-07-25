@@ -13,7 +13,6 @@ if ($quote->isVirtual()) {
 	$data = $quote->getShippingAddress();
 }
 
-
 // Partial payment?
 $isPartial = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
 
@@ -54,6 +53,45 @@ $countCcs = count($ccs);
 
 // Payment method
 $_code = $this->getMethodCode();
+
+
+$cart = Mage::getSingleton('checkout/cart');
+$cartQuote = $cart->getQuote();
+
+$items = $cartQuote->getAllItems();
+$recurrent = false;
+foreach ($items as $item) {
+
+    foreach ($item->getOptions() as $option) {
+        $product = $option->getProduct();
+        $product->load($product->getId());
+
+        if ($product->getMundipaggRecurrent()) {
+            $recurrent = true;
+            $frequency = $product->getMundipaggFrequencyEnum();
+            $interval = $product->getMundipaggRecurrences();
+        }
+    }
+}
+
+$frequencyType = [
+  "Daily"  => 'Day',
+  "Weekly"  => 'Week',
+  "Monthly"  => 'Month',
+];
+
+if ($recurrent) {
+    $recurrenceTotalString =
+        $this->__('Total') . ": " .
+        $currencySymbol .
+        number_format($baseGrandTotal, "2", ",", ".") .
+        "/".
+        strtolower($this->__($frequencyType[$frequency])) . " " .
+        $this->__('by') . " " .
+        $interval . " " .
+        $this->__(strtolower($frequencyType[$frequency] . "s"))
+        ;
+}
 ?>
 
 <ul id="payment_form_<?php echo $_code ?>" style="display:none;">
@@ -95,14 +133,22 @@ $_code = $this->getMethodCode();
 			break;
 
 	endswitch;
+
+
+    echo "<pre>";
+		/* @var Mage_Sales_Model_Quote $quote */
+
+    echo "</pre>";
+
+
 	?>
     <li>
         <div id="<?php echo $_code; ?>">
 			<?php if ($num != 1 && $isPartial != 'partial'): ?>
                 <p></p>
                 <div>
-                    <b><?php echo $this->__('Grand Total') ?>
-                        :</b> <?php echo $currencySymbol . number_format($baseGrandTotal, "2", ",", "."); ?>
+                    <b><?php echo $this->__('Grand Total') ?>:</b>
+                        <?php echo $currencySymbol . number_format($baseGrandTotal, "2", ",", "."); ?>
                 </div>
                 <p></p>
 			<?php endif ?>
@@ -191,12 +237,16 @@ $_code = $this->getMethodCode();
                                 </div>
 				<?php endif; ?>
 				<?php 
-                    if ($installmentsHelper->isInstallmentsEnabled() &&
-                        $_code != 'mundipagg_creditcardoneinstallment'):
+                    if (
+                        $installmentsHelper->isInstallmentsEnabled() &&
+                        $_code != 'mundipagg_creditcardoneinstallment' &&
+                        $_code != 'mundipagg_recurrencepayment'
+                       ):
                 ?>
                                     <div
                                         id="<?php echo 'parcelamento_' . $num . '_' . $c; ?>"
-                                        <?php if ($countCcs > 1): ?>style="display:none"<?php endif ?>>
+                                        <?php if ($countCcs > 1): ?>style="display:none"<?php endif ?>
+                                   >
                                         <li class="fields" style="margin-bottom: 5px;">
                                             <div class="field">
                                                 <label class="required"><?php echo $this->__('Credit options') ?></label>
@@ -386,7 +436,9 @@ $_code = $this->getMethodCode();
 							<?php endif; ?>
 							<?php
                                 if ($installmentsHelper->isInstallmentsEnabled() &&
-                                    $_code != 'mundipagg_creditcardoneinstallment'):
+                                    $_code != 'mundipagg_creditcardoneinstallment' &&
+                                    $_code != 'mundipagg_recurrencepayment'
+                                ):
                                 ?>
                                 <li style="margin-bottom: 5px;">
                                     <div class="field">
@@ -449,6 +501,13 @@ $_code = $this->getMethodCode();
 								<?php endif; ?>
 							<?php endif; ?>
                         </div>
+                        <?php if ($_code === 'mundipagg_recurrencepayment') { ?>
+                            <li style="margin-bottom: 5px;" class="recurrenceTotal">
+                                <br>
+                                <p><b><?php echo $this->__('Recurrent payment'); ?></b></p>
+                                <p><?php echo $recurrenceTotalString; ?></p>
+                            </li>
+                        <?php } ?>
 					<?php endfor; ?>
                 </ul>
 			<?php endif ?>
