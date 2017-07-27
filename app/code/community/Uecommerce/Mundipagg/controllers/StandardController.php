@@ -191,6 +191,118 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 		$session->clear();
 	}
 
+	// ------------------------------------------------------------
+    private function orderRestAction($orderId)
+    {
+        $order = Mage::getModel('sales/order')->loadByIncrementId($orderId);
+        if (!$order || !$order->getPayment()) {
+            return ['status_code' => 404];
+        }
+
+        return ['message' => $order->getPayment()->getAdditionalInformation()];
+    }
+
+    private function getKeyFromAuthorizationHeader($basicAuth)
+    {
+        /***
+         * @fixme improve this part, few readable lines are better than just an ugly one
+         */
+        return explode(':', base64_decode(explode(' ', $basicAuth)[1]))[0];
+    }
+
+    private function isNotAuthorizedRequest($basicAuth)
+    {
+        if (!$basicAuth) {
+            return true;
+        }
+
+        $basicAuthKey = $this->getKeyFromAuthorizationHeader($basicAuth);
+
+        if ($basicAuthKey !== Mage::getModel('mundipagg/standard')->getMerchantKey()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function wrongRestApiUsage($params)
+    {
+        /***
+         * @fixme validation not working
+         */
+        if (count($params) !== 1) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function manageRestRequest($params)
+    {
+        $endpoint = key($params);
+        $id = $params[$endpoint];
+        $restAction = strtolower($endpoint) . 'RestAction';
+
+        $result = $this->$restAction($id);
+
+        return $result;
+    }
+
+    private function isInvalidRequest()
+    {
+        $endpoint = key($this->getRequest()->getParams()) . 'RestAction';
+
+        if ($this->getRequest()->isPost()) {
+            return ['status_code' => 404];
+        }
+
+        if ($this->isNotAuthorizedRequest(Mage::app()->getRequest()->getHeader('Authorization'))) {
+            return ['status_code' => 401];
+        }
+
+        if ($this->wrongRestApiUsage($this->getRequest()->getParams())) {
+            return ['status_code' => 404];
+        }
+
+        if (!method_exists($this, $endpoint)) {
+            return ['status_code' => 404];
+        }
+
+        return false;
+    }
+
+    public function restAction()
+    {
+        $invalid = $this->isInvalidRequest();
+
+        if ($invalid) {
+            $this->getResponse()
+                ->setHeader('Content-type', 'application/json')
+                ->setHeader('HTTP/1.0', $invalid['status_code'], true);
+            return;
+        }
+
+        try {
+            $result = $this->manageRestRequest($this->getRequest()->getParams());
+        } catch (Exception $e) {
+            $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+            $log->error($e->getMessage());
+        }
+
+        if (isset($result['status_code'])) {
+            $this->getResponse()
+                ->setHeader('Content-type', 'application/json')
+                ->setHeader('HTTP/1.0', $result['status_code'], true);
+            return;
+        }
+
+        $this->getResponse()
+            ->setHeader('Content-type', 'application/json')
+            ->setHeader('HTTP/1.0', $result['status_code'], true)
+            ->setBody(Mage::helper('core')->jsonEncode($result['message']));
+    }
+    // ------------------------------------------------------------
+
 	/**
 	 * Success page (also used for Mundipagg return page for payments like "debit" and "boleto")
 	 */
