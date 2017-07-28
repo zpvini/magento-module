@@ -122,10 +122,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 			switch ($method->getCode()) {
 				case 'mundipagg_creditcardoneinstallment':
 				case 'mundipagg_creditcard':
-//				case 'mundipagg_twocreditcards':
-//				case 'mundipagg_threecreditcards':
-//				case 'mundipagg_fourcreditcards':
-//				case 'mundipagg_fivecreditcards':
 					$active = Mage::getStoreConfig('payment/' . $method->getCode() . '/active');
 
 					if ($active == '1') {
