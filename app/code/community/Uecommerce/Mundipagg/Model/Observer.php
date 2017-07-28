@@ -166,20 +166,32 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$session = Mage::getSingleton('checkout/session');
 		$recurrent = $session->getMundipaggRecurrency();
 
-		if ($recurrent) {
-			$instance = $observer->getMethodInstance();
-			$result = $observer->getResult();
+        $instance = $observer->getMethodInstance();
+        $result = $observer->getResult();
+        $code = $instance->getCode();
 
-			switch ($instance->getCode()) {
+        if ($code === 'mundipagg_recurrencepayment'){
+            $result->isAvailable = false;
+        }
+
+        if ($recurrent) {
+			switch ($code) {
 				case 'mundipagg_boleto':
 				case 'mundipagg_debit':
 				case 'mundipagg_creditcardoneinstallment':
 				case 'mundipagg_twocreditcards':
 					$result->isAvailable = false;
 					break;
-				case 'mundipagg_creditcard':
                 case 'mundipagg_recurrencepayment':
-					$result->isAvailable = true;
+                    $result->isAvailable = true;
+                    break;
+				case 'mundipagg_creditcard':
+
+                    if (!$this->checkRecurrenceMix($session->getQuote())){
+                        $result->isAvailable = false;
+                    } else {
+                        $result->isAvailable = true;
+                    }
 					break;
 				default:
 					$result->isAvailable = false;
@@ -187,6 +199,25 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 			}
 		}
 	}
+
+    /**
+     * @param Object $quote
+     * @return boolean
+     */
+    private function checkRecurrenceMix($quote) {
+        $items = $quote->getAllItems();
+        foreach ($items as $item) {
+
+            foreach ($item->getOptions() as $option) {
+                $product = $option->getProduct();
+                $product->load($product->getId());
+                if ($product->getMundipaggRecurrenceMix() === '1') {
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
 
 	/**
 	 * Add discount amount in the quote when partial payment

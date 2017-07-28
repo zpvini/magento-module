@@ -70,6 +70,7 @@ foreach ($items as $item) {
             $recurrent = true;
             $frequency = $product->getMundipaggFrequencyEnum();
             $interval = $product->getMundipaggRecurrences();
+            $recurrenceMix = $product->getMundipaggRecurrenceMix();
         }
     }
 }
@@ -127,19 +128,12 @@ if ($recurrent) {
 			break;
 
 		case 'mundipagg_recurrencepayment':
-			$num = 1;
-			$paymentMethod = '1CreditCards';
-			$paymentMethodLabel = $this->__('Credit Card');
+                $num = 1;
+                $paymentMethod = '1CreditCards';
+                $paymentMethodLabel = $this->__('Credit Card');
 			break;
 
 	endswitch;
-
-
-    echo "<pre>";
-		/* @var Mage_Sales_Model_Quote $quote */
-
-    echo "</pre>";
-
 
 	?>
     <li>
