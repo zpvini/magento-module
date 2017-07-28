@@ -1311,7 +1311,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$helperLog->info($returnMessage);
 
 					} catch (Exception $e) {
-						$returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
+						$returnMessage = "OK | KO | {$returnMessageLabel} | {$e->getMessage()}";
 						$helperLog->error($returnMessage);
 					}
 
@@ -1402,7 +1402,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					}
 
 					// cannot capture transaction
-					$returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
+					$returnMessage = "OK | KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
 					$returnMessage .= $return;
 
 					$helperLog->info($returnMessage);
@@ -1487,7 +1487,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$helperLog->error($returnMessage);
                     $helperLog->info("Current order status: " . $order->getStatusLabel());
 
-					return "KO | {$returnMessage}";
+					return "OK | KO | {$returnMessage}";
 
 					break;
 
@@ -1607,7 +1607,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$helperLog->info($returnMessage);
                         $helperLog->info("Current order status: " . $order->getStatusLabel());
 
-						return "KO | {$returnMessage}";
+						return "OK | KO | {$returnMessage}";
 					}
 
 					break;
@@ -1627,7 +1627,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$returnMessage = "OK | {$returnMessageLabel} | Order changed to WithError status";
 
 					} catch (Exception $e) {
-						$returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
+						$returnMessage = "OK | KO | {$returnMessageLabel} | {$e->getMessage()}";
 					}
 
 					$helperLog->info($returnMessage);
@@ -1656,7 +1656,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			//Mail error
 			$this->mailError(print_r($e->getMessage(), 1));
 
-			return "KO | {$returnMessage}";
+			return "OK | KO | {$returnMessage}";
 		}
 	}
 
