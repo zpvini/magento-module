@@ -86,14 +86,14 @@ $frequencyType = [
 
 if ($recurrent) {
     $recurrenceTotalString =
-         '<strong>' .
-                $currencySymbol .
-                number_format($baseGrandTotal, "2", ",", ".") . '/' .
-                strtolower($this->__($frequencyType[$frequency])) .
-                ' ' . $this->__('by') . ' ' .
-                $interval . ' ' .
-                $this->__($frequencyType[$frequency] .'s') .
-            '</strong>';
+        '<strong>' .
+               $currencySymbol .
+               number_format($baseGrandTotal, "2", ",", ".") . '/' .
+               strtolower($this->__($frequencyType[$frequency])) .
+               ' ' . $this->__('by') . ' ' .
+               $interval . ' ' .
+               $this->__($frequencyType[$frequency] .'s') .
+           '</strong>';
 }
 ?>
 
