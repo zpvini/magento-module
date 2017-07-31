@@ -10,6 +10,7 @@ class Uecommerce_Mundipagg_Model_Adminvalidators_Offlineretry extends Mage_Core_
 			'mundipagg_threecreditcards',
 			'mundipagg_fourcreditcards',
 			'mundipagg_fivecreditcards',
+			'mundipagg_recurrencepayment',
 		);
 
 		if ($value) {

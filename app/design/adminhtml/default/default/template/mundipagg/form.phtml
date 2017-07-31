@@ -1,32 +1,4 @@
 <?php
-/**
- * Uecommerce
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Uecommerce EULA.
- * It is also available through the world-wide-web at this URL:
- * http://www.uecommerce.com.br/
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade the extension
- * to newer versions in the future. If you wish to customize the extension
- * for your needs please refer to http://www.uecommerce.com.br/ for more information
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
- * @license    http://www.uecommerce.com.br/
- */
-
-/**
- * Mundipagg Payment module
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @author     Uecommerce Dev Team
- */
 
 //Return Standard model
 $standard = $this->getStandard();
@@ -34,10 +6,10 @@ $standard = $this->getStandard();
 // Get Quote
 $quote = Mage::getSingleton('adminhtml/session_quote')->getQuote();
 
-if($quote->isVirtual()) {
-	$data = $quote->getBillingAddress();
+if ($quote->isVirtual()) {
+    $data = $quote->getBillingAddress();
 } else {
-	$data = $quote->getShippingAddress();
+    $data = $quote->getShippingAddress();
 }
 
 $baseGrandTotal = $quote->getBaseGrandTotal();
@@ -62,318 +34,442 @@ $countCcs = count($ccs);
 $_code = $this->getMethodCode();
 ?>
 <style type="text/css">
-.issuers{
-	text-align: center;
-	padding-right: 10px;
-}
+    .issuers{
+        text-align: center;
+        padding-right: 10px;
+    }
 </style>
 <fieldset class="form-list">
-	<ul id="payment_form_<?php echo $_code ?>" style="display:none;">
-		<div>
-    		<input type="hidden" id="baseGrandTotal" name="baseGrandTotal" value="<?php echo number_format($baseGrandTotal, "2", ",", ""); ?>"/>
-    	</div>
-        <?php 
-		// START CREDIT CARD PAYMENT METHOD
-    	$num = 1;
+    <ul id="payment_form_<?php echo $_code ?>" style="display:none;">
+        <div>
+            <input type="hidden" id="baseGrandTotal" name="baseGrandTotal" value="<?php echo number_format($baseGrandTotal, "2", ",", ""); ?>"/>
+        </div>
+<?php
+// START CREDIT CARD PAYMENT METHOD
+$num = 1;
 
-    	switch ($_code):
-    		case 'mundipagg_creditcardoneinstallment':
-    			$num = 1;
-    			$paymentMethod = '1CreditCardsOneInstallment';
-    			$paymentMethodLabel = $this->__('Credit Card');
-    			break;
+switch ($_code):
+    case 'mundipagg_creditcardoneinstallment':
+        $num = 1;
+        $paymentMethod = '1CreditCardsOneInstallment';
+        $paymentMethodLabel = $this->__('Credit Card');
+        break;
 
-    		case 'mundipagg_creditcard':
-    			$num = 1;
-    			$paymentMethod = '1CreditCards';
-    			$paymentMethodLabel = $this->__('Credit Card');
-    			break;
-    		
-    		case 'mundipagg_twocreditcards':
-    			$num = 2;
-    			$paymentMethod = '2CreditCards';
-    			$paymentMethodLabel = $this->__('Pay with 2 Credit Cards');
-    			break;
+    case 'mundipagg_creditcard':
+        $num = 1;
+        $paymentMethod = '1CreditCards';
+        $paymentMethodLabel = $this->__('Credit Card');
+        break;
 
-    		case 'mundipagg_threecreditcards':
-    			$num = 3;
-    			$paymentMethod = '3CreditCards';
-    			$paymentMethodLabel = $this->__('Pay with 3 Credit Cards');
-    			break;
-
-    		case 'mundipagg_fourcreditcards':
-    			$num = 4;
-    			$paymentMethod = '4CreditCards';
-    			$paymentMethodLabel = $this->__('Pay with 4 Credit Cards');
-    			break;
-
-    		case 'mundipagg_fivecreditcards':
-    			$num = 5;
-    			$paymentMethod = '5CreditCards';
-    			$paymentMethodLabel = $this->__('Pay with 5 Credit Cards');
-    			break;
-    	endswitch;
-    	?>
+    case 'mundipagg_twocreditcards':
+        $num = 2;
+        $paymentMethod = '2CreditCards';
+        $paymentMethodLabel = $this->__('Pay with 2 Credit Cards');
+        break;
+endswitch;
+?>
        	<li>
-        	<div id="<?php echo $_code; ?>">
-    			<?php if ( $_code == 'mundipagg_creditcardoneinstallment' || $_code == 'mundipagg_creditcard' || $_code == 'mundipagg_twocreditcards' || $_code == 'mundipagg_threecreditcards' || $_code == 'mundipagg_fourcreditcards' || $_code == 'mundipagg_fivecreditcards'): ?>
-	                <ul>
-	                	<?php for($c=1;$c<=$num;$c++): ?>
-	                		<input type="hidden" id="mundipagg_type" name="payment[mundipagg_type]" value="<?php echo $paymentMethod ; ?>"/>
+            <div id="<?php echo $_code; ?>">
+                <?php
+                    if (
+                        $_code == 'mundipagg_creditcardoneinstallment' ||
+                        $_code == 'mundipagg_creditcard' ||
+                        $_code == 'mundipagg_twocreditcards'
+                    ):
+                    ?>
+                    <ul>
+                        <?php for ($c = 1; $c <= $num; $c++): ?>
+                            <input type="hidden" id="mundipagg_type" name="payment[mundipagg_type]" value="<?php echo $paymentMethod; ?>"/>
                             <?php $currentSelectedToken = null; ?>
-	            			<?php if( $countCcs > 0 ):?>
-	                    		<li class="fields" style="margin-bottom: 5px;">
+                            <?php if ($countCcs > 0): ?>
+                                <li class="fields" style="margin-bottom: 5px;">
                                     <div class="field">
                                         <label class="required"><?php echo $this->__('Select a Credit Card or add a new one') ?><span class="required">*</span></label>
                                         <div class="input-box">
 
-                                            <select id="<?php echo $_code; ?>_token_<?php echo $num; ?>_<?php echo $c;?>" data="group_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_token_<?php echo $num; ?>_<?php echo $c;?>]" class="required-entry tokens group_<?php echo $num; ?>_<?php echo $c;?>" onchange="token_or_not(<?php echo $num; ?>,<?php echo $c;?>,this)">
+                                            <select 
+                                                id="<?php echo $_code  . '_token_' . $num . '_' . $c; ?>"
+                                                data="group_<?php echo $num . '_' . $c; ?>"
+                                                name="payment[<?php echo $_code . '_token_' . $num . '_' . $c; ?>]"
+                                                class="required-entry tokens group_<?php echo $num . '_' . $c; ?>"
+                                                onchange="token_or_not(<?php echo $num; ?>,<?php echo $c; ?>, this)"
+                                             >
                                                 <option value="">...</option>
                                                 <?php
-                                                    foreach($ccs as $id => $cc):
+                                                foreach ($ccs as $id => $cc):
 
-                                                        if($countCcs == 1){
-                                                            $currentSelectedToken = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
-                                                        }
-                                                        $dataType = $currentSelectedToken?$currentSelectedToken:Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
-                                                        echo '<option value="'.$cc->getId().'" data="'.$dataType.'">'.$cc->getCcType().' '.$cc->getCreditCardMask().'</option>';
-                                                    endforeach;
+                                                    if ($countCcs == 1) {
+                                                        $currentSelectedToken = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
+                                                    }
+                                                    $dataType = $currentSelectedToken
+                                                            ? $currentSelectedToken
+                                                            : Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
+                                                    echo '<option value="'.$cc->getId().'" data="'.$dataType.'">'.$cc->getCcType().' '.$cc->getCreditCardMask().'</option>';
+                                                endforeach;
                                                 ?>
                                                 <option value="new"><?php echo $this->__('New Credit Card') ?></option>
                                             </select>
                                         </div>
                                     </div>
-								</li>
-								<?php if($num != 1): ?>
-                                    <div id="value_<?php echo $num; ?>_<?php echo $c;?>">
-                                        <li class="fields" style="margin-bottom: 5px;">
-                                            <div class="field">
-                                                <label class="required"><?php echo $this->__('Value (Ex: 100,50)') ?> <span class="required">*</span></label>
-                                                <div class="input-box">
-                                                    <input type="text" id="<?php echo $_code; ?>_value_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_value_<?php echo $num; ?>_<?php echo $c;?>]" title="<?php echo $this->__('Value (Ex: 100,50)') ?>" class="required-entry validate-greater-than-zero check_values group_<?php echo $num; ?>_<?php echo $c;?>" onchange="calculateInstallmentValue(this, <?php echo $num;?>, <?php echo $c;?>, '<?php echo Mage::getUrl('',array('_secure'=>true)); ?>');" onkeydown="remove_special_characters(event);" value=""/>
+                                </li>
+                                    <?php if ($num != 1): ?>
+                                        <div id="value_<?php echo $num . '_' . $c; ?>">
+                                            <li class="fields" style="margin-bottom: 5px;">
+                                                <div class="field">
+                                                    <label class="required"><?php echo $this->__('Value (Ex: 100,50)') ?> <span class="required">*</span></label>
+                                                    <div class="input-box">
+                                                        <input
+                                                            type="text" id="<?php echo $_code . '_value_' . $num . '_' . $c; ?>"
+                                                            name="payment[<?php echo $_code . '_value_' . $num . '_' . $c; ?>]"
+                                                            title="<?php echo $this->__('Value (Ex: 100,50)') ?>"
+                                                            class="required-entry validate-greater-than-zero check_values group_<?php echo $num . '_' . $c; ?>"
+                                                            onchange="calculateInstallmentValue(this, <?php echo $num; ?>, <?php echo $c; ?>, '<?php
+                                                            echo Mage::getUrl('', array('_secure' => true));
+                                                            ?>');"
+                                                            onkeydown="remove_special_characters(event);"
+                                                        value=""
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </li>
-                                    </div>
-							    <?php endif; ?>
-								<?php if ($installmentsHelper->isInstallmentsEnabled() && $_code != 'mundipagg_creditcardoneinstallment'): ?>
-                                    <div id="parcelamento_<?php echo $num; ?>_<?php echo $c;?>" <?php if($countCcs > 1): ?>style="display:none"<?php endif?>>
-                                        <li class="fields" style="margin-bottom: 5px;">
-                                            <div class="field">
-                                                <label class="required"><?php echo $this->__('Credit options') ?> <?php if($num == 2):?><!--<a href="javascript:void(0);" onclick="javascript:void(0);">(<?php /*echo $this->__('click to update') */?>)</a>--><?php endif ?></label>
-                                                <div class="input-box">
-                                                    <select id="<?php echo $_code; ?>_credito_parcelamento_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_credito_parcelamento_<?php echo $num; ?>_<?php echo $c;?>]" class="required-entry installment-token group_<?php echo $num; ?>_<?php echo $c;?>">
-                                                        <?php foreach($this->getInstallments($currentSelectedToken) as $key => $parcel): ?>
-                                                            <option value="<?php echo $key ?>"><?php echo $parcel ?></option>
-                                                        <?php endforeach ?>
-                                                    </select>
+                                            </li>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php 
+                                    if (
+                                        $installmentsHelper->isInstallmentsEnabled() && $_code
+                                        != 'mundipagg_creditcardoneinstallment'):
+                                    ?>
+                                        <div id="parcelamento_<?php echo $num . '_' . $c; ?>" <?php
+                                            if ($countCcs> 1):
+                                            ?>style="display:none"<?php endif ?>
+                                        >
+                                            <li class="fields" style="margin-bottom: 5px;">
+                                                <div class="field">
+                                                    <label class="required"><?php echo $this->__('Credit options') ?>
+                                                    </label>
+                                                    <div class="input-box">
+                                                        <select
+                                                            id="<?php echo $_code; ?>_credito_parcelamento_<?php echo $num . '_' . $c; ?>"
+                                                            name="payment[<?php echo $_code; ?>_credito_parcelamento_<?php echo $num . '_' . $c; ?>]"
+                                                            class="required-entry installment-token group_<?php echo $num . '_' . $c; ?>"
+                                                        >
+                                                            <?php foreach ($this->getInstallments($currentSelectedToken) as $key => $parcel): ?>
+                                                                <option value="<?php echo $key ?>"><?php echo $parcel ?></option>
+                                                            <?php endforeach ?>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </li>
+                                            </li>
+                                        </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+
+                            <div
+                                id="<?php echo $_code . '_new_credit_card_' .  $num . '_' . $c; ?>"
+                                    <?php if ($countCcs > 0) { ?>
+                                        style="display:none"
+                                    <?php } ?>
+                                >
+
+                                <li style="margin-bottom: 5px;">
+                                    <div class="field">
+                                        <label><?php echo $this->__('Credit Card Issuer') ?> <span class="required">*</span></label>
+                                        <div class="input-box">
+                                            <select 
+                                                id="<?php echo $_code . '_' . $num . '_' . $c . '_cc_type';?>" 
+                                                name="payment[<?php echo $_code . '_' . $num . '_' . $c; ?>_cc_type]"
+                                                class="required-entry validate-cc-type-select"
+                                                onchange="cc_cid(this, <?php echo $num; ?>,<?php echo $c; ?>);"
+                                            >
+                                                <?php $_ccType = $this->getInfoData('creditCardType') ?>
+                                                    <option value=""></option>
+                                                    <?php $ccards = $standard->getCcTypes(); ?>
+                                                    <?php foreach ($ccards as $ccard): ?>
+                                                        <option
+                                                            value="<?php echo $ccard; ?>"
+                                                                <?php
+                                                                    if ($ccard == $_ccType): ?>
+                                                                        class=""
+                                                                        accesskey=""
+                                                                        selected="selected"
+                                                                    <?php endif ?>
+                                                        ><?php echo Mage::helper('mundipagg')->issuer($ccard); ?>
+                                                        </option>
+                                                    <?php endforeach ?>
+                                            </select>
+                                        </div>
                                     </div>
-	            				<?php endif; ?>
-	    					<?php endif; ?>
-
-							<div id="<?php echo $_code; ?>_new_credit_card_<?php echo $num; ?>_<?php echo $c;?>" <?php if( $countCcs > 0 ) { ?>style="display:none"<?php } ?>>
-
-	                        	<li style="margin-bottom: 5px;">
-	                        		<div class="field">
-	                        			<label><?php echo $this->__('Credit Card Issuer') ?> <span class="required">*</span></label>
-		                        		<div class="input-box">
-			                               	<select id="<?php echo $_code; ?>_<?php echo $num; ?>_<?php echo $c;?>_cc_type" name="payment[<?php echo $_code; ?>_<?php echo $num; ?>_<?php echo $c;?>_cc_type]" class="required-entry validate-cc-type-select" onchange="cc_cid(this, <?php echo $num; ?>,<?php echo $c;?>);">
-		                        				<?php $_ccType = $this->getInfoData('creditCardType') ?>
-									            <option value=""></option>
-									            <?php $ccards = $standard->getCcTypes();?>
-									            <?php foreach($ccards as $ccard): ?>
-									                <option value="<?php echo $ccard;?>" <?php if($ccard==$_ccType): ?>selected="selected"<?php endif ?>><?php echo Mage::helper('mundipagg')->issuer($ccard);?></option>
-									            <?php endforeach ?>
-									        </select>
-										</div>
-									</div>
-	                    		</li>
-	                    		<li style="margin-bottom: 5px;">
-	                    			<div class="field">
-	                    				<label><?php echo $this->__('Credit Card Number') ?> <span class="required">*</span></label>
-				                    	<div class="input-box">
-				                    		<input type="text" id="<?php echo $_code; ?>_<?php echo $num; ?>_<?php echo $c;?>_cc_number" name="payment[<?php echo $_code; ?>_<?php echo $num; ?>_<?php echo $c;?>_cc_number]" title="<?php echo $this->__('Credit Card Number') ?>" class="input-text required-entry validate-cc-number" onkeydown="remove_characters(event);" value=""/>
-				                    	</div>
-				                    </div>
-	                			</li>
-	                        	<li style="margin-bottom: 5px;">
-	                        		<div class="field">
-	                        			<label><?php echo $this->__('Credit Card Holder name') ?> <span class="required">*</span></label>
-		                                <div class="input-box">
-		                                    <input type="text" id="<?php echo $_code; ?>_cc_holder_name_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_cc_holder_name_<?php echo $num; ?>_<?php echo $c;?>]" class="required-entry input-text" />
-		                                </div>
-	                            	</div>
-	                    		</li>
-			                    <li style="margin-bottom: 5px;">
-			                    	<div class="field">
-			                    		<label><?php echo $this->__('Expiration date') ?> <span class="required">*</span></label>
-				                   		<div class="input-box">
-											<div class="v-fix">
-												<select id="<?php echo $_code; ?>_expirationMonth_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_expirationMonth_<?php echo $num; ?>_<?php echo $c;?>]" style="width: 145px;" class="required-entry validate-cc-exp-new">
-				                                    <option value=""><?php echo $this->__('Month') ?></option>
-				                                    <option value="1">01 - <?php echo $this->__('January') ?></option>
-				                                    <option value="2">02 - <?php echo $this->__('February') ?></option>
-				                                    <option value="3">03 - <?php echo $this->__('March') ?></option>
-				                                    <option value="4">04 - <?php echo $this->__('April') ?></option>
-				                                    <option value="5">05 - <?php echo $this->__('May') ?></option>
-				                                    <option value="6">06 - <?php echo $this->__('June') ?></option>
-				                                    <option value="7">07 - <?php echo $this->__('July') ?></option>
-				                                    <option value="8">08 - <?php echo $this->__('August') ?></option>
-				                                    <option value="9">09 - <?php echo $this->__('September') ?></option>
-				                                    <option value="10">10 - <?php echo $this->__('October') ?></option>
-				                                    <option value="11">11 - <?php echo $this->__('November') ?></option>
-				                                    <option value="12">12 - <?php echo $this->__('December') ?></option>
-			                                	</select>
-			                                </div>
-			                                <div class="v-fix" style="padding-left:6px;">
-			                                	<select id="<?php echo $_code; ?>_expirationYear_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_expirationYear_<?php echo $num; ?>_<?php echo $c;?>]" style="width: 105px;" class="required-entry">
-				                                    <option value=""><?php echo $this->__('Year') ?></option>
-				                                    <?php
-				                                    $i = date('Y');
-				                                    $year = date('Y');
-				                                    $year10 = $year + 10;
-				                                    for( $i = $year; $i <= $year10; $i++ ):
-				                                    ?>
-				                                    	<option value="<?php echo substr($i, -2);?>"><?php echo $i;?></option>
-				                                    <?php endfor; ?>
-			                                	</select>
-			                                </div>
-			                            </div>
-				                	</div>
-				                </li>
-			                    <li style="margin-bottom: 5px;">
-			                    	<div class="field">
-			                    		<label><?php echo $this->__('Card Verification Number') ?> <span class="required">*</span></label>
-				                    	<div class="input-box">
-					                    	<div class="v-fix">
-					                    		<input type="text" id="<?php echo $_code; ?>_cc_cid_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_cc_cid_<?php echo $num; ?>_<?php echo $c;?>]" style="width: 30px" class="required-entry input-text validate-cc-cvn validate-length" maxlength="4" onkeydown="remove_characters(event);"/>
-					                    	</div>
-					                    	<div class="v-fix" style="padding-left:6px;">
-					                    		<a href="#" class="cvv-what-is-this"><?php echo $this->__('What is this?') ?></a>
-					                    	</div>
-										</div>
-									</div>
-								</li>
-								<?php if($num != 1): ?>
-		                        	<li style="margin-bottom: 5px;">
-						        		<div class="field">
-						        			<label><?php echo $this->__('Value (Ex: 100,50)') ?> <span class="required">*</span></label>
-						        			<div class="input-box">
-						        				<input type="text" id="<?php echo $_code; ?>_new_value_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_new_value_<?php echo $num; ?>_<?php echo $c;?>]" title="<?php echo $this->__('Value (Ex: 100,50)') ?>" class="required-entry validate-greater-than-zero check_values" onchange="calculateInstallmentValue(this, <?php echo $num;?>, <?php echo $c;?>);" onkeydown="remove_special_characters(event);" value=""/>
-						        			</div>
-						        		</div>
-							        </li>
-							    <?php endif; ?>
-	                			<?php if ($installmentsHelper->isInstallmentsEnabled() && $_code != 'mundipagg_creditcardoneinstallment'): ?>
+                                </li>
+                                <li style="margin-bottom: 5px;">
+                                    <div class="field">
+                                        <label><?php echo $this->__('Credit Card Number') ?> <span class="required">*</span></label>
+                                        <div class="input-box">
+                                            <input
+                                                type="text"
+                                                id="<?php echo $_code . '_' . $num . '_' . $c . '_cc_number'; ?>"
+                                                name="payment[<?php echo $_code . '_' . $num . '_' . $c; ?>_cc_number]"
+                                                title="<?php echo $this->__('Credit Card Number') ?>"
+                                                class="input-text required-entry validate-cc-number"
+                                                onkeydown="remove_characters(event);"
+                                                value=""
+                                            />
+                                        </div>
+                                    </div>
+                                </li>
+                                <li style="margin-bottom: 5px;">
+                                    <div class="field">
+                                        <label><?php echo $this->__('Credit Card Holder name') ?> <span class="required">*</span></label>
+                                        <div class="input-box">
+                                            <input
+                                                type="text"
+                                                id="<?php echo $_code . '_cc_holder_name_' . $num . '_' . $c; ?>" 
+                                                name="payment[<?php echo $_code . '_cc_holder_name_' . $num . '_' . $c; ?>]"
+                                                class="required-entry input-text"
+                                            />
+                                        </div>
+                                    </div>
+                                </li>
+                                <li style="margin-bottom: 5px;">
+                                    <div class="field">
+                                        <label><?php echo $this->__('Expiration date') ?> <span class="required">*</span></label>
+                                        <div class="input-box">
+                                            <div class="v-fix">
+                                                <select 
+                                                    id="<?php echo $_code . '_expirationMonth_' . $num . '_' . $c; ?>" 
+                                                    name="payment[<?php echo $_code . '_expirationMonth_' . $num . '_' . $c; ?>]"
+                                                    style="width: 145px;" class="required-entry validate-cc-exp-new"
+                                                >
+                                                    <option value=""><?php echo $this->__('Month') ?></option>
+                                                    <option value="1">01 - <?php echo $this->__('January') ?></option>
+                                                    <option value="2">02 - <?php echo $this->__('February') ?></option>
+                                                    <option value="3">03 - <?php echo $this->__('March') ?></option>
+                                                    <option value="4">04 - <?php echo $this->__('April') ?></option>
+                                                    <option value="5">05 - <?php echo $this->__('May') ?></option>
+                                                    <option value="6">06 - <?php echo $this->__('June') ?></option>
+                                                    <option value="7">07 - <?php echo $this->__('July') ?></option>
+                                                    <option value="8">08 - <?php echo $this->__('August') ?></option>
+                                                    <option value="9">09 - <?php echo $this->__('September') ?></option>
+                                                    <option value="10">10 - <?php echo $this->__('October') ?></option>
+                                                    <option value="11">11 - <?php echo $this->__('November') ?></option>
+                                                    <option value="12">12 - <?php echo $this->__('December') ?></option>
+                                                </select>
+                                            </div>
+                                            <div class="v-fix" style="padding-left:6px;">
+                                                <select 
+                                                    id="<?php echo $_code . '_expirationYear_' .  $num . '_' . $c; ?>"
+                                                    name="payment[<?php echo $_code . '_expirationYear_' . $num . '_' . $c; ?>]"
+                                                    style="width: 105px;"
+                                                    class="required-entry"
+                                                >
+                                                    <option value=""><?php echo $this->__('Year') ?></option>
+                                                    <?php
+                                                        $i = date('Y');
+                                                        $year = date('Y');
+                                                        $year10 = $year + 10;
+                                                        for ($i = $year; $i <= $year10; $i++):
+                                                    ?>
+                                                        <option value="<?php echo substr($i, -2); ?>"><?php echo $i; ?></option>
+                                                        <?php endfor; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li style="margin-bottom: 5px;">
+                                    <div class="field">
+                                        <label><?php echo $this->__('Card Verification Number') ?> <span class="required">*</span></label>
+                                        <div class="input-box">
+                                            <div class="v-fix">
+                                                <input
+                                                    type="text"
+                                                    id="<?php echo $_code . '_cc_cid_' . $num . '_' . $c; ?>" 
+                                                    name="payment[<?php echo $_code . '_cc_cid_' . $num . '_' . $c; ?>]"
+                                                    style="width: 30px"
+                                                    class="required-entry input-text validate-cc-cvn validate-length"
+                                                    maxlength="4"
+                                                    onkeydown="remove_characters(event);"
+                                                />
+                                            </div>
+                                            <div class="v-fix" style="padding-left:6px;">
+                                                <a href="#" class="cvv-what-is-this"><?php echo $this->__('What is this?') ?></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <?php if ($num != 1): ?>
                                     <li style="margin-bottom: 5px;">
                                         <div class="field">
-                                            <label class="required"><?php echo $this->__('Credit options') ?> <?php if($num ==2): ?><!--<a href="javascript:void(0);" onclick="javascript:void(0);">(<?php /*echo $this->__('click to update') */?>)</a>--><?php endif ?></label>
+                                            <label><?php echo $this->__('Value (Ex: 100,50)') ?> <span class="required">*</span></label>
                                             <div class="input-box">
-                                                <select id="<?php echo $_code; ?>_new_credito_parcelamento_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_new_credito_parcelamento_<?php echo $num; ?>_<?php echo $c;?>]" onchange="checkInstallments(this, '<?php echo Mage::getUrl('',array('_secure'=>true)); ?>');">
-                                                    <?php foreach($this->getInstallments() as $key => $parcel): ?>
+                                                <input
+                                                    type="text"
+                                                    id="<?php echo $_code . '_new_value_' . $num . '_' . $c; ?>"
+                                                    name="payment[<?php echo $_code . '_new_value_' . $num . '_' . $c; ?>]"
+                                                    title="<?php echo $this->__('Value (Ex: 100,50)') ?>"
+                                                    class="required-entry validate-greater-than-zero check_values"
+                                                    onchange="calculateInstallmentValue(this, <?php echo $num; ?>, <?php echo $c; ?>);"
+                                                    onkeydown="remove_special_characters(event);"
+                                                    value=""
+                                                />
+                                            </div>
+                                        </div>
+                                    </li>
+                                <?php endif; ?>
+                                <?php 
+                                    if (
+                                        $installmentsHelper->isInstallmentsEnabled()
+                                        && $_code != 'mundipagg_creditcardoneinstallment'
+                                    ):
+                                ?>
+                                    <li style="margin-bottom: 5px;">
+                                        <div class="field">
+                                            <label class="required"><?php echo $this->__('Credit options') ?>
+                                            </label>
+                                            <div class="input-box">
+                                                <select 
+                                                    id="<?php echo $_code . '_new_credito_parcelamento_' . $num . '_' . $c; ?>"
+                                                    name="payment[<?php echo $_code . '_new_credito_parcelamento_' . $num . '_' . $c; ?>]"
+                                                    onchange="checkInstallments(this, '<?php echo Mage::getUrl('', array(
+                                                    '_secure' => true)); ?>');"
+                                                >
+                                                    <?php foreach ($this->getInstallments() as $key => $parcel): ?>
                                                         <option value="<?php echo $key ?>"><?php echo $parcel ?></option>
                                                     <?php endforeach ?>
                                                 </select>
                                             </div>
                                         </div>
                                     </li>
-	            				<?php endif; ?>
-	            				<?php if ($standard->getConfigData('clearsale') && !$_taxvat->isEnabled() && Mage::getSingleton('adminhtml/session_quote')->getCustomer()->getTaxvat() == ''): ?>
-		        					<li style="margin-bottom: 5px;">
-		        						<div class="field">
-		        							<label><?php echo $this->__('CPF ou CNPJ') ?> <span class="required">*</span></label>
-								        	<div class="input-box">
-								        		<input type="text" id="<?php echo $_code; ?>_cc_taxvat_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_cc_taxvat_<?php echo $num; ?>_<?php echo $c;?>]" title="<?php echo $this->__('CPF ou CNPJ') ?>" class="validar_cpf required-entry" onkeydown="remove_characters(event);"/>
-								        	</div>
-								        </div>
-							        </li>
-						    	<?php endif;?>
-						    	<?php if($standard->getQuote()->getCheckoutMethod() != 'guest'): ?>
-						    	<li>
-		               				<div class="input-box" style="padding-top: 10px">
-		               					<div class="field">
-		                        			<label><?php echo $this->__('Save Card On File') ?></label>
-		                        			<input type="checkbox" id="<?php echo $_code; ?>_save_token_<?php echo $num; ?>_<?php echo $c;?>" name="payment[<?php echo $_code; ?>_save_token_<?php echo $num; ?>_<?php echo $c;?>]" value="new"/>
-		                        		</div>
-		                        	</div>
-		                        </li>
-		                    	<?php endif; ?>
-					    	</div>
-					    <?php endfor; ?>
-	                </ul>
-	            <?php endif ?>
+                                <?php endif; ?>
+                                <?php if (
+                                    $standard->getConfigData('clearsale') &&
+                                    !$_taxvat->isEnabled() &&
+                                    Mage::getSingleton('adminhtml/session_quote')->getCustomer()->getTaxvat() == ''):
+                                ?>
+                                    <li style="margin-bottom: 5px;">
+                                        <div class="field">
+                                            <label><?php echo $this->__('CPF ou CNPJ') ?> <span class="required">*</span></label>
+                                            <div class="input-box">
+                                                <input
+                                                    type="text"
+                                                    id="<?php echo $_code . '_cc_taxvat_' . $num . '_' . $c; ?>"
+                                                    name="payment[<?php echo $_code . '_cc_taxvat_' . $num . '_' . $c; ?>]"
+                                                    title="<?php echo $this->__('CPF ou CNPJ') ?>"
+                                                    class="validar_cpf required-entry"
+                                                    onkeydown="remove_characters(event);"/>
+                                            </div>
+                                        </div>
+                                    </li>
+                            <?php endif; ?>
+                            <?php 
+                                if (
+                                    $standard->getQuote()->getCheckoutMethod()
+                                    != 'guest'):
+                                ?>
+                                    <li>
+                                        <div class="input-box" style="padding-top: 10px">
+                                            <div class="field">
+                                                <label><?php echo $this->__('Save Card On File') ?></label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="<?php echo $_code . '_save_token_' . $num . '_' . $c; ?>" 
+                                                    name="payment[<?php echo $_code . '_save_token_' . $num . '_' . $c; ?>]" 
+                                                    value="new"
+                                                />
+                                            </div>
+                                        </div>
+                                    </li>
+                                <?php endif; ?>
+                            </div>
+                        <?php endfor; ?>
+                    </ul>
+                <?php endif ?>
             </div>
         </li> 
-    	<?php // END CREDIT CARD PAYMENT METHOD ?>
+        <?php // END CREDIT CARD PAYMENT METHOD  ?>
 
-        <?php if ( $_code == 'mundipagg_boleto' ): ?>
-	        <li>
-	        	<input type="hidden" id="mundipagg_type" name="payment[mundipagg_type]" value="BoletoBancario"/>
-	            <br/>
-	            <div id="mundipagg_boleto">
-		            <ul >
-		            	<?php if(!$_taxvat->isEnabled() && Mage::getSingleton('adminhtml/session_quote')->getCustomer()->getTaxvat() == ''): ?>
-				        <li>
-				        	<div class="input-box" style="float:left;">	
-				        		<label><?php echo $this->__('CPF ou CNPJ') ?> <span class="required">*</span></label><br/>
-				        		<input type="text" id="<?php echo $_code ?>_boleto_taxvat" name="payment[boleto_taxvat]" title="<?php echo $this->__('Taxvat') ?>" class="validar_cpf required-entry" onkeydown="remove_characters(event);"/>
-				        	</div>
-				        </li>
-				    	<?php endif; ?>
-				        <li>
-			                <div id="boleto" style="float:left; text-align:center">
-					            <img src="<?php echo $this->getSkinUrl('images/mundipagg/boleto.jpg');?>" alt="<?php echo $this->__('Boleto Bancário') ?>" /> <?php echo $this->__('Print your boleto after you have placed your order.') ?>
-			                </div>
-				        </li>
-			        </ul>
-		    	</div>
-			</li>
-		<?php endif ?>
-	</ul>
+        <?php if ($_code == 'mundipagg_boleto'): ?>
+            <li>
+                <input type="hidden" id="mundipagg_type" name="payment[mundipagg_type]" value="BoletoBancario"/>
+                <br/>
+                <div id="mundipagg_boleto">
+                    <ul >
+                        <?php
+                            if (
+                                !$_taxvat->isEnabled() &&
+                                Mage::getSingleton('adminhtml/session_quote')->getCustomer()->getTaxvat() == ''
+                               ):
+                            ?>
+                            <li>
+                                <div class="input-box" style="float:left;">
+                                    <label><?php echo $this->__('CPF ou CNPJ') ?> <span class="required">*</span></label>
+                                    <br/>
+                                    <input
+                                        type="text"
+                                        id="<?php echo $_code . '_boleto_taxvat'; ?>"
+                                        name="payment[boleto_taxvat]"
+                                        title="<?php echo $this->__('Taxvat') ?>"
+                                        class="validar_cpf required-entry"
+                                        onkeydown="remove_characters(event);
+                                    "/>
+                                </div>
+                            </li>
+                        <?php endif; ?>
+                        <li>
+                            <div id="boleto" style="float:left; text-align:center">
+                                <img
+                                    src="<?php echo $this->getSkinUrl('images/mundipagg/boleto.jpg'); ?>"
+                                    alt="<?php echo $this->__('Boleto Bancário') ?>"
+                                />
+                                <?php echo $this->__('Print your boleto after you have placed your order.') ?>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        <?php endif ?>
+    </ul>
 </fieldset>
 
 <script type="text/javascript">
 //<![CDATA[
-window.baseUrl = '<?php echo Mage::helper("adminhtml")->getUrl();?>';
-window.admin_area_url_installments_and_interest = '<?php echo Mage::helper("adminhtml")->getUrl("mundipagg/standard/installmentsandinterest"); ?>';
-window.installmentsandinterestUrl = '<?php echo Mage::helper("adminhtml")->getUrl("mundipagg/standard/installmentsandinterest",array("_secure"=>true)); ?>';
-window.ajaxLoaderGif = '<?php echo $this->getSkinUrl("images/mundipagg/ajax-loader.gif"); ?>';
-window.isInstallmentsEnabled = '<?php echo Mage::helper("mundipagg/installments")->isInstallmentsEnabled(); ?>';
+    window.baseUrl = '<?php echo Mage::helper("adminhtml")->getUrl(); ?>';
+    window.admin_area_url_installments_and_interest = '<?php echo Mage::helper("adminhtml")->getUrl("mundipagg/standard/installmentsandinterest"); ?>';
+    window.installmentsandinterestUrl = '<?php echo Mage::helper("adminhtml")->getUrl("mundipagg/standard/installmentsandinterest", array(
+    "_secure" => true)); ?>';
+    window.ajaxLoaderGif = '<?php echo $this->getSkinUrl("images/mundipagg/ajax-loader.gif"); ?>';
+    window.isInstallmentsEnabled = '<?php echo Mage::helper("mundipagg/installments")->isInstallmentsEnabled(); ?>';
 
-$$('.validate-cc-type-select').invoke('observe','change',function(){
-    brand_select = this;
-    amount = false;
-    if(this.value != '') {
-        this.up(3).select('select,input').each(function(sel){
-            if(sel.readAttribute('id').indexOf('new_value') != -1){
-                if(brand_select.value != '' && brand_select.value != undefined) {
-                    amount = sel.value;
+    $$('.validate-cc-type-select').invoke('observe', 'change', function () {
+        brand_select = this;
+        amount = false;
+        if (this.value != '') {
+            this.up(3).select('select,input').each(function (sel) {
+                if (sel.readAttribute('id').indexOf('new_value') != -1) {
+                    if (brand_select.value != '' && brand_select.value != undefined) {
+                        amount = sel.value;
+                    }
                 }
-            }
-            if(sel.readAttribute('id').indexOf('parcelamento') != -1){
+                if (sel.readAttribute('id').indexOf('parcelamento') != -1) {
 
-                updateInstallments(brand_select.value, sel, amount);
-            }
-        });
-    }
-});
-
-Validation.addAllThese([
-	['validate-cc-exp-new', '<?php echo $this->jsQuoteEscape( Mage::helper('mundipagg')->__('Incorrect credit card expiration date.') )?>', function(v, elm) {
-        var ccExpMonth   = v;
-        var ccExpYear    = $( elm.id.replace("_expirationMonth", "_expirationYear") ).value;
-
-        var currentTime  = new Date();
-        var currentMonth = currentTime.getMonth() + 1;
-        var currentYear  = currentTime.getFullYear().toString().substr(2,2);
-        if (ccExpMonth < currentMonth && ccExpYear == currentYear) {
-            return false;
+                    updateInstallments(brand_select.value, sel, amount);
+                }
+            });
         }
-        return true;
-    }]
-]);
+    });
+
+    Validation.addAllThese([
+        ['validate-cc-exp-new', '<?php echo $this->jsQuoteEscape(Mage::helper('mundipagg')->__('Incorrect credit card expiration date.')) ?>', function (v, elm) {
+                var ccExpMonth = v;
+                var ccExpYear = $(elm.id.replace("_expirationMonth", "_expirationYear")).value;
+
+                var currentTime = new Date();
+                var currentMonth = currentTime.getMonth() + 1;
+                var currentYear = currentTime.getFullYear().toString().substr(2, 2);
+                if (ccExpMonth < currentMonth && ccExpYear == currentYear) {
+                    return false;
+                }
+                return true;
+            }]
+    ]);
 //]]>
 </script>

@@ -1,33 +1,5 @@
 <?php
 
-/**
- * Uecommerce
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Uecommerce EULA.
- * It is also available through the world-wide-web at this URL:
- * http://www.uecommerce.com.br/
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade the extension
- * to newer versions in the future. If you wish to customize the extension
- * for your needs please refer to http://www.uecommerce.com.br/ for more information
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
- * @license    http://www.uecommerce.com.br/
- */
-
-/**
- * Mundipagg Payment module
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @author     Uecommerce Dev Team
- */
 class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Standard {
 	/*
 	 * Update status and notify customer or not
@@ -150,10 +122,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 			switch ($method->getCode()) {
 				case 'mundipagg_creditcardoneinstallment':
 				case 'mundipagg_creditcard':
-//				case 'mundipagg_twocreditcards':
-//				case 'mundipagg_threecreditcards':
-//				case 'mundipagg_fourcreditcards':
-//				case 'mundipagg_fivecreditcards':
 					$active = Mage::getStoreConfig('payment/' . $method->getCode() . '/active');
 
 					if ($active == '1') {
@@ -194,22 +162,32 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$session = Mage::getSingleton('checkout/session');
 		$recurrent = $session->getMundipaggRecurrency();
 
-		if ($recurrent) {
-			$instance = $observer->getMethodInstance();
-			$result = $observer->getResult();
+        $instance = $observer->getMethodInstance();
+        $result = $observer->getResult();
+        $code = $instance->getCode();
 
-			switch ($instance->getCode()) {
+        if ($code === 'mundipagg_recurrencepayment'){
+            $result->isAvailable = false;
+        }
+
+        if ($recurrent) {
+			switch ($code) {
 				case 'mundipagg_boleto':
 				case 'mundipagg_debit':
 				case 'mundipagg_creditcardoneinstallment':
 				case 'mundipagg_twocreditcards':
-				case 'mundipagg_threecreditcards':
-				case 'mundipagg_fourcreditcards':
-				case 'mundipagg_fivecreditcards':
 					$result->isAvailable = false;
 					break;
+                case 'mundipagg_recurrencepayment':
+                    $result->isAvailable = true;
+                    break;
 				case 'mundipagg_creditcard':
-					$result->isAvailable = true;
+
+                    if (!$this->checkRecurrenceMix($session->getQuote())){
+                        $result->isAvailable = false;
+                    } else {
+                        $result->isAvailable = true;
+                    }
 					break;
 				default:
 					$result->isAvailable = false;
@@ -217,6 +195,25 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 			}
 		}
 	}
+
+    /**
+     * @param Object $quote
+     * @return boolean
+     */
+    private function checkRecurrenceMix($quote) {
+        $items = $quote->getAllItems();
+        foreach ($items as $item) {
+
+            foreach ($item->getOptions() as $option) {
+                $product = $option->getProduct();
+                $product->load($product->getId());
+                if ($product->getMundipaggRecurrenceMix() === '1') {
+                    return true;
+                }
+                return false;
+            }
+        }
+    }
 
 	/**
 	 * Add discount amount in the quote when partial payment

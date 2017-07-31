@@ -1,8 +1,36 @@
 
 <?php
-$parcelamento = $this->getParcelamento();
+    $_coreHelper = $this->helper('core');
+    $frequencyType = [
+        'Daily' => 'Day',
+        'Weekly' => 'Week',
+        'Monthly' => 'Month',
+        'Quarterly' => 'Quarter',
+        'Biannual' => 'Semester',
+        'Yearly' => 'Year'
+    ];
 
-if(!empty($parcelamento)):
+    $parcelamento = $this->getParcelamento();
+    $recurrence = $this->getMundipaggRecurrence();
+    $recurrences = $this->getMundipaggRecurrences();
+    $frequency = $this->getMundipaggFrequency();
+    $recurrenceMix = $this->getMundipaggRecurrenceMix();
+    $reurrenceDiscount = $this->getMundipaggRecurrenceDiscount();
+    if ($recurrence) {
+        echo '<strong>/' . 
+                strtolower($this->__($frequencyType[$frequency])) .
+                ' ' . $this->__('by') . ' ' .
+                $recurrences . ' ' .
+                $this->__($frequencyType[$frequency] .'s') .
+                '(' 
+                    . $this->__('Total') . ' ' .
+                    $_coreHelper->formatPrice(($this->getPrice() * $recurrences)) .
+                ')' .
+            '</strong>'
+            ;
+    } else {
+        if (!empty($parcelamento)) {
+            echo $this->__('ou') . ' '  . '<strong>' . $parcelamento . '</strong>';
+        }
+    }
 ?>
-<?php echo $this->__('ou')?> <strong><?php echo $parcelamento; ?></strong>
-<?php endif;?>
