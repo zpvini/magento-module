@@ -118,6 +118,15 @@
                     </mundipagg_cart_check_recurrency>
                 </observers>
             </checkout_cart_product_add_after>
+            <checkout_cart_update_items_after>
+                <observers>
+                    <mundipagg_cart_check_recurrency>
+                        <type>singleton</type>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>cartCheckRecurrencyConflicts</method>
+                    </mundipagg_cart_check_recurrency>
+                </observers>
+            </checkout_cart_update_items_after>
         </events>
         
 

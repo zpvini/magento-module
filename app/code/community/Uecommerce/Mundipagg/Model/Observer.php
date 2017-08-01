@@ -227,16 +227,70 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         $recurrencePayment = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/active');
         if ($recurrencePayment === '1') {
 
-            $msgConflictRecurrentOthers = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_others');
             $msgConflictRecurrentMixMix = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_mix_mix');
             $msgConflictRecurrentMixRecurrent = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_mix_recurrent');
 
-            Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentOthers);
+            $this->checkRecurrenceConflicts($observer);
+
+
+            
+            /*Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentOthers);
             Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentMixMix);
             Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentMixRecurrent);
+
+
+            return false;*/
+            
+            
+        }
+    }
+
+    private function checkRecurrenceConflicts($observer)
+    {
+		$event = $observer->getEvent();
+        
+        if ($event->getQuoteItem()) {
+            $quote = $event->getQuoteItem()->getQuote();
+        } else {
+            $quote = $event->getCart()->getQuote();
+        }
+		$items = $quote->getAllItems();
+
+        $countItems = count($items);
+
+		foreach ($items as $item) {
+
+			foreach ($item->getOptions() as $option) {
+				$product = $option->getProduct();
+				$product->load($product->getId());
+                $productQty = $item->getQty();
+                if ($this->checkRecurrentAlone($countItems, $productQty, $product)) {
+                    break;
+                }
+
+				
+			}
+		}
+    }
+
+    /**
+     * Check if recurrent products are alone in the cart
+     * @param type $product
+     */
+    private function checkRecurrentAlone($countItems, $productQty, $product)
+    {
+        if (
+            (
+                $countItems > 1 ||
+                $productQty > 1
+            ) &&
+            $product->getMundipaggRecurrent()
+        ) {
+            Mage::getSingleton('checkout/session')->addError(
+                Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_others')
+            );
             Mage::getSingleton('checkout/session')->addError($this->__(''));
             return false;
-            
         }
     }
 
