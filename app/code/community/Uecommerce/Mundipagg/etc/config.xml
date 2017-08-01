@@ -359,12 +359,6 @@
                 <allowspecific>0</allowspecific>
                 <payment_action>authorize</payment_action>
             </mundipagg_boleto>
-            <mundipagg_recurrencepayment>
-                <model>mundipagg/recurrencepayment</model>
-                <active>0</active>
-                <title><![CDATA[Recorrência no checkout]]></title>
-                <payment_action>authorize</payment_action>
-            </mundipagg_recurrencepayment>
             <mundipagg_debit>
                 <model>mundipagg/debit</model>
                 <active>0</active>
@@ -374,6 +368,13 @@
                 <allowspecific>0</allowspecific>
                 <payment_action>authorize</payment_action>
             </mundipagg_debit>
+            <mundipagg_recurrencepayment>
+                <model>mundipagg/recurrencepayment</model>
+                <active>0</active>
+                <title><![CDATA[Recorrência no checkout]]></title>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_recurrencepayment>
         </payment>
     </default>
 </config>

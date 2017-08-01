@@ -169,6 +169,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         if ($code === 'mundipagg_recurrencepayment'){
             $result->isAvailable = false;
         }
+        $active = Mage::getStoreConfig('payment/' . $code . '/active');
 
         if ($recurrent) {
 			switch ($code) {
@@ -179,11 +180,16 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 					$result->isAvailable = false;
 					break;
                 case 'mundipagg_recurrencepayment':
-                    $result->isAvailable = true;
+                    if ($active === '1') {
+                        $result->isAvailable = true;
+                    }
                     break;
 				case 'mundipagg_creditcard':
 
-                    if (!$this->checkRecurrenceMix($session->getQuote())){
+                    if (
+                        !$this->checkRecurrenceMix($session->getQuote()) &&
+                        $active === '1'
+                    ){
                         $result->isAvailable = false;
                     } else {
                         $result->isAvailable = true;
