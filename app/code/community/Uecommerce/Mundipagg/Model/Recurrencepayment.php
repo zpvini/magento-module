@@ -25,7 +25,6 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
     protected $_isInitializeNeeded = true;
 
     /**
-     * Armazena as informações passadas via formulário no frontend
      * @access public
      * @param array $data
      * @return Uecommerce_Mundipagg_Model_Standard
