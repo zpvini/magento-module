@@ -155,6 +155,42 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$quote->save();
 	}
 
+    public function recurrenceMixConflict()
+    {
+        $session = Mage::getSingleton('checkout/session');
+
+		$recurrent = $session->getMundipaggRecurrency();
+        if ($recurrent) {
+            $active = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/active');
+
+            $quote = $session->getQuote();
+            if ($this->checkRecurrenceMix($quote) &&
+                $this->countTotalCartItems($quote) > 1
+            ) {
+                $msg = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_mix_mix');
+                $message = Mage::getModel('core/message_warning', $msg);
+                Mage::getSingleton('core/session')->addUniqueMessages($message);
+
+                return;
+            }
+        }
+    }
+
+    private function countTotalCartItems($quote)
+    {
+        $items = $quote->getAllItems();
+        
+        foreach ($items as $item) {
+
+            foreach ($item->getOptions() as $option) {
+                $product = $option->getProduct();
+                $product->load($product->getId());
+                $productQty += $item->getQty();
+            }
+        }
+        return $productQty;
+    }
+
 	/**
 	 * Check if recurrency product is in cart in order to show
      * only Mundipagg Credit Card payment
@@ -171,7 +207,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             $result->isAvailable = false;
         }
         $active = Mage::getStoreConfig('payment/' . $code . '/active');
-
         if ($recurrent) {
 			switch ($code) {
 				case 'mundipagg_boleto':
@@ -181,8 +216,13 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 					$result->isAvailable = false;
 					break;
                 case 'mundipagg_recurrencepayment':
-                    if ($active === '1') {
+                    if (
+                        $active === '1' &&
+                        $this->checkItemsAlone($session->getQuote())
+                    ) {
                         $result->isAvailable = true;
+                    } else {
+                        
                     }
                     break;
 				case 'mundipagg_creditcard':
@@ -209,6 +249,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
      */
     private function checkRecurrenceMix($quote) {
         $items = $quote->getAllItems();
+
         foreach ($items as $item) {
 
             foreach ($item->getOptions() as $option) {
@@ -217,7 +258,33 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
                 if ($product->getMundipaggRecurrenceMix() === '1') {
                     return true;
                 }
-                return false;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * @param Object $quote
+     * @return boolean
+     */
+    private function checkItemsAlone($quote) {
+        $items = $quote->getAllItems();
+        $countItems = count($items);
+        if ($countItems > 1) {
+            return false;
+        }
+        foreach ($items as $item) {
+
+            foreach ($item->getOptions() as $option) {
+                $product = $option->getProduct();
+                $product->load($product->getId());
+                $productQty = $item->getQty();
+                if (
+                    $productQty > 1
+                ) {
+                    return false;
+                }
+                return true;
             }
         }
     }
@@ -226,22 +293,9 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     {
         $recurrencePayment = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/active');
         if ($recurrencePayment === '1') {
-
-            $msgConflictRecurrentMixMix = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_mix_mix');
-            $msgConflictRecurrentMixRecurrent = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_mix_recurrent');
-
             $this->checkRecurrenceConflicts($observer);
-
-
-            
             /*Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentOthers);
-            Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentMixMix);
-            Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentMixRecurrent);
-
-
-            return false;*/
-            
-            
+            Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentMixRecurrent);*/
         }
     }
 
@@ -265,10 +319,8 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 				$product->load($product->getId());
                 $productQty = $item->getQty();
                 if ($this->checkRecurrentAlone($countItems, $productQty, $product)) {
-                    break;
+                    return false;
                 }
-
-				
 			}
 		}
     }
@@ -280,11 +332,12 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     private function checkRecurrentAlone($countItems, $productQty, $product)
     {
         if (
+            !$product->getMundipaggRecurrenceMix() &&
+            $product->getMundipaggRecurrent() &&
             (
                 $countItems > 1 ||
                 $productQty > 1
-            ) &&
-            $product->getMundipaggRecurrent()
+            )
         ) {
             Mage::getSingleton('checkout/session')->addError(
                 Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_others')
