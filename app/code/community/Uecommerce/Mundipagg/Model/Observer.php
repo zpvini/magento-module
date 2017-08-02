@@ -289,13 +289,14 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         }
     }
 
+    /*
+     * Recurrent product needs to be alone.
+     */
     public function cartCheckRecurrencyConflicts($observer)
     {
         $recurrencePayment = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/active');
         if ($recurrencePayment === '1') {
             $this->checkRecurrenceConflicts($observer);
-            /*Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentOthers);
-            Mage::getSingleton('checkout/session')->addError($msgConflictRecurrentMixRecurrent);*/
         }
     }
 
@@ -309,35 +310,40 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             $quote = $event->getCart()->getQuote();
         }
 		$items = $quote->getAllItems();
+        $countItems = $this->countTotalCartItems($quote);
 
-        $countItems = count($items);
+        if ($countItems > 0) {
 
-		foreach ($items as $item) {
-
-			foreach ($item->getOptions() as $option) {
-				$product = $option->getProduct();
-				$product->load($product->getId());
-                $productQty = $item->getQty();
-                if ($this->checkRecurrentAlone($countItems, $productQty, $product)) {
-                    return false;
-                }
-			}
-		}
+            //Others + recurrent
+            $this->showRecurrentFirstError($quote, $items[0]);
+            $this->showOthersWithRecurrentError($items, $countItems);
+            
+        }
     }
 
     /**
-     * Check if recurrent products are alone in the cart
-     * @param type $product
+     * Show an error when a recurrent product is adeed with others.
      */
-    private function checkRecurrentAlone($countItems, $productQty, $product)
+    private function showOthersWithRecurrentError($items, $countItems)
+    {
+        if ($countItems >1 && !$this->checkRecurrentAlone($items)) {
+            Mage::getSingleton('checkout/session')->addError(
+                Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_mix_recurrent')
+            );
+            Mage::getSingleton('checkout/session')->addError($this->__(''));
+            return false;
+        }
+    }
+
+
+    /**
+     * Show an error when other products are added with a recurrent one;
+     */
+    private function showRecurrentFirstError($quote, $item)
     {
         if (
-            !$product->getMundipaggRecurrenceMix() &&
-            $product->getMundipaggRecurrent() &&
-            (
-                $countItems > 1 ||
-                $productQty > 1
-            )
+            $this->itemIsOnlyRecurrent($item) &&
+            $this->countTotalCartItems($quote) > 1
         ) {
             Mage::getSingleton('checkout/session')->addError(
                 Mage::getStoreConfig('payment/mundipagg_recurrencepayment/conflict_message_recurrent_others')
@@ -345,6 +351,44 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             Mage::getSingleton('checkout/session')->addError($this->__(''));
             return false;
         }
+    }
+
+    private function itemIsOnlyRecurrent($item)
+    {
+        foreach ($item->getOptions() as $option) {
+            $product = $option->getProduct();
+            $product->load($product->getId());
+            if (
+                $product->getMundipaggRecurrent() &&
+                !$product->getMundipaggRecurrenceMix()
+            ) {
+                return true;
+            }
+            
+        }
+        return false;
+    }
+
+    /**
+     * Check if a recurrent product are alone in the cart
+     * @param type $product
+     */
+    private function checkRecurrentAlone($items)
+    {
+        foreach ($items as $item) {
+            foreach ($item->getOptions() as $option) {
+                $product = $option->getProduct();
+                $product->load($product->getId());
+                if (
+                    $product->getMundipaggRecurrent() &&
+                    !$product->getMundipaggRecurrenceMix()
+                ) {
+                    return false;
+                }
+            }
+            
+        }
+        return true;
     }
 
 
