@@ -211,7 +211,6 @@ if ($recurrent) {
                                                         $currentSelectedToken ? $currentSelectedToken :
                                                         Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
 
-                                                    $expiresAt = "2017-12-01";
                                                     $value = $cc->getId();
                                                     $mask = $cc->getCreditCardMask();
                                                     
