@@ -105,18 +105,6 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract {
 			case 'mundipagg_twocreditcards':
 				$num = 2;
 				break;
-
-			case 'mundipagg_threecreditcards':
-				$num = 3;
-				break;
-
-			case 'mundipagg_fourcreditcards':
-				$num = 4;
-				break;
-
-			case 'mundipagg_fivecreditcards':
-				$num = 5;
-				break;
 		}
 
 		return $num;
@@ -137,15 +125,6 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract {
 				break;
 			case '2':
 				$method = 'mundipagg_twocreditcards';
-				break;
-			case '3':
-				$method = 'mundipagg_threecreditcards';
-				break;
-			case '4':
-				$method = 'mundipagg_fourcreditcards';
-				break;
-			case '5':
-				$method = 'mundipagg_fivecreditcards';
 				break;
 		}
 
