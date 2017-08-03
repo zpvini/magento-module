@@ -161,7 +161,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 			$_request["CreditCardTransactionCollection"] = $this->ConvertCreditcardTransactionCollectionFromRequest($creditcardTransactionCollection, $standard);
 
-			$_request = $recurrencyModel->generateRecurrences($_request, $installmentCount);
+            if($data['payment_method'] === 'mundipagg_recurrencepayment') {
+                $_request = $recurrencyModel->generateRecurrences($_request, $installmentCount);
+            }
 
 			// Buyer data
 			$_request["Buyer"] = array();
