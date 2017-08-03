@@ -1868,7 +1868,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$newStatus = 'overpaid';
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, 'overpaid');
 		} else {
-			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true, $comment = 'Boleto pago', true);
+			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true, 'Boleto pago', true);
 		}
 
 		$order->save();
