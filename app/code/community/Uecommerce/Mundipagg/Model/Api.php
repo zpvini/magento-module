@@ -1311,7 +1311,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 						$helperLog->info($returnMessage);
 
 					} catch (Exception $e) {
-						$returnMessage = "OK | KO | {$returnMessageLabel} | {$e->getMessage()}";
+						$returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
 						$helperLog->error($returnMessage);
 					}
 
