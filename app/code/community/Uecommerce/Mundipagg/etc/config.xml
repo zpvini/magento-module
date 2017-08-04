@@ -42,6 +42,23 @@
                     </checkRecurrencyFrequency>
                 </observers>
             </catalog_product_save_before>
+
+
+
+
+
+            <controller_action_predispatch_checkout_onepage_index>
+                <observers>
+                    <checkRecurrencyFrequency>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>testCheckout</method>
+                    </checkRecurrencyFrequency>
+                </observers>
+            </controller_action_predispatch_checkout_onepage_index>
+
+
+
+
             <controller_action_predispatch>
                 <observers>
                     <sessionUpdate>

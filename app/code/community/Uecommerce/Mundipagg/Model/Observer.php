@@ -512,6 +512,26 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		}
 	}
 
+
+
+
+	public function testCheckout(Varien_Event_Observer $observer)
+    {
+        $quote = Mage::getSingleton('checkout/session')->getQuote();
+        $items = $quote->getAllItems();
+
+        foreach($items as $item) {
+            $item->setCustomPrice(125);
+            $item->setOriginalCustomPrice(125);
+            $item->getProduct();
+            $item->save();
+        }
+    }
+
+
+
+
+
 	public function catalogProductSaveBefore($event) {
 		$product = $event->getProduct();
 		$recurrentOption = (boolean)$product->getMundipaggRecurrent();
