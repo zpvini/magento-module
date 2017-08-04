@@ -211,9 +211,16 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 			switch ($code) {
 				case 'mundipagg_boleto':
 				case 'mundipagg_debit':
-				case 'mundipagg_creditcardoneinstallment':
 				case 'mundipagg_twocreditcards':
-					$result->isAvailable = false;
+                case 'mundipagg_creditcard':
+                    if (
+                        !$this->checkRecurrenceMix($session->getQuote()) &&
+                        $active === '1'
+                    ){
+                        $result->isAvailable = false;
+                        break;
+                    }
+                    $result->isAvailable = true;
 					break;
                 case 'mundipagg_recurrencepayment':
                     if (
@@ -221,21 +228,8 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
                         $this->checkItemsAlone($session->getQuote())
                     ) {
                         $result->isAvailable = true;
-                    } else {
-                        
                     }
                     break;
-				case 'mundipagg_creditcard':
-
-                    if (
-                        !$this->checkRecurrenceMix($session->getQuote()) &&
-                        $active === '1'
-                    ){
-                        $result->isAvailable = false;
-                    } else {
-                        $result->isAvailable = true;
-                    }
-					break;
 				default:
 					$result->isAvailable = false;
 					break;
@@ -517,15 +511,8 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 
 	public function testCheckout(Varien_Event_Observer $observer)
     {
-        $quote = Mage::getSingleton('checkout/session')->getQuote();
-        $items = $quote->getAllItems();
 
-        foreach($items as $item) {
-            $item->setCustomPrice(125);
-            $item->setOriginalCustomPrice(125);
-            $item->getProduct();
-            $item->save();
-        }
+        
     }
 
 
