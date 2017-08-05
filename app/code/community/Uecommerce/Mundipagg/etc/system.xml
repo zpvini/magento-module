@@ -983,6 +983,15 @@
                             <show_in_store>1</show_in_store>
                             <comment>Defina uma mensagem para esse conflito.</comment>
                         </conflict_message_recurrent_mix_recurrent>
+                        <recurrent_mix_message translate="label">
+                            <label>Mensagem da recorrência no checkout review</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Defina uma mensagem que será exibida na finalização do pedido.</comment>
+                        </recurrent_mix_message>
                     </fields>
                 </mundipagg_recurrencepayment>
             </groups>
