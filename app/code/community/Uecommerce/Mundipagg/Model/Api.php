@@ -1294,12 +1294,29 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				//if Magento order is not processing and MundiPagg order status is canceled, cancel the order on Magento
 				if ($order->getState() != Mage_Sales_Model_Order::STATE_PROCESSING && $orderStatus == Uecommerce_Mundipagg_Model_Enum_OrderStatusEnum::CANCELED) {
 
-					if ($order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) {
-						$returnMessage = "OK | {$returnMessageLabel} | Order already canceled.";
+					switch ($order->getState()) {
+						case Mage_Sales_Model_Order::STATE_CANCELED:
+							$returnMessage = "OK | {$returnMessageLabel} | Order already canceled.";
+							$helperLog->info($returnMessage);
+							return $returnMessage;
+						case Mage_Sales_Model_Order::STATE_COMPLETE:
+							foreach ($order->getInvoiceCollection() as $invoice) {
+								if ($invoice->canRefund()) {
+									$invoices[] = $invoice;
+								}
+							}
 
-						$helperLog->info($returnMessage);
-
-						return $returnMessage;
+							if (!empty($invoices)) {
+								$service = Mage::getModel('sales/service_order', $order);
+								foreach ($invoices as $invoice) {
+									$this->closeInvoice($invoice);
+									$this->createCreditMemo($invoice, $service);
+								}
+							}
+							$this->closeOrder($order);
+							$returnMessage = 'OK | ' . $returnMessageLabel . ' | Order closed.';
+							$helperLog->info($returnMessage);
+							return $returnMessage;
 					}
 
 					try {
