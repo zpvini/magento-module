@@ -16,7 +16,16 @@
     $frequency = $this->getMundipaggFrequency();
     $recurrenceMix = $this->getMundipaggRecurrenceMix();
     $reurrenceDiscount = $this->getMundipaggRecurrenceDiscount();
-    if ($recurrence) {
+    if ($recurrenceMix) {
+        echo '<strong>' .
+                'ou ' .
+                $_coreHelper->formatPrice(($this->getPrice() / $recurrences)) .
+                ' ' . $this->__('by') . ' ' .
+                $recurrences . ' ' .
+                $this->__($frequencyType[$frequency] .'s') .
+            '</strong>'
+            ;
+    } elseif ($recurrence) {
         echo '<strong>/' . 
                 strtolower($this->__($frequencyType[$frequency])) .
                 ' ' . $this->__('by') . ' ' .

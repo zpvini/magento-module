@@ -99,11 +99,13 @@ if ($recurrent) {
         case 'semester':
             $interval *= 6;
             $freq = 'Month';
-            break;;
+            break;
     }
     $recFinal = strtotime('+' . $interval . ' ' . $freq . 's');
     $recurrenceFinalDate = date('Y/m/01', $recFinal);
-    
+    if ($recurrenceMix) {
+        $baseGrandTotal = $baseGrandTotal / $interval;
+    }
     $recurrenceTotalString =
         '<strong>' .
                $currencySymbol .
@@ -113,7 +115,7 @@ if ($recurrent) {
                $interval . ' ' .
                $this->__($frequencyType[$frequency] .'s') .
            '</strong>'.
-        '<p>Fim do ciclo: ' . date("d/m/Y", $recFinal) . "</p>";
+        '<p>Fim do ciclo: ' . date("m/Y", $recFinal) . "</p>";
 }
 ?>
 

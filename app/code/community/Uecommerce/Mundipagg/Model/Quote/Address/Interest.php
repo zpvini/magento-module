@@ -52,7 +52,7 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Interest extends Mage_Sales_Model
 
         $quote = $address->getQuote();
         $amount = $quote->getMundipaggInterest();
-
+        
         if($amount > 0) {
             $this->_setBaseAmount(0.00);
             $this->_setAmount(0.00);
