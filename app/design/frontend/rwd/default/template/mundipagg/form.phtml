@@ -179,8 +179,12 @@ if ($recurrent) {
                 ): ?>
                 <ul>
 					<?php for ($c = 1; $c <= $num; $c++): ?>
-                        <input type="hidden" id="mundipagg_type" name="payment[mundipagg_type]"
-                               value="<?php echo $paymentMethod; ?>"/>
+                        <input
+                            type="hidden"
+                            id="mundipagg_type"
+                            name="payment[mundipagg_type]"
+                            value="<?php echo $paymentMethod; ?>"
+                        />
 						<?php $currentSelectedToken = null; ?>
                         <?php
                             if ($countCcs > 0) {
@@ -210,9 +214,7 @@ if ($recurrent) {
                                             foreach ($ccs as $id => $cc):
 
                                                     if ($countCcs == 1) {
-                                                            $currentSelectedToken = 
-                                                                Mage::getSingleton('mundipagg/source_cctypes')
-                                                                ->getCcTypeForLabel($cc->getCcType());
+                                                            $currentSelectedToken = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
                                                     }
                                                     $dataType = 
                                                         $currentSelectedToken ? $currentSelectedToken :
@@ -234,7 +236,7 @@ if ($recurrent) {
                                                             $selected .
                                                             ' data="' .
                                                             $dataType . '">' .
-                                                            $cc->getCcType() .
+                                                            $dataType .
                                                             ' ' .
                                                             $mask .
                                                         '</option>';
