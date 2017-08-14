@@ -45,8 +45,8 @@ class Uecommerce_Mundipagg_Model_Source_Cctypes
     public function getCcTypeForLabel($label){
         $ccTypes = $this->toOptionArray();
         foreach($ccTypes as $cc){
-            if($cc['label'] == $label){
-                return $cc['value'];
+            if($cc['value'] == $label){
+                return $cc['label'];
             }
         }
     }

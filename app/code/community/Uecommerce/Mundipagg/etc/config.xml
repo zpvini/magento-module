@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Uecommerce_Mundipagg>
-            <version>2.11.02</version>
+            <version>2.12.02</version>
         </Uecommerce_Mundipagg>
     </modules>
 
@@ -42,6 +42,16 @@
                     </checkRecurrencyFrequency>
                 </observers>
             </catalog_product_save_before>
+
+            <payment_method_is_active>
+                <observers>
+                    <checkRecurrencyFrequency>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>changeRecurrenceValues</method>
+                    </checkRecurrencyFrequency>
+                </observers>
+            </payment_method_is_active>
+
             <controller_action_predispatch>
                 <observers>
                     <sessionUpdate>
@@ -342,13 +352,6 @@
                 <integration_timeout_limit>30</integration_timeout_limit>
                 <overwrite_magento_flags>1</overwrite_magento_flags>
             </mundipagg_standard>
-            <mundipagg_creditcardoneinstallment>
-                <model>mundipagg/creditcardoneinstallment</model>
-                <active>0</active>
-                <title><![CDATA[Cartão de Crédito à vista]]></title>
-                <allowspecific>0</allowspecific>
-                <payment_action>authorize</payment_action>
-            </mundipagg_creditcardoneinstallment>
             <mundipagg_creditcard>
                 <model>mundipagg/creditcard</model>
                 <active>0</active>

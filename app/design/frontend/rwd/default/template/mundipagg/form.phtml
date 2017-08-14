@@ -84,7 +84,28 @@ $frequencyType = [
     'Yearly' => 'Year'
 ];
 
+$recurrenceFinalDate = false;
+$recurrenceTotalString = "";
+$recFinal = "";
+$recurrenceFinalDate = "";
 if ($recurrent) {
+    $freq = $frequencyType[$frequency];
+
+    switch (strtolower($freq)) {
+        case 'quarter':
+            $interval *= 3;
+            $freq = 'Month';
+            break;
+        case 'semester':
+            $interval *= 6;
+            $freq = 'Month';
+            break;
+    }
+    $recFinal = strtotime('+' . $interval . ' ' . $freq . 's');
+    $recurrenceFinalDate = date('Y/m/01', $recFinal);
+    if ($recurrenceMix) {
+        $baseGrandTotal = $baseGrandTotal / $interval;
+    }
     $recurrenceTotalString =
         '<strong>' .
                $currencySymbol .
@@ -93,7 +114,8 @@ if ($recurrent) {
                ' ' . $this->__('by') . ' ' .
                $interval . ' ' .
                $this->__($frequencyType[$frequency] .'s') .
-           '</strong>';
+           '</strong>'.
+        '<p>Fim do ciclo: ' . date("m/Y", $recFinal) . "</p>";
 }
 ?>
 
@@ -157,9 +179,19 @@ if ($recurrent) {
                 ): ?>
                 <ul>
 					<?php for ($c = 1; $c <= $num; $c++): ?>
-                        <input type="hidden" id="mundipagg_type" name="payment[mundipagg_type]"
-                               value="<?php echo $paymentMethod; ?>"/>
+                        <input
+                            type="hidden"
+                            id="mundipagg_type"
+                            name="payment[mundipagg_type]"
+                            value="<?php echo $paymentMethod; ?>"
+                        />
 						<?php $currentSelectedToken = null; ?>
+                        <?php
+                            if ($countCcs > 0) {
+                                $ccsData = $ccs->getData();
+                                $expiresAt = $ccsData[0]["expires_at"];
+                            }
+                        ?>
 						<?php if ($countCcs > 0): ?>
                             <li class="fields" style="margin-bottom: 5px;">
                                 <div class="field">
@@ -182,22 +214,31 @@ if ($recurrent) {
                                             foreach ($ccs as $id => $cc):
 
                                                     if ($countCcs == 1) {
-                                                            $currentSelectedToken = 
-                                                                Mage::getSingleton('mundipagg/source_cctypes')
-                                                                ->getCcTypeForLabel($cc->getCcType());
+                                                            $currentSelectedToken = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
                                                     }
                                                     $dataType = 
                                                         $currentSelectedToken ? $currentSelectedToken :
                                                         Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cc->getCcType());
+
+                                                    $value = $cc->getId();
+                                                    $mask = $cc->getCreditCardMask();
+                                                    
+                                                    if ($_code === 'mundipagg_recurrencepayment') {
+                                                        if (strtotime($recurrenceFinalDate) > strtotime($expiresAt)) {
+                                                            $value = "";
+                                                            $mask .= " (Data de validade do cartão menor do que a data da compra)";
+                                                        }
+                                                    }
+
                                                     echo '<option value="' .
-                                                            $cc->getId() .
+                                                            $value .
                                                             '" ' .
                                                             $selected .
                                                             ' data="' .
                                                             $dataType . '">' .
-                                                            $cc->getCcType() .
+                                                            $dataType .
                                                             ' ' .
-                                                            $cc->getCreditCardMask() .
+                                                            $mask .
                                                         '</option>';
                                             endforeach;
                                             ?>
@@ -497,6 +538,13 @@ if ($recurrent) {
 								<?php endif; ?>
 							<?php endif; ?>
                         </div>
+                        <?php
+                            if ($recurrenceFinalDate) {
+                                echo "<input id='recurrenceFinalDate' type='hidden' value='" . $recurrenceFinalDate . "' />";
+                            } else {
+                                echo "<input id='recurrenceFinalDate' type='hidden' value='' />";
+                            }
+                        ?>
                         <?php if ($_code === 'mundipagg_recurrencepayment') { ?>
                             <li style="margin-bottom: 5px;" class="recurrenceTotal">
                                 <br>
@@ -522,12 +570,23 @@ if ($recurrent) {
             var ccExpMonth = v;
             var ccExpYear = $(elm.id.replace("_expirationMonth", "_expirationYear")).value;
 
+            //Recurrence expiration check
+            var expiration = new Date("20" + ccExpYear + "/" + ('0000'+ccExpMonth).slice(-2) + "/01");
+
+            if (document.getElementById("recurrenceFinalDate").value.length > 0) {
+                var recurrenceExpiration = new Date(document.getElementById("recurrenceFinalDate").value);
+                if(expiration.getTime() < recurrenceExpiration.getTime()){
+                    return false;
+                }
+            }
+            
             var currentTime = new Date();
             var currentMonth = currentTime.getMonth() + 1;
             var currentYear = currentTime.getFullYear().toString().substr(2, 2);
             if (ccExpMonth < currentMonth && ccExpYear == currentYear) {
                 return false;
             }
+
             return true;
         }]
     ]);
