@@ -1773,6 +1773,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 	/**
 	 * Create invoice
 	 * @todo must be deprecated use Uecommerce_Mundipagg_Model_Order_Payment createInvoice
+	 * @param Mage_Sales_Model_Order $order
+	 * @param array $data
+	 * @param float $totalPaid
+	 * @param string $status
 	 * @return string OK|KO
 	 */
 	private function createInvoice($order, $data, $totalPaid, $status) {
@@ -1848,8 +1852,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$newStatus = 'overpaid';
 			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, 'overpaid');
 		} else {
-			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true);
-                        $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_PROCESSING, $comment = 'Boleto pago', true);
+			$order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true, 'Boleto pago', true);
 		}
 
 		$order->save();
