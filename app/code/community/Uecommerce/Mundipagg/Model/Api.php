@@ -1296,7 +1296,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 					switch ($order->getState()) {
 						case Mage_Sales_Model_Order::STATE_CANCELED:
-							$returnMessage = "OK | {$returnMessageLabel} | Order already canceled.";
+							$returnMessage = 'OK | ' . $returnMessageLabel . ' | Order already canceled.';
 							$helperLog->info($returnMessage);
 							return $returnMessage;
 						case Mage_Sales_Model_Order::STATE_COMPLETE:
