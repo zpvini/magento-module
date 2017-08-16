@@ -179,13 +179,15 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     private function countTotalCartItems($quote)
     {
         $items = $quote->getAllItems();
-        
+        $productQty = 0;
         foreach ($items as $item) {
 
             foreach ($item->getOptions() as $option) {
                 $product = $option->getProduct();
                 $product->load($product->getId());
-                $productQty += $item->getQty();
+                if ($item->getQty()) {
+                    $productQty += $item->getQty();
+                }
             }
         }
         return $productQty;
