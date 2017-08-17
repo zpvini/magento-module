@@ -23,6 +23,14 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
     protected $_canManageRecurringProfiles = false;
     protected $_allowCurrencyCode = array('BRL', 'USD', 'EUR');
     protected $_isInitializeNeeded = true;
+    private $brands = [
+        'VI' => 'Visa',
+        'MC' => 'Mastercard',
+        'AE' => 'Amex',
+        'DI' => 'Diners',
+        'HI' => 'Hipercard',
+        'EL' => 'Elo'
+    ];
 
     /**
      * Transaction ID
@@ -1080,9 +1088,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                         }
 
                         if (Mage::helper('mundipagg')->issuer(isset($postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type']))) {
-                            $data['payment'][$i]['CreditCardBrandEnum'] = $postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type'];
+                            $data['payment'][$i]['CreditCardBrandEnum'] = $this->brands[$postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type']];
                         } else {
-                            $data['payment'][$i]['CreditCardBrandEnum'] = $mundipaggData[$method . '_' . $num . '_' . $i . '_cc_type'];
+                            $data['payment'][$i]['CreditCardBrandEnum'] = $this->brands[$mundipaggData[$method . '_' . $num . '_' . $i . '_cc_type']];
                         }
 
                         if (isset($postData['payment'][$method . '_new_credito_parcelamento_' . $num . '_' . $i])) {
