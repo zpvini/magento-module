@@ -1159,7 +1159,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
                             $data['payment'][$i]['AmountInCents'] =
                                 $data['payment'][$i]['AmountInCents'] +
-                                age::helper('mundipagg/installments')->getInterestForCard(
+                                Mage::helper('mundipagg/installments')->getInterestForCard(
                                     $data['payment'][$i]['InstallmentCount'],
                                     $cctype,
                                     $data['payment'][$i]['AmountInCents']
