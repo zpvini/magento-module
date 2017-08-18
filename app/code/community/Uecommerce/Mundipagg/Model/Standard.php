@@ -1105,26 +1105,28 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                             $data['payment'][$i]['token'] = null;
                         }
 
-
+                        $new = $method . '_new_value_' . $num . '_' . $i;
                         if (
-                                isset($postData['payment'][$method . '_new_value_' . $num . '_' . $i]) &&
-                                $postData['payment'][$method . '_new_value_' . $num . '_' . $i] != ''
+                                isset($postData['payment'][$new]) &&
+                                $postData['payment'][$new] != ''
                         ) {
-                            $data['payment'][$i]['AmountInCents'] = str_replace(',', '.', $postData['payment'][$method . '_new_value_' . $num . '_' . $i]);
-
+                            $data['payment'][$i]['AmountInCents'] = str_replace(',', '.', $postData['payment'][$new]);
 
                             if (isset($postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type'])) {
                                 $cctype = $postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type'];
                             } else {
                                 $cctype = $mundipaggData[$method . '_' . $num . '_' . $i . '_cc_type'];
                             }
-
-                            $data['payment'][$i]['AmountInCents'] = $data['payment'][$i]['AmountInCents'] +
-                                    Mage::helper('mundipagg/installments')->getInterestForCard(
-                                            $data['payment'][$i]['InstallmentCount'], $cctype, $data['payment'][$i]['AmountInCents']
+                            
+                            $interest = 
+                            Mage::helper('mundipagg/installments')->getInterestForCard(
+                                    $data['payment'][$i]['InstallmentCount'], 
+                                    $cctype, 
+                                    $data['payment'][$i]['AmountInCents']
                             );
 
-                            $data['payment'][$i]['AmountInCents'] = $data['payment'][$i]['AmountInCents'] * 100;
+                            $amountInCents = $data['payment'][$i]['AmountInCents'] + $interest;
+                            $data['payment'][$i]['AmountInCents'] = $amountInCents * 100;
                         } else {
                             if (!isset($postData['partial'])) {
                                 $data['payment'][$i]['AmountInCents'] = $order->getGrandTotal() * 100;
