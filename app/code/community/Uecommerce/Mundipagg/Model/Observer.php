@@ -141,7 +141,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 	}
 
 	public function removeInterest($observer) {
-		$session = Mage::getSingleton('admin/session');
+		/*$session = Mage::getSingleton('admin/session');
 
 		if ($session->isLoggedIn()) {
 			$quote = Mage::getSingleton('adminhtml/session_quote')->getQuote();
@@ -152,7 +152,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		$quote->setMundipaggInterest(0.0);
 		$quote->setMundipaggBaseInterest(0.0);
 		$quote->setTotalsCollectedFlag(false)->collectTotals();
-		$quote->save();
+		$quote->save();*/
 	}
 
     public function recurrenceMixConflict()
@@ -179,13 +179,15 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     private function countTotalCartItems($quote)
     {
         $items = $quote->getAllItems();
-        
+        $productQty = 0;
         foreach ($items as $item) {
 
             foreach ($item->getOptions() as $option) {
                 $product = $option->getProduct();
                 $product->load($product->getId());
-                $productQty += $item->getQty();
+                if ($item->getQty()) {
+                    $productQty += $item->getQty();
+                }
             }
         }
         return $productQty;
