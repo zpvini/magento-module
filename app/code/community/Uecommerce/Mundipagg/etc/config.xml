@@ -218,6 +218,11 @@
                         <after>shipping</after>
                         <before>grand_total</before>
                     </mundipagg_interest>
+                    <mundipagg_recurrence>
+                        <class>Uecommerce_Mundipagg_Model_Quote_Address_Recurrence</class>
+                        <after>shipping</after>
+                        <before>grand_total</before>
+                    </mundipagg_recurrence>
                 </totals>
             </quote>
             <order>

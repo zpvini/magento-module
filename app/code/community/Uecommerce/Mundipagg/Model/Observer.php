@@ -547,7 +547,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     }
 
     public function changeRecurrenceValues(Varien_Event_Observer $observer) {
-        $quote = Mage::getSingleton('checkout/session')->getQuote();
+        /*$quote = Mage::getSingleton('checkout/session')->getQuote();
         $quoteid = $quote->getId();
 
         $payment = $quote->getPayment();
@@ -643,7 +643,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
                     }
                 }
             }
-        }
+        }*/
     }
 
     private function getRecurrencePartial($total, $items)
