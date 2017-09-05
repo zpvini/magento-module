@@ -1259,7 +1259,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         
             //If is recurrency order and it status is processing or canceled stop the execution
             if(($order->getState() == Mage_Sales_Model_Order::STATE_PROCESSING ||
-                    $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) &&
+                $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) &&
                 $transactionData['IsRecurrency'] === 'true'
             ) {
                 $returnMessage = "OK | Order #{$orderReference} | This is a recurrency order and its status is already " . $order->getState();
