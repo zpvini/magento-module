@@ -545,30 +545,18 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             }
         }
     }
-    
-    private function getCouponDiscount($items)
-    {
-        $discountAmount = 0;
-        foreach ($items as $item){
-            $discountAmount += $item->getDiscountAmount();
-        }
-        
-        return $discountAmount;
-    }
 
-    public function changeRecurrenceValues(Varien_Event_Observer $observer)
-    {       
+    public function changeRecurrenceValues(Varien_Event_Observer $observer) {
         $quote = Mage::getSingleton('checkout/session')->getQuote();
         $quoteid = $quote->getId();
-      
-        $couponDiscount = $this->getCouponDiscount($quote->getAllItems());
-        $interest = $quote->getMundipaggInterest();
-        $paymentMethod = $quote->getPayment()->getMethod();
-        
+
+        $payment = $quote->getPayment();
+
+        $quoteItems = $quote->getAllItems();
+        $discountAmount = $this->getRecurrenceDiscount($quoteItems);
+
         if ($quoteid) {
             $total = $quote->getGrandTotal();
-            $total = $total - $couponDiscount;
-            $total = $total + $interest;
 
             $quote->setSubtotal(0);
             $quote->setBaseSubtotal(0);
@@ -579,9 +567,10 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             $quote->setGrandTotal(0);
             $quote->setBaseGrandTotal(0);
 
+
             $canAddItems = $quote->isVirtual() ? ('billing') : ('shipping');
-            
             foreach ($quote->getAllAddresses() as $address) {
+
                 $address->setSubtotal(0);
                 $address->setBaseSubtotal(0);
 
@@ -590,50 +579,64 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 
                 $address->collectTotals();
 
-                $quote->setSubtotal((float) $total);
-                $quote->setBaseSubtotal((float) $total);
+                $quote->setSubtotal((float) $quote->getSubtotal() + $address->getSubtotal());
+                $quote->setBaseSubtotal((float) $quote->getBaseSubtotal() + $address->getBaseSubtotal());
 
-                $quote->setGrandTotal((float) $total);
-                $quote->setBaseGrandTotal((float) $total);
+                $quote->setGrandTotal((float) $quote->getGrandTotal() + $address->getGrandTotal());
+                $quote->setBaseGrandTotal((float) $quote->getBaseGrandTotal() + $address->getBaseGrandTotal());
 
                 $quote->save();
-                
-                if ($this->checkRecurrenceMix($quote) && $this->checkItemAlone($quote)) {
-                    // pagamento recorrente
-                    if ($paymentMethod === 'mundipagg_recurrencepayment') {
-                        $recurrenceInstallmentValue = $this->getRecurrencePartial(
-                            $quote->getGrandTotal(),
-                            $quoteItems
-                        );
-                        
+
+                $quote->setGrandTotal($quote->getBaseSubtotal() - $discountAmount)
+                        ->setBaseGrandTotal($quote->getBaseSubtotal() - $discountAmount)
+                        ->setSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
+                        ->setBaseSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
+                        ->save();
+
+                if (
+                    $this->checkRecurrenceMix($quote) &&
+                    $this->checkItemAlone($quote)
+                ) {
+                    $paymentMethod = $quote->getPayment()->getMethod();
+                    if (
+                        $paymentMethod === 'mundipagg_recurrencepayment'
+                    ) {
+                        $totalWithDiscount = $this->getRecurrencePartial($total, $quoteItems);
                         if ($address->getAddressType() == $canAddItems) {
-                            $address->setSubtotalWithDiscount((float) $recurrenceInstallmentValue);
-                            $address->setGrandTotal((float) $recurrenceInstallmentValue);
-                            $address->setBaseSubtotalWithDiscount((float) $recurrenceInstallmentValue);
-                            $address->setBaseGrandTotal((float) $recurrenceInstallmentValue);
-                            
+                            //Muda o valor do pedido para o valor da parcela da recorrência
+                            $msg = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrent_mix_message');
+                            $address->setSubtotalWithDiscount((float) $totalWithDiscount);
+                            $address->setGrandTotal((float) $totalWithDiscount);
+                            $address->setBaseSubtotalWithDiscount((float) $totalWithDiscount);
+                            $address->setBaseGrandTotal((float) $totalWithDiscount);
+                            if ($address->getDiscountDescription()) {
+                                $address->setDiscountAmount(-($address->getDiscountAmount()));
+                                
+                                $address->setBaseDiscountAmount($address->getBaseDiscountAmount());
+                            } else {
+                                
+                            }
                             $address->save();
                         }
-                    // pagamento avulso
                     } else {
                         if ($address->getAddressType() == $canAddItems) {
-                            $msg = 'Desconto para pagamento único';
-                            
-                            $total -= $this->getRecurrenceDiscount($quoteItems);
-                            $discountAmount = $this->getRecurrenceDiscount($quoteItems);
-                            $subtotalWithDiscount = (float) $total - $discountAmount;
-                            $grandTotal = (float) $total;
-                            $baseSubtotalWithDiscount = (float) $total - $discountAmount;
-                            $baseGrandTotal = 100;//(float) $address->getBaseGrandTotal() - $discountAmount;
-                            
-                            $address->setSubtotalWithDiscount($subtotalWithDiscount);
-                            $address->setGrandTotal($grandTotal);
-                            $address->setBaseSubtotalWithDiscount($baseSubtotalWithDiscount);
-                            $address->setBaseGrandTotal($baseGrandTotal);
-                            
-                            $address->setDiscountAmount($discountAmount * (-1));
-                            $address->setDiscountDescription($address->getDiscountDescription() . " | " .$msg);
-                            $address->setBaseDiscountAmount($discountAmount * (-1));
+                            //Aplica desconto se o produto for misto e a compra for à vista
+                            $msg = 'Desconto para pagamento avulso';
+                            $address->setSubtotalWithDiscount((float) $address->getSubtotalWithDiscount() - $discountAmount);
+                            $address->setGrandTotal((float) $address->getGrandTotal() - $discountAmount);
+                            $address->setBaseSubtotalWithDiscount((float) $address->getBaseSubtotalWithDiscount() - $discountAmount);
+                            $address->setBaseGrandTotal((float) $address->getBaseGrandTotal() - $discountAmount);
+                            if ($address->getDiscountDescription()) {
+                                $address->setDiscountAmount(-($address->getDiscountAmount() - $discountAmount));
+                                $address->setDiscountDescription(
+                                        $address->getDiscountDescription() . $msg
+                                );
+                                $address->setBaseDiscountAmount(-($address->getBaseDiscountAmount() - $discountAmount));
+                            } else {
+                                $address->setDiscountAmount(-($discountAmount));
+                                $address->setDiscountDescription($msg);
+                                $address->setBaseDiscountAmount(-($discountAmount));
+                            }
                             $address->save();
                         }
                     }
