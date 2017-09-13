@@ -47,8 +47,6 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Interest extends Mage_Sales_Model
         }
 
         $this->_setAddress($address);
-        $addressObj = $this->_getAddress();
-        $totals = $addressObj->_totals;
         
         parent::collect($address);
 
@@ -65,9 +63,8 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Interest extends Mage_Sales_Model
             $this->_setBaseAmount($amount);
             $this->_setAmount($amount);
             
-            
-            $shippingAmount = $totals['shipping_amount'];
-            $baseSubtotal = $totals['base_subtotal'];
+            $shippingAmount = $address->getShippingAmount();
+            $baseSubtotal = $address->getBaseSubtotal();
             $totalOrderAmount = $baseSubtotal + $shippingAmount + $amount;
             $address->setGrandTotal($totalOrderAmount);
             $address->setBaseGrandTotal($totalOrderAmount);
