@@ -1,0 +1,180 @@
+<_>
+   <form_key>NmUUfJ5AumhPckJf</form_key>
+   <name>Mundipagg_Integracao</name>
+   <channel>community</channel>
+   <version_ids>
+      <version_ids>2</version_ids>
+   </version_ids>
+   <summary>MundiPagg payment gateway integration extension / Integração com o gateway de pagamentos MundiPagg.</summary>
+   <description>MundiPagg Payment Gateway
+Using this extension, shopkeepers can offer different payment methods through the brazilian payment gateway MundiPagg.
+
+This extension supports credit card and boleto as payment methods, also it has &quot;Instant Buy&quot; (token transaction) where the shopkeeper can save customers credit card for future orders. The data will be saved on MundiPagg servers (PCI certified).
+
+MundiPagg will notify the store when the order payment status is updated.
+
+IMPORTANT
+Always install our extension in your development environment before going live. We do not take any responsibility and we are not liable for any damage caused through use of products or services.
+
+
+Utilizando a extensão de integração com o gateway de pagamentos Mundipagg, lojistas podem oferecer diferentes meios de pagamentos em sua loja.
+
+Esta extensão suporta cartões de crédito e boleto como meios de pagamento, além de oferecer o &quot;Instant Buy&quot; da MundiPagg (tokenização de cartões) onde o lojista pode disponibilizar a opção do cliente salvar as informações do cartão para as compras futuras. Os dados são armazenados nos servidores da MundiPagg que tem certificação PCI.
+
+A MundiPagg irá notificar a loja das atualizações do status de pagamento dos pedidos.
+
+IMPORTANTE
+Em qualquer procedimento de instalação ou update existem riscos, aconselhamos sempre criar backups de sua loja e efetuar qualquer procedimento em ambiente de desenvolvimento antes, nunca diretamente em produção. Não nos responsabilizamos por eventuais incidentes causados por negligenciar este alerta ou por uso de produtos ou serviços de terceiros.</description>
+   <license>MIT</license>
+   <license_uri/>
+   <version>2.12.06</version>
+   <stability>stable</stability>
+   <notes>- fix bug with variable totals
+- fix indentation
+- fix problem with field from post notification
+- Code refact.</notes>
+   <authors>
+      <name>
+         <name>mundipagg</name>
+      </name>
+      <user>
+         <user>mundi</user>
+      </user>
+      <email>
+         <email>mundi@mundipagg.com</email>
+      </email>
+   </authors>
+   <depends_php_min>5.4.0</depends_php_min>
+   <depends_php_max>7.1.0</depends_php_max>
+   <depends>
+      <package>
+         <name>
+            <name/>
+         </name>
+         <channel>
+            <channel/>
+         </channel>
+         <min>
+            <min/>
+         </min>
+         <max>
+            <max/>
+         </max>
+         <files>
+            <files>   </files>
+         </files>
+      </package>
+      <extension>
+         <name>
+            <name>Core</name>
+         </name>
+         <min>
+            <min/>
+         </min>
+         <max>
+            <max/>
+         </max>
+      </extension>
+   </depends>
+   <contents>
+      <target>
+         <target>magelocal</target>
+         <target>magecommunity</target>
+         <target>magedesign</target>
+         <target>magedesign</target>
+         <target>magedesign</target>
+         <target>magedesign</target>
+         <target>magedesign</target>
+         <target>mageetc</target>
+         <target>magelocale</target>
+         <target>magelocale</target>
+         <target>mageweb</target>
+         <target>mageskin</target>
+         <target>mageskin</target>
+         <target>mageskin</target>
+         <target>mageskin</target>
+         <target>mage</target>
+         <target>mage</target>
+      </target>
+      <path>
+         <path/>
+         <path>Uecommerce</path>
+         <path>adminhtml/default/default/layout/mundipagg.xml</path>
+         <path>adminhtml/default/default/template/mundipagg</path>
+         <path>frontend/base/default/layout/mundipagg.xml</path>
+         <path>frontend/base/default/template/mundipagg</path>
+         <path>frontend/rwd/default/template/mundipagg</path>
+         <path>modules/Uecommerce_Mundipagg.xml</path>
+         <path>en_US/Uecommerce_Mundipagg.csv</path>
+         <path>pt_BR/Uecommerce_Mundipagg.csv</path>
+         <path>js/uecommerce</path>
+         <path>adminhtml/default/default/images/mundipagg</path>
+         <path>frontend/base/default/css/mundipagg.css</path>
+         <path>frontend/base/default/images/mundipagg</path>
+         <path>frontend/default/default/images/mundipagg/</path>
+         <path>README.md</path>
+         <path>modman</path>
+      </path>
+      <type>
+         <type>file</type>
+         <type>dir</type>
+         <type>file</type>
+         <type>dir</type>
+         <type>file</type>
+         <type>dir</type>
+         <type>dir</type>
+         <type>file</type>
+         <type>file</type>
+         <type>file</type>
+         <type>dir</type>
+         <type>dir</type>
+         <type>file</type>
+         <type>dir</type>
+         <type>dir</type>
+         <type>file</type>
+         <type>file</type>
+      </type>
+      <include>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+         <include/>
+      </include>
+      <ignore>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+         <ignore/>
+      </ignore>
+   </contents>
+   <page>1</page>
+   <limit>200</limit>
+   <folder/>
+   <package/>
+</_>

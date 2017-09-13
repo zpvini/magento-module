@@ -603,6 +603,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
                     ) {
                         $totalWithDiscount = $this->getRecurrencePartial($total, $quoteItems);
                         if ($address->getAddressType() == $canAddItems) {
+                            //Muda o valor do pedido para o valor da parcela da recorrência
                             $msg = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrent_mix_message');
                             $address->setSubtotalWithDiscount((float) $totalWithDiscount);
                             $address->setGrandTotal((float) $totalWithDiscount);
@@ -622,6 +623,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
                         }
                     } else {
                         if ($address->getAddressType() == $canAddItems) {
+                            //Aplica desconto se o produto for misto e a compra for à vista
                             $msg = 'Desconto para pagamento avulso';
                             $address->setSubtotalWithDiscount((float) $address->getSubtotalWithDiscount() - $discountAmount);
                             $address->setGrandTotal((float) $address->getGrandTotal() - $discountAmount);
