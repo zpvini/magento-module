@@ -1,6 +1,7 @@
 <?php
 
 class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Standard {
+
 	/*
 	 * Update status and notify customer or not
 	 */
@@ -140,20 +141,20 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 		}
 	}
 
-	public function removeInterest($observer) {
-		/*$session = Mage::getSingleton('admin/session');
+    public function removeInterest($observer) {
+            /*$session = Mage::getSingleton('admin/session');
 
-		if ($session->isLoggedIn()) {
-			$quote = Mage::getSingleton('adminhtml/session_quote')->getQuote();
-		} else {
-			$quote = Mage::getSingleton('checkout/session')->getQuote();
-		}
+            if ($session->isLoggedIn()) {
+                    $quote = Mage::getSingleton('adminhtml/session_quote')->getQuote();
+            } else {
+                    $quote = Mage::getSingleton('checkout/session')->getQuote();
+            }
 
-		$quote->setMundipaggInterest(0.0);
-		$quote->setMundipaggBaseInterest(0.0);
-		$quote->setTotalsCollectedFlag(false)->collectTotals();
-		$quote->save();*/
-	}
+            $quote->setMundipaggInterest(0.0);
+            $quote->setMundipaggBaseInterest(0.0);
+            $quote->setTotalsCollectedFlag(false)->collectTotals();
+            $quote->save();*/
+    }
 
     public function recurrenceMixConflict()
     {
@@ -193,13 +194,13 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         return $productQty;
     }
 
-	/**
-	 * Check if recurrency product is in cart in order to show
-     * only Mundipagg Credit Card payment
-	 */
-	public function checkForRecurrency($observer) {
-		$session = Mage::getSingleton('checkout/session');
-		$recurrent = $session->getMundipaggRecurrency();
+    /**
+    * Check if recurrency product is in cart in order to show
+    * only Mundipagg Credit Card payment
+    */
+    public function checkForRecurrency($observer) {
+        $session = Mage::getSingleton('checkout/session');
+        $recurrent = $session->getMundipaggRecurrency();
 
         $instance = $observer->getMethodInstance();
         $result = $observer->getResult();
@@ -209,40 +210,57 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             $result->isAvailable = false;
         }
         $active = Mage::getStoreConfig('payment/' . $code . '/active');
+        $thereIsrecurrentProduct = $this->checkRecurrence($session->getQuote());
         $isMundipagg = strpos($code, "mundipagg_");
-        //0 => First string position. (true)
+        
+        //0 => First string position = true. 
         if (
             $isMundipagg === 0 &&
-            $this->checkRecurrence($session->getQuote())
+            $thereIsrecurrentProduct &&
+            $active
         ) {
-			switch ($code) {
-				case 'mundipagg_boleto':
-				case 'mundipagg_debit':
-				case 'mundipagg_twocreditcards':
-                case 'mundipagg_creditcard':
-                    if (
-                        $this->checkRecurrenceMix($session->getQuote()) &&
-                        $active === '1'
-                    ){
-                        $result->isAvailable = true;
-                        break;
-                    }
+            $this->switchPaymentMethods($code, $result, $session->getQuote(), true);
+        }
+    }
+    
+    /**
+     * Enable/disable Mundipagg payment methods for recurrence
+     * @param string $code
+     * @param object $result
+     */
+    private function switchPaymentMethods($code, $result, $quote) 
+    {
+        $itemAlone = $this->checkItemAlone($quote);
+        $recurenceMix = $this->checkRecurrenceMix($quote);
+        
+        if ($recurenceMix && $itemAlone) {
+            $result->isAvailable = true;
+            return;
+        }
+        
+        switch ($code) {
+            case 'mundipagg_boleto':
+            case 'mundipagg_debit':
+            case 'mundipagg_twocreditcards':
+            case 'mundipagg_creditcard':
+                if ($itemAlone && !$recurenceMix) {
                     $result->isAvailable = false;
-					break;
-                case 'mundipagg_recurrencepayment':
-                    if (
-                        $active === '1' &&
-                        $this->checkItemsAlone($session->getQuote())
-                    ) {
-                        $result->isAvailable = true;
-                    }
                     break;
-				default:
-					$result->isAvailable = false;
-					break;
-			}
-		}
-	}
+                }
+                $result->isAvailable = true;
+                break;
+            case 'mundipagg_recurrencepayment':
+                if ($itemAlone && !$recurenceMix) {
+                    $result->isAvailable = true;
+                    break;
+                }
+                $result->isAvailable = false;
+                break;
+            default:
+                $result->isAvailable = false;
+            break;
+        }
+    }
 
     /**
      * Check if exists a recurrent product in cart
@@ -286,7 +304,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
      * @param Object $quote
      * @return boolean
      */
-    private function checkItemsAlone($quote) {
+    private function checkItemAlone($quote) {
         $items = $quote->getAllItems();
         $countItems = count($items);
         if ($countItems > 1) {
@@ -411,191 +429,186 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     }
 
 
-	/**
-	 * Add discount amount in the quote when partial payment
-	 *
-	 * @param type $observer
-	 */
-	public function addDiscountWhenPartial($observer) {
-		$session = Mage::getSingleton('checkout/session');
-		if (!$session->getApprovalRequestSuccess() == 'partial') {
-			$request = Mage::app()->getRequest();
-			if (
+    /**
+     * Add discount amount in the quote when partial payment
+     *
+     * @param type $observer
+     */
+    public function addDiscountWhenPartial($observer) {
+        $session = Mage::getSingleton('checkout/session');
+        if (!$session->getApprovalRequestSuccess() == 'partial') {
+            $request = Mage::app()->getRequest();
+            if (
                 Mage::app()->getRequest()->getActionName() != 'partialPost' &&
                 $request->getModuleName() != 'mundipagg' &&
                 $request->getControllerName() != 'standard'
-                ) {
-				return $this;
-			}
-		}
-		$quote = $observer->getEvent()->getQuote();
-		$quoteid = $quote->getId();
+            ) {
+                return $this;
+            }
+        }
+        $quote = $observer->getEvent()->getQuote();
+        $quoteid = $quote->getId();
 
-		$reservedOrderId = $quote->getReservedOrderId();
+        $reservedOrderId = $quote->getReservedOrderId();
 
-		if (!$reservedOrderId) {
-			return $this;
-		}
+        if (!$reservedOrderId) {
+            return $this;
+        }
 
-		$order = Mage::getModel('sales/order')->loadByIncrementId($reservedOrderId);
+        $order = Mage::getModel('sales/order')->loadByIncrementId($reservedOrderId);
 
-		if (!$order->getId()) {
-			return $this;
-		}
+        if (!$order->getId()) {
+            return $this;
+        }
 
-		$payment = $order->getPayment();
+        $payment = $order->getPayment();
 
-		$interestInformation = $payment->getAdditionalInformation('mundipagg_interest_information');
-		$discountAmount = 0;
+        $interestInformation = $payment->getAdditionalInformation('mundipagg_interest_information');
+        $discountAmount = 0;
 
-		if (isset($interestInformation)) {
-			foreach ($interestInformation as $ii) {
-				$discountAmount += (float)$ii->getValue();
-			}
-		}
+        if (isset($interestInformation)) {
+            foreach ($interestInformation as $ii) {
+                $discountAmount += (float) $ii->getValue();
+            }
+        }
 
-		if ($quoteid) {
-			$total = $quote->getBaseSubtotal();
-			$quote->setSubtotal(0);
-			$quote->setBaseSubtotal(0);
+        if ($quoteid) {
+            $total = $quote->getBaseSubtotal();
+            $quote->setSubtotal(0);
+            $quote->setBaseSubtotal(0);
 
-			$quote->setSubtotalWithDiscount(0);
-			$quote->setBaseSubtotalWithDiscount(0);
+            $quote->setSubtotalWithDiscount(0);
+            $quote->setBaseSubtotalWithDiscount(0);
 
-			$quote->setGrandTotal(0);
-			$quote->setBaseGrandTotal(0);
+            $quote->setGrandTotal(0);
+            $quote->setBaseGrandTotal(0);
 
+            $canAddItems = $quote->isVirtual() ? ('billing') : ('shipping');
+            foreach ($quote->getAllAddresses() as $address) {
 
-			$canAddItems = $quote->isVirtual() ? ('billing') : ('shipping');
-			foreach ($quote->getAllAddresses() as $address) {
+                $discountAmount -= $address->getShippingAmount();
 
-				$discountAmount -= $address->getShippingAmount();
+                $address->setSubtotal(0);
+                $address->setBaseSubtotal(0);
 
-				$address->setSubtotal(0);
-				$address->setBaseSubtotal(0);
+                $address->setGrandTotal(0);
+                $address->setBaseGrandTotal(0);
 
-				$address->setGrandTotal(0);
-				$address->setBaseGrandTotal(0);
+                $address->collectTotals();
 
-				$address->collectTotals();
+                $quote->setSubtotal((float) $quote->getSubtotal() + $address->getSubtotal());
+                $quote->setBaseSubtotal((float) $quote->getBaseSubtotal() + $address->getBaseSubtotal());
 
-				$quote->setSubtotal((float)$quote->getSubtotal() + $address->getSubtotal());
-				$quote->setBaseSubtotal((float)$quote->getBaseSubtotal() + $address->getBaseSubtotal());
+                $quote->setSubtotalWithDiscount(
+                        (float) $quote->getSubtotalWithDiscount() + $address->getSubtotalWithDiscount()
+                );
+                $quote->setBaseSubtotalWithDiscount(
+                        (float) $quote->getBaseSubtotalWithDiscount() + $address->getBaseSubtotalWithDiscount()
+                );
 
-				$quote->setSubtotalWithDiscount(
-					(float)$quote->getSubtotalWithDiscount() + $address->getSubtotalWithDiscount()
-				);
-				$quote->setBaseSubtotalWithDiscount(
-					(float)$quote->getBaseSubtotalWithDiscount() + $address->getBaseSubtotalWithDiscount()
-				);
+                $quote->setGrandTotal((float) $quote->getGrandTotal() + $address->getGrandTotal());
+                $quote->setBaseGrandTotal((float) $quote->getBaseGrandTotal() + $address->getBaseGrandTotal());
 
-				$quote->setGrandTotal((float)$quote->getGrandTotal() + $address->getGrandTotal());
-				$quote->setBaseGrandTotal((float)$quote->getBaseGrandTotal() + $address->getBaseGrandTotal());
+                $quote->save();
 
-				$quote->save();
+                $quote->setGrandTotal($quote->getBaseSubtotal() - $discountAmount)
+                        ->setBaseGrandTotal($quote->getBaseSubtotal() - $discountAmount)
+                        ->setSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
+                        ->setBaseSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
+                        ->save();
 
-				$quote->setGrandTotal($quote->getBaseSubtotal() - $discountAmount)
-					->setBaseGrandTotal($quote->getBaseSubtotal() - $discountAmount)
-					->setSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
-					->setBaseSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
-					->save();
+                if ($address->getAddressType() == $canAddItems) {
+                    //echo $address->setDiscountAmount; exit;
+                    $address->setSubtotalWithDiscount((float) $address->getSubtotalWithDiscount() - $discountAmount);
+                    $address->setGrandTotal((float) $address->getGrandTotal() - $discountAmount);
+                    $address->setBaseSubtotalWithDiscount((float) $address->getBaseSubtotalWithDiscount() - $discountAmount);
+                    $address->setBaseGrandTotal((float) $address->getBaseGrandTotal() - $discountAmount);
+                    if ($address->getDiscountDescription()) {
+                        $address->setDiscountAmount(-($address->getDiscountAmount() - $discountAmount));
+                        $address->setDiscountDescription($address->getDiscountDescription() . ', Discount to Partial Payment');
+                        $address->setBaseDiscountAmount(-($address->getBaseDiscountAmount() - $discountAmount));
+                    } else {
+                        $address->setDiscountAmount(-($discountAmount));
+                        $address->setDiscountDescription('Discount to Partial Payment');
+                        $address->setBaseDiscountAmount(-($discountAmount));
+                    }
+                    $address->save();
+                }
+            }
 
+            foreach ($quote->getAllItems() as $item) {
+                //We apply discount amount based on the ratio between the GrandTotal and the RowTotal
+                $rat = $item->getPriceInclTax() / $total;
+                $ratdisc = $discountAmount * $rat;
+                $item->setDiscountAmount(($item->getDiscountAmount() + $ratdisc) * $item->getQty());
+                $item->setBaseDiscountAmount(($item->getBaseDiscountAmount() + $ratdisc) * $item->getQty())->save();
+            }
+        }
+    }
 
-				if ($address->getAddressType() == $canAddItems) {
-					//echo $address->setDiscountAmount; exit;
-					$address->setSubtotalWithDiscount((float)$address->getSubtotalWithDiscount() - $discountAmount);
-					$address->setGrandTotal((float)$address->getGrandTotal() - $discountAmount);
-					$address->setBaseSubtotalWithDiscount((float)$address->getBaseSubtotalWithDiscount() - $discountAmount);
-					$address->setBaseGrandTotal((float)$address->getBaseGrandTotal() - $discountAmount);
-					if ($address->getDiscountDescription()) {
-						$address->setDiscountAmount(-($address->getDiscountAmount() - $discountAmount));
-						$address->setDiscountDescription($address->getDiscountDescription() . ', Discount to Partial Payment');
-						$address->setBaseDiscountAmount(-($address->getBaseDiscountAmount() - $discountAmount));
-					} else {
-						$address->setDiscountAmount(-($discountAmount));
-						$address->setDiscountDescription('Discount to Partial Payment');
-						$address->setBaseDiscountAmount(-($discountAmount));
-					}
-					$address->save();
-				}
-			}
-			//echo $quote->getGrandTotal();
-
-			foreach ($quote->getAllItems() as $item) {
-				//We apply discount amount based on the ratio between the GrandTotal and the RowTotal
-				$rat = $item->getPriceInclTax() / $total;
-				$ratdisc = $discountAmount * $rat;
-				$item->setDiscountAmount(($item->getDiscountAmount() + $ratdisc) * $item->getQty());
-				$item->setBaseDiscountAmount(($item->getBaseDiscountAmount() + $ratdisc) * $item->getQty())->save();
-			}
-		}
-	}
-
-	public function changeRecurrenceValues(Varien_Event_Observer $observer)
-    {
+    public function changeRecurrenceValues(Varien_Event_Observer $observer) {
         $quote = Mage::getSingleton('checkout/session')->getQuote();
-		$quoteid = $quote->getId();
+        $quoteid = $quote->getId();
 
-		$payment = $quote->getPayment();
+        $payment = $quote->getPayment();
 
         $quoteItems = $quote->getAllItems();
-		$discountAmount = $this->getRecurrenceDiscount($quoteItems);
+        $discountAmount = $this->getRecurrenceDiscount($quoteItems);
 
-		if ($quoteid) {
-			$total = $quote->getGrandTotal();
-            
-			$quote->setSubtotal(0);
-			$quote->setBaseSubtotal(0);
+        if ($quoteid) {
+            $total = $quote->getGrandTotal();
 
-			$quote->setSubtotalWithDiscount(0);
-			$quote->setBaseSubtotalWithDiscount(0);
+            $quote->setSubtotal(0);
+            $quote->setBaseSubtotal(0);
 
-			$quote->setGrandTotal(0);
-			$quote->setBaseGrandTotal(0);
+            $quote->setSubtotalWithDiscount(0);
+            $quote->setBaseSubtotalWithDiscount(0);
 
-
-			$canAddItems = $quote->isVirtual() ? ('billing') : ('shipping');
-			foreach ($quote->getAllAddresses() as $address) {
-
-				$address->setSubtotal(0);
-				$address->setBaseSubtotal(0);
-
-				$address->setGrandTotal(0);
-				$address->setBaseGrandTotal(0);
-
-				$address->collectTotals();
-
-				$quote->setSubtotal((float)$quote->getSubtotal() + $address->getSubtotal());
-				$quote->setBaseSubtotal((float)$quote->getBaseSubtotal() + $address->getBaseSubtotal());
+            $quote->setGrandTotal(0);
+            $quote->setBaseGrandTotal(0);
 
 
-				$quote->setGrandTotal((float)$quote->getGrandTotal() + $address->getGrandTotal());
-				$quote->setBaseGrandTotal((float)$quote->getBaseGrandTotal() + $address->getBaseGrandTotal());
+            $canAddItems = $quote->isVirtual() ? ('billing') : ('shipping');
+            foreach ($quote->getAllAddresses() as $address) {
 
-				$quote->save();
+                $address->setSubtotal(0);
+                $address->setBaseSubtotal(0);
 
-				$quote->setGrandTotal($quote->getBaseSubtotal() - $discountAmount)
-					->setBaseGrandTotal($quote->getBaseSubtotal() - $discountAmount)
-					->setSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
-					->setBaseSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
-					->save();
+                $address->setGrandTotal(0);
+                $address->setBaseGrandTotal(0);
 
-                
-                if(
+                $address->collectTotals();
+
+                $quote->setSubtotal((float) $quote->getSubtotal() + $address->getSubtotal());
+                $quote->setBaseSubtotal((float) $quote->getBaseSubtotal() + $address->getBaseSubtotal());
+
+                $quote->setGrandTotal((float) $quote->getGrandTotal() + $address->getGrandTotal());
+                $quote->setBaseGrandTotal((float) $quote->getBaseGrandTotal() + $address->getBaseGrandTotal());
+
+                $quote->save();
+
+                $quote->setGrandTotal($quote->getBaseSubtotal() - $discountAmount)
+                        ->setBaseGrandTotal($quote->getBaseSubtotal() - $discountAmount)
+                        ->setSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
+                        ->setBaseSubtotalWithDiscount($quote->getBaseSubtotal() - $discountAmount)
+                        ->save();
+
+                if (
                     $this->checkRecurrenceMix($quote) &&
-                    $this->checkItemsAlone($quote)
-                ){
+                    $this->checkItemAlone($quote)
+                ) {
                     $paymentMethod = $quote->getPayment()->getMethod();
                     if (
                         $paymentMethod === 'mundipagg_recurrencepayment'
                     ) {
                         $totalWithDiscount = $this->getRecurrencePartial($total, $quoteItems);
                         if ($address->getAddressType() == $canAddItems) {
+                            //Muda o valor do pedido para o valor da parcela da recorrência
                             $msg = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrent_mix_message');
-                            $address->setSubtotalWithDiscount((float)$totalWithDiscount);
-                            $address->setGrandTotal((float)$totalWithDiscount);
-                            $address->setBaseSubtotalWithDiscount((float)$totalWithDiscount);
-                            $address->setBaseGrandTotal((float)$totalWithDiscount);
+                            $address->setSubtotalWithDiscount((float) $totalWithDiscount);
+                            $address->setGrandTotal((float) $totalWithDiscount);
+                            $address->setBaseSubtotalWithDiscount((float) $totalWithDiscount);
+                            $address->setBaseGrandTotal((float) $totalWithDiscount);
                             if ($address->getDiscountDescription()) {
                                 $address->setDiscountAmount(-($address->getDiscountAmount()));
                                 $address->setDiscountDescription(
@@ -605,21 +618,21 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
                             } else {
                                 $address->setDiscountAmount($totalWithDiscount);
                                 $address->setDiscountDescription($msg);
-
                             }
                             $address->save();
                         }
-                    }else{
+                    } else {
                         if ($address->getAddressType() == $canAddItems) {
+                            //Aplica desconto se o produto for misto e a compra for à vista
                             $msg = 'Desconto para pagamento avulso';
-                            $address->setSubtotalWithDiscount((float)$address->getSubtotalWithDiscount() - $discountAmount);
-                            $address->setGrandTotal((float)$address->getGrandTotal() - $discountAmount);
-                            $address->setBaseSubtotalWithDiscount((float)$address->getBaseSubtotalWithDiscount() - $discountAmount);
-                            $address->setBaseGrandTotal((float)$address->getBaseGrandTotal() - $discountAmount);
+                            $address->setSubtotalWithDiscount((float) $address->getSubtotalWithDiscount() - $discountAmount);
+                            $address->setGrandTotal((float) $address->getGrandTotal() - $discountAmount);
+                            $address->setBaseSubtotalWithDiscount((float) $address->getBaseSubtotalWithDiscount() - $discountAmount);
+                            $address->setBaseGrandTotal((float) $address->getBaseGrandTotal() - $discountAmount);
                             if ($address->getDiscountDescription()) {
                                 $address->setDiscountAmount(-($address->getDiscountAmount() - $discountAmount));
                                 $address->setDiscountDescription(
-                                    $address->getDiscountDescription() . $msg
+                                        $address->getDiscountDescription() . $msg
                                 );
                                 $address->setBaseDiscountAmount(-($address->getBaseDiscountAmount() - $discountAmount));
                             } else {
@@ -631,10 +644,9 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
                         }
                     }
                 }
-			}
-		}
+            }
+        }
     }
-
 
     private function getRecurrencePartial($total, $items)
     {
@@ -659,7 +671,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
                     }
 
                     return $total / $recurrences;
-
                 }
             }
     }
@@ -675,92 +686,88 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             }
     }
 
+    public function catalogProductSaveBefore($event) {
+        $product = $event->getProduct();
+        $recurrentOption = (boolean)$product->getMundipaggRecurrent();
 
+        if ($recurrentOption) {
+                $isRequired = true;
+        } else {
+                $isRequired = false;
+        }
 
+        try {
+                $attribute = new Mage_Eav_Model_Entity_Attribute();
+                $attribute->loadByCode(Mage_Catalog_Model_Product::ENTITY, 'mundipagg_recurrences');
+                $attribute->setIsRequired($isRequired);
+                $attribute->save();
 
+        } catch (Mage_Adminhtml_Exception $e) {
+                $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+                $helper = Mage::helper('mundipagg');
 
-	public function catalogProductSaveBefore($event) {
-		$product = $event->getProduct();
-		$recurrentOption = (boolean)$product->getMundipaggRecurrent();
+                $errMsg = "{$helper->__("Internal error")}: {$e->getMessage()}";
+                $log->error($helper->__("Unable to save product configuration: {$e}"));
 
-		if ($recurrentOption) {
-			$isRequired = true;
-		} else {
-			$isRequired = false;
-		}
+                throw new Mage_Adminhtml_Exception($errMsg);
+        }
 
-		try {
-			$attribute = new Mage_Eav_Model_Entity_Attribute();
-			$attribute->loadByCode(Mage_Catalog_Model_Product::ENTITY, 'mundipagg_recurrences');
-			$attribute->setIsRequired($isRequired);
-			$attribute->save();
+    }
 
-		} catch (Mage_Adminhtml_Exception $e) {
-			$log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-			$helper = Mage::helper('mundipagg');
+    public function checkRecurrencyFrequency(Varien_Event_Observer $observer) {
+            $product = $observer->getProduct();
+            $recurrent = (boolean)$product->getData('mundipagg_recurrent');
+            $frequency = $product->getData('mundipagg_frequency_enum');
 
-			$errMsg = "{$helper->__("Internal error")}: {$e->getMessage()}";
-			$log->error($helper->__("Unable to save product configuration: {$e}"));
+            if ($recurrent === true && $frequency == '0') {
+                    $helper = Mage::helper('mundipagg');
+                    $errMsg = $helper->__('Recurrency frequency is required');
 
-			throw new Mage_Adminhtml_Exception($errMsg);
-		}
+                    Mage::throwException($errMsg);
+            }
+    }
 
-	}
+    /**
+     * @param Varien_Event $event
+     */
+    public function cartCheckRecurrency($event) {
+        /* @var Mage_Checkout_Model_Cart $cart */
+        $cart = $event->getCart();
 
-	public function checkRecurrencyFrequency(Varien_Event_Observer $observer) {
-		$product = $observer->getProduct();
-		$recurrent = (boolean)$product->getData('mundipagg_recurrent');
-		$frequency = $product->getData('mundipagg_frequency_enum');
+        /* @var Mage_Sales_Model_Quote $quote */
+        $quote = $cart->getQuote();
 
-		if ($recurrent === true && $frequency == '0') {
-			$helper = Mage::helper('mundipagg');
-			$errMsg = $helper->__('Recurrency frequency is required');
+        /* @var Mage_Sales_Model_Resource_Quote_Item_Collection $items */
+        $items = $quote->getAllItems();
 
-			Mage::throwException($errMsg);
-		}
-	}
+        /* @var Mage_Sales_Model_Quote_Item $item */
+        foreach ($items as $item) {
 
-	/**
-	 * @param Varien_Event $event
-	 */
-	public function cartCheckRecurrency($event) {
-		/* @var Mage_Checkout_Model_Cart $cart */
-		$cart = $event->getCart();
+            /* @var Mage_Sales_Model_Quote_Item_Option $option */
+            foreach ($item->getOptions() as $option) {
+                    /* @var Mage_Catalog_Model_Product $product */
+                    $product = $option->getProduct();
+                    $product->load($product->getId());
 
-		/* @var Mage_Sales_Model_Quote $quote */
-		$quote = $cart->getQuote();
+                    if ($product->getMundipaggRecurrent()) {
+                            $this->setQuoteRecurrencyFlag(true);
 
-		/* @var Mage_Sales_Model_Resource_Quote_Item_Collection $items */
-		$items = $quote->getAllItems();
+                            return;
+                    }
+            }
+        }
 
-		/* @var Mage_Sales_Model_Quote_Item $item */
-		foreach ($items as $item) {
+        $this->setQuoteRecurrencyFlag(false);
+    }
 
-			/* @var Mage_Sales_Model_Quote_Item_Option $option */
-			foreach ($item->getOptions() as $option) {
-				/* @var Mage_Catalog_Model_Product $product */
-				$product = $option->getProduct();
-				$product->load($product->getId());
-
-				if ($product->getMundipaggRecurrent()) {
-					$this->setQuoteRecurrencyFlag(true);
-
-					return;
-				}
-			}
-		}
-
-		$this->setQuoteRecurrencyFlag(false);
-	}
-
-	/**
-	 * @param boolean $option
-	 *
-	 */
-	private function setQuoteRecurrencyFlag($option) {
-		$session = Mage::getSingleton('checkout/session');
-		$session->setMundipaggRecurrency($option);
-	}
+    /**
+     * @param boolean $option
+     *
+     */
+    private function setQuoteRecurrencyFlag($option) {
+            $session = Mage::getSingleton('checkout/session');
+            $session->setMundipaggRecurrency($option);
+    }
         
     public function checkModuleVersion()
     {

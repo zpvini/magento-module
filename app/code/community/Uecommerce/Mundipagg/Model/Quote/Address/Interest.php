@@ -48,7 +48,7 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Interest extends Mage_Sales_Model
 
         $this->_setAddress($address);
         $addressObj = $this->_getAddress();
-        $totals = $addressObj->$_totals;
+        $totals = $addressObj->_totals;
         
         parent::collect($address);
 
