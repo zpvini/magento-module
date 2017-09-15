@@ -1,16 +1,16 @@
 <?php
 
 class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Standard {
-    private static $payment_recurrence_active = null;
+    private static $recurrence_payment_active = null;
     public function __construct($Store = null) {
         parent::__construct($Store);
-        if (self::$payment_recurrence_active === null) {
-            self::$payment_recurrence_active = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/active');
+        if (self::$recurrence_payment_active === null) {
+            self::$recurrence_payment_active = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/active');
         }
     }
 
-    public function isPaymentRecurrenceActive() {
-        return self::$payment_recurrence_active == 1;
+    public function isRecurrencePaymentActive() {
+        return self::$recurrence_payment_active == 1;
     }
 
 	/*
@@ -340,7 +340,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
      */
     public function cartCheckRecurrencyConflicts($observer)
     {
-        if ($this->isPaymentRecurrenceActive()) {
+        if ($this->isRecurrencePaymentActive()) {
             $this->checkRecurrenceConflicts($observer);
         }
     }
@@ -555,7 +555,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     }
 
     public function changeRecurrenceValues(Varien_Event_Observer $observer) {
-        if (!$this->isPaymentRecurrenceActive()) {
+        if (!$this->isRecurrencePaymentActive()) {
             return;
         }
         $quote = Mage::getSingleton('checkout/session')->getQuote();
