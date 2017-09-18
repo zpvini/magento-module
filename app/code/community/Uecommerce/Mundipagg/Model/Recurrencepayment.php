@@ -31,37 +31,33 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
      */
     public function assignData($data)
     {
-        $info = $this->getInfoInstance();
-
-        // Reset interests first
-        $this->resetInterest($info);
-
-        $cctype = $data[$this->_code.'_1_1_cc_type'];
-        $parcelsNumber = 1;
         if (
             isset($data[$this->_code.'_token_1_1']) &&
             $data[$this->_code.'_token_1_1'] != 'new'
         ) {
             $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($data[$this->_code.'_token_1_1']);
             $cctype = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cardonFile->getCcType());
+        } else {
+            $cctype = $data[$this->_code.'_1_1_cc_type'];
         }
 
-        /**
-         * @var $interest Uecommerce_Mundipagg_Helper_Installments
-         */
-        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber , $cctype);
-        $interestInformation = array();
-        $interestInformation[$this->_code.'_1_1'] = new Varien_Object();
-        $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',','.',$interest));
+        $info = $this->getInfoInstance();
+        $info->getQuote()->preventSaving();
+        $info = $this->resetInterest($info);
+
+        $interest = Mage::helper('mundipagg/installments')->getInterestForCard(1 , $cctype);
 
         if ($interest > 0) {
+            $interestInformation = array();
+            $interestInformation[$this->_code.'_1_1'] = new Varien_Object();
+            $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',','.',$interest));
             $info->setAdditionalInformation('mundipagg_interest_information', array());
             $info->setAdditionalInformation('mundipagg_interest_information',$interestInformation);
             $this->applyInterest($info, $interest);
 
         } else {
             // If none of Cc parcels doens't have interest we reset interest
-            $this->resetInterest($info);
+            $info = $this->resetInterest($info);
         }
 
         parent::assignData($data);

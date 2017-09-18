@@ -10,20 +10,21 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Recurrence extends Mage_Sales_Mod
     public function fetch(Mage_Sales_Model_Quote_Address $address)
     {
         $quote = $address->getQuote();
-        $baseGrandTotal = $address->getBaseGrandTotal();
         $payment = $quote->getPayment()->getMethod();
         $msg = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrent_mix_message');
         $items = $quote->getAllItems();
         if(
             $payment == 'mundipagg_recurrencepayment' && 
-            $this->checkItemAlone($items) &&
-            $this->checkRecurrenceMix($items) 
+            Uecommerce_Mundipagg_Model_Observer::checkItemAlone($quote) &&
+            Uecommerce_Mundipagg_Model_Observer::checkRecurrenceMix($quote)
         ) {
+            $quoteId = Mage::getSingleton('checkout/session')->getQuoteId();
+            $quote = Mage::getModel("sales/quote")->load($quoteId);
             $address->addTotal(array
             (
                 'code' => 'mundipagg_recurrence',
                 'title' => $msg,
-                'value' => $baseGrandTotal
+                'value' => $quote->getGrandTotal()
             ));
         }
     }
@@ -38,52 +39,5 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Recurrence extends Mage_Sales_Mod
             return $baseGrandTotal/$recurrences;
         }
         return;
-    }
-
-
-    /**
-     * Check if exists a recurrence mix product in $items
-     * @param array $items Cart items
-     * @return boolean
-     */
-    private function checkRecurrenceMix($items) 
-    {
-        
-        foreach ($items as $item) {
-            foreach ($item->getOptions() as $option) {
-                $product = $option->getProduct();
-                $product->load($product->getId());
-                if ($product->getMundipaggRecurrenceMix() === '1') {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    /**
-     * Check if exists only on product in $items
-     * @return boolean
-     */
-    private function checkItemAlone($items) 
-    {
-        
-        $countItems = count($items);
-        if ($countItems > 1) {
-            return false;
-        }
-        foreach ($items as $item) {
-            foreach ($item->getOptions() as $option) {
-                $product = $option->getProduct();
-                $product->load($product->getId());
-                $productQty = $item->getQty();
-                if (
-                    $productQty > 1
-                ) {
-                    return false;
-                }
-                return true;
-            }
-        }
     }
 }

@@ -16,8 +16,6 @@ if ($quote->isVirtual()) {
 // Partial payment?
 $isPartial = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
 
-$this->getInstallments();
-
 $orderGrandTotal = $standard->getQuote()->getBaseGrandTotal();
 if ($isPartial === 'partial'):
 	$order = $this->loadOrder();
@@ -289,7 +287,6 @@ if ($recurrent) {
                                             <div class="field">
                                                 <label class="required"><?php echo $this->__('Credit options') ?></label>
                                                 <div class="input-box">
-                                                    <?php $this->getInstallments(); ?>
                                                     <select id="<?php echo $_code . '_credito_parcelamento_' .  $num . '_' . $c; ?>"
                                                             name="payment[<?php echo $_code . '_credito_parcelamento_' . $num . '_' . $c; ?>]"
                                                             class="required-entry installment-token <?php echo 'group_' . $num . '_' . $c; ?>"

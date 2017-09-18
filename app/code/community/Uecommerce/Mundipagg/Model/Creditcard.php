@@ -60,41 +60,35 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
      */
     public function assignData($data) 
     {
-        $info = $this->getInfoInstance();
-
-        // Reset interests first
-        $this->resetInterest($info);
-
-        $cctype = $data[$this->_code.'_1_1_cc_type'];
-        
         if (isset($data[$this->_code.'_token_1_1']) && $data[$this->_code.'_token_1_1'] != 'new') {
             $parcelsNumber = $data[$this->_code.'_credito_parcelamento_1_1'];
             $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($data[$this->_code.'_token_1_1']);
             $cctype = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cardonFile->getCcType());
         } else {
+            $cctype = $data[$this->_code.'_1_1_cc_type'];
             $parcelsNumber = $data[$this->_code.'_new_credito_parcelamento_1_1'];
-
         }
-        
-        /**
-         * @var $interest Uecommerce_Mundipagg_Helper_Installments
-         */
+
+        $info = $this->getInfoInstance();
+        $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
+        $info->getQuote()->preventSaving();
+        $info = $this->resetInterest($info);
+
         $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber , $cctype);
-        $interestInformation = array();
-        $interestInformation[$this->_code.'_1_1'] = new Varien_Object();
-        $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',','.',$interest));
 
         if ($interest > 0) {
+            $interestInformation = array();
+            $interestInformation[$this->_code.'_1_1'] = new Varien_Object();
+            $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',','.',$interest));
             $info->setAdditionalInformation('mundipagg_interest_information', array());
             $info->setAdditionalInformation('mundipagg_interest_information',$interestInformation);
             $this->applyInterest($info, $interest);
-            
+
         } else {
             // If none of Cc parcels doens't have interest we reset interest
-            $this->resetInterest($info);
+            $info = $this->resetInterest($info);
         }
-        
-        parent::assignData($data);
+        return parent::assignData($data);
     }
 
     /**

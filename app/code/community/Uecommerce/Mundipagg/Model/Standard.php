@@ -1919,7 +1919,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $info->getQuote()->setMundipaggInterest(0.0);
             $info->getQuote()->setMundipaggBaseInterest(0.0);
             $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
-            $info->getQuote()->save();
         }
 
         return $info;
@@ -1933,6 +1932,14 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $info->getQuote()->setMundipaggBaseInterest($interest);
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
         $info->getQuote()->save();
+        foreach ($info->getQuote()->getAllAddresses() as $address) {
+            $grandTotal = $address->getGrandTotal();
+            if ($grandTotal) {
+                $address->setMundipaggInterest($interest);
+                $address->setGrandTotal($grandTotal + $interest);
+            }
+        }
+        return $info;
     }
 
     /**

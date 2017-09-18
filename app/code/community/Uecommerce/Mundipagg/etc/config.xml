@@ -42,16 +42,6 @@
                     </checkRecurrencyFrequency>
                 </observers>
             </catalog_product_save_before>
-
-            <payment_method_is_active>
-                <observers>
-                    <checkRecurrencyFrequency>
-                        <class>Uecommerce_Mundipagg_Model_Observer</class>
-                        <method>changeRecurrenceValues</method>
-                    </checkRecurrencyFrequency>
-                </observers>
-            </payment_method_is_active>
-
             <controller_action_predispatch>
                 <observers>
                     <sessionUpdate>
@@ -128,6 +118,10 @@
             </order_cancel_after>
             <checkout_cart_save_after>
                 <observers>
+                    <checkRecurrencyFrequency>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>changeRecurrenceValues</method>
+                    </checkRecurrencyFrequency>
                     <mundipagg_cart_check_recurrency>
                         <type>singleton</type>
                         <class>Uecommerce_Mundipagg_Model_Observer</class>
