@@ -253,7 +253,7 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 			$installment = $all_installments[$key];
 
 			if (isset($installment[2]) && $installment[2] > 0) {
-				$total_amount_with_interest = $this->priceFormatter($amount + ($amount * ($installment[2] / 100)));
+			    $total_amount_with_interest = $this->priceFormatter(($amount - $discount) + (($amount - $discount) * ($installment[2] / 100)));
 				$message = $this->__('with interest');
 
 //				if ($displayTotal && $this->displayTotal) {
@@ -261,13 +261,12 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 //				}
 
 			} else {
-				$total_amount_with_interest = $amount;
+			    $total_amount_with_interest = $amount - $discount;
 				$message = $this->__('without interest');
 			}
 
 //			$coreHelper = Mage::helper('core');
 //			$partial_amount = $this->priceFormatter($total_amount_with_interest / $i);
-			$total_amount_with_interest-=$discount;
 
 			$accurPriceWithInterest = $this->priceFormatter($total_amount_with_interest);
 			$accurInstallmentAmount = $this->priceFormatter($accurPriceWithInterest / $i);
@@ -301,7 +300,6 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 		if ($session->isLoggedIn()) {
 			$quote = Mage::getSingleton('adminhtml/session_quote')->getQuote();
 		} else {
-// 		    $quote = Mage::getSingleton('checkout/session')->getQuote();
 		    $quoteId = Mage::getSingleton('checkout/session')->getQuoteId();
 		    $quote = Mage::getModel("sales/quote")->load($quoteId);
 		}
@@ -326,9 +324,11 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 			if ($installment != null && is_array($installment)) {
 				// check if interest rate is filled in
 				if (isset($installment[2]) && $installment[2] > 0) {
+				    $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($quote);
 					if (!$grandTotal) {
 						$grandTotal = $quote->getGrandTotal();
 					}
+					$grandTotal-=$discount;
 
 					$grandTotalInterest = $grandTotal + ($grandTotal * ($installment[2] / 100));
 
@@ -349,10 +349,14 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 		$items = $quote->getAllItems();
 		$discount = 0;
 		foreach($items as $item) {
-			$product = $item->getProduct();
-			$discount = $product->getMundipaggRecurrenceDiscount();
-			$price = $product->getPrice();
+		    $product = $item->getProduct();
+		    $discount = $product->getMundipaggRecurrenceDiscount();
+		    if(!$discount) {
+		        $product->load($product->getId());
+		        $discount = $product->getMundipaggRecurrenceDiscount();
+		    }
 			if ($discount > 0) {
+    			$price = $product->getPrice();
 				$discount = $price * ($discount/100);
 				break;
 			}
