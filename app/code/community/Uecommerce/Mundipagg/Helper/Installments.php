@@ -211,12 +211,14 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 			}
 		}
 
-		$discount = $this->getDiscountOneInstallment($quote);
 
 		if (!$amount) {
 			// Get pre-authorized amount
 			$authorizedAmount = Mage::getSingleton('checkout/session')->getAuthorizedAmount();
 			$amount = (double)$quote->getGrandTotal() - $quote->getMundipaggInterest() - $authorizedAmount;
+    		$discount = $this->getDiscountOneInstallment($quote);
+		} else {
+		    $discount = 0;
 		}
 
 		$result = array();
