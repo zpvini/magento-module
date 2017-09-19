@@ -81,6 +81,25 @@ class Uecommerce_Mundipagg_Model_Debit extends Uecommerce_Mundipagg_Model_Standa
      */
     public function assignData($data) 
     {
+        $info = $this->getInfoInstance();
+        $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
+        $info->getQuote()->preventSaving();
+        $info = $this->resetInterest($info);
+        $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
+        foreach ($info->getQuote()->getAllAddresses() as $address) {
+            $grandTotal = $address->getGrandTotal();
+            if ($grandTotal) {
+                $address->setMundipaggInterest($interest);
+                $address->setGrandTotal($grandTotal - $discount + $interest);
+                if ($discount) {
+                    $address->setDiscountAmount(($address->getDiscountAmount() - $discount));
+                    $address->setDiscountDescription(
+                        $address->getDiscountDescription() . ' + ' . 
+                        Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
+                    );
+                }
+            }
+        }
         parent::assignData($data);
     }
 

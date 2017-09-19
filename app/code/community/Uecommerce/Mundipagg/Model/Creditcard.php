@@ -96,7 +96,8 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
                 if ($discount) {
                     $address->setDiscountAmount(($address->getDiscountAmount() - $discount));
                     $address->setDiscountDescription(
-                        $address->getDiscountDescription() . ' + ' . 'Desconto para pagamento avulso'
+                        $address->getDiscountDescription() . ' + ' .
+                        Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
                     );
                 }
             }

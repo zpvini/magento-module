@@ -551,14 +551,14 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             ) {
                 $canAddItems = $quote->isVirtual() ? ('billing') : ('shipping');
                 if ($address->getAddressType() == $canAddItems) {
-                    $msg = 'Desconto para pagamento avulso';
                     $discountAmount = $this->getRecurrenceDiscount($quote->getAllItems());
                     $address->setGrandTotal((float) $address->getGrandTotal() - $discountAmount);
                     $discountDescription = $address->getDiscountDescription();
                     if ($discountDescription) {
                         $address->setDiscountAmount(($address->getDiscountAmount() - $discountAmount));
                         $address->setDiscountDescription(
-                            $discountDescription . ' + ' . $msg
+                            $discountDescription . ' + ' .
+                            Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
                         );
                     } else {
                         $address->setDiscountAmount(-($discountAmount));
