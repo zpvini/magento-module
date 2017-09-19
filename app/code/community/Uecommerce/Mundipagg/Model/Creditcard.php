@@ -83,10 +83,17 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
             $info->setAdditionalInformation('mundipagg_interest_information', array());
             $info->setAdditionalInformation('mundipagg_interest_information',$interestInformation);
             $this->applyInterest($info, $interest);
-
         } else {
             // If none of Cc parcels doens't have interest we reset interest
             $info = $this->resetInterest($info);
+        }
+        $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
+        foreach ($info->getQuote()->getAllAddresses() as $address) {
+            $grandTotal = $address->getGrandTotal();
+            if ($grandTotal) {
+                $address->setMundipaggInterest($interest);
+                $address->setGrandTotal($grandTotal - $discount + $interest);
+            }
         }
         return parent::assignData($data);
     }
