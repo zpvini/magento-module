@@ -42,6 +42,7 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
         }
 
         $info = $this->getInfoInstance();
+        $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
         $info->getQuote()->preventSaving();
         $info = $this->resetInterest($info);
 
@@ -54,10 +55,16 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
             $info->setAdditionalInformation('mundipagg_interest_information', array());
             $info->setAdditionalInformation('mundipagg_interest_information',$interestInformation);
             $this->applyInterest($info, $interest);
-
         } else {
             // If none of Cc parcels doens't have interest we reset interest
             $info = $this->resetInterest($info);
+        }
+        foreach ($info->getQuote()->getAllAddresses() as $address) {
+            $grandTotal = $address->getGrandTotal();
+            if ($grandTotal) {
+                $address->setMundipaggInterest($interest);
+                $address->setGrandTotal($grandTotal + $interest);
+            }
         }
 
         parent::assignData($data);
