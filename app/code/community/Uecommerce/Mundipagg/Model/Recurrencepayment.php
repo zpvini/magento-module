@@ -62,8 +62,18 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
         foreach ($info->getQuote()->getAllAddresses() as $address) {
             $grandTotal = $address->getGrandTotal();
             if ($grandTotal) {
+                $items = $info->getQuote()->getAllItems();
+                $frequency = 1;
+                foreach($items as $item) {
+                    $product = $item->getProduct();
+                    if ($product->getMundipaggRecurrent()) {
+                        $frequency = $product->getMundipaggFrequencyEnum();
+                        $interval = $product->getMundipaggRecurrences();
+                        break;
+                    }
+                }
                 $address->setMundipaggInterest($interest);
-                $address->setGrandTotal($grandTotal + $interest);
+                $address->setGrandTotal(($grandTotal + $interest) / $interval);
             }
         }
 
