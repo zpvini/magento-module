@@ -93,6 +93,12 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
             if ($grandTotal) {
                 $address->setMundipaggInterest($interest);
                 $address->setGrandTotal($grandTotal - $discount + $interest);
+                if ($discount) {
+                    $address->setDiscountAmount(($address->getDiscountAmount() - $discount));
+                    $address->setDiscountDescription(
+                        $address->getDiscountDescription() . ' + ' . 'Desconto para pagamento avulso'
+                    );
+                }
             }
         }
         return parent::assignData($data);
