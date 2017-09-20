@@ -83,8 +83,8 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
         foreach ($info->getQuote()->getAllAddresses() as $address) {
             $grandTotal = $address->getGrandTotal();
             if ($grandTotal) {
-                $address->setMundipaggInterest($interest);
-                $address->setGrandTotal($grandTotal - $discount + $interest);
+                $address->setMundipaggInterest(0);
+                $address->setGrandTotal($grandTotal - $discount);
                 if ($discount) {
                     $address->setDiscountAmount(($address->getDiscountAmount() - $discount));
                     $address->setDiscountDescription(
