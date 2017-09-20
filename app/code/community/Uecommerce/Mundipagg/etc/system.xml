@@ -956,6 +956,15 @@
                             <show_in_store>1</show_in_store>
                             <frontend_class>validate-number</frontend_class>
                         </sort_order>
+                        <recurrence_discount_message translate="label">
+                            <label>Mensagem de deesconto em pagamento avulso</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Defina uma mensagem de deesconto em pagamento avulso.</comment>
+                        </recurrence_discount_message>
                         <conflict_message_recurrent_others translate="label">
                             <label>Mensagem de conflito Recorrente + Qualquer tipo</label>
                             <frontend_type>text</frontend_type>
@@ -984,13 +993,13 @@
                             <comment>Defina uma mensagem para esse conflito.</comment>
                         </conflict_message_recurrent_mix_recurrent>
                         <recurrent_mix_message translate="label">
-                            <label>Mensagem da recorrência no checkout review</label>
+                            <label>Mensagem da parcela da recorrência</label>
                             <frontend_type>text</frontend_type>
                             <sort_order>100</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-                            <comment>Defina uma mensagem que será exibida na finalização do pedido.</comment>
+                            <comment>Defina uma mensagem para a parcela da recorrência.</comment>
                         </recurrent_mix_message>
                     </fields>
                 </mundipagg_recurrencepayment>
