@@ -74,7 +74,8 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
         $info->getQuote()->preventSaving();
         $info = $this->resetInterest($info);
 
-        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber , $cctype);
+        $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
+        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber , $cctype, $info->getQuote()->getGrandTotal() - $discount);
 
         if ($interest > 0) {
             $interestInformation = array();

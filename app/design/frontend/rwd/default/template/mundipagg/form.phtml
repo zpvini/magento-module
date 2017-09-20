@@ -26,8 +26,12 @@ if ($isPartial === 'partial'):
 else :
 	$baseGrandTotal = $orderGrandTotal;
 endif;
-$discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($quote);
-$baseGrandTotal-=$discount;
+
+// Payment method
+$_code = $this->getMethodCode();
+if ($_code != 'mundipagg_recurrencepayment') {
+    $baseGrandTotal-= Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($quote);
+}
 
 if ($data->getMundipaggInterest()) {
 	$baseGrandTotal = $baseGrandTotal - $data->getMundipaggInterest();
@@ -51,10 +55,6 @@ $currencySymbol =
 $ccs = $this->getCcs();
 
 $countCcs = count($ccs);
-
-// Payment method
-$_code = $this->getMethodCode();
-
 
 $cart = Mage::getSingleton('checkout/cart');
 $cartQuote = $cart->getQuote();

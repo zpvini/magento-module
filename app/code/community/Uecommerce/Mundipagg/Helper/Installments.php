@@ -326,11 +326,9 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 			if ($installment != null && is_array($installment)) {
 				// check if interest rate is filled in
 				if (isset($installment[2]) && $installment[2] > 0) {
-				    $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($quote);
 					if (!$grandTotal) {
 						$grandTotal = $quote->getGrandTotal();
 					}
-					$grandTotal-=$discount;
 
 					$grandTotalInterest = $grandTotal + ($grandTotal * ($installment[2] / 100));
 

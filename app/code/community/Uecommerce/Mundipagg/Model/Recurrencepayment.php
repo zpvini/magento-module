@@ -98,47 +98,7 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
      */
     public function initialize($paymentAction, $stateObject)
     {
-        $standard = Mage::getModel('mundipagg/standard');
-
-        switch($standard->getConfigData('payment_action')) {
-            case 'order':
-                $this->setCreditCardOperationEnum('AuthAndCapture');
-
-                $paymentAction = $orderAction = 'order';
-                break;
-
-            case 'authorize':
-                $this->setCreditCardOperationEnum('AuthOnly');
-
-                $paymentAction = $orderAction = 'authorize';
-                break;
-
-            case 'authorize_capture':
-                $this->setCreditCardOperationEnum('AuthAndCaptureWithDelay');
-
-                $paymentAction = $orderAction = 'authorize_capture';
-                break;
-        }
-
-        $payment = $this->getInfoInstance();
-        $order = $payment->getOrder();
-
-        switch ($paymentAction) {
-            case Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE:
-                parent::authorize($payment, $order->getBaseTotalDue());
-                break;
-
-            case Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE_CAPTURE:
-                parent::authorize($payment, $order->getBaseTotalDue());
-                break;
-
-            case $orderAction:
-                parent::order($payment, $order->getBaseTotalDue());
-                break;
-
-            default:
-                parent::order($payment, $order->getBaseTotalDue());
-                break;
-        }
+        $this->setCreditCardOperationEnum('AuthAndCapture');
+        parent::order($this->getInfoInstance(), 0);
     }
 }
