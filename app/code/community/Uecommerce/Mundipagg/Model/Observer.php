@@ -210,7 +210,12 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     * Check if recurrency product is in cart in order to show
     * only Mundipagg Credit Card payment
     */
-    public function checkForRecurrency($observer) {
+    public function checkForRecurrency($observer)
+    {
+        if (!$this->isRecurrencePaymentActive()) {
+            return;
+        }
+
         $session = Mage::getSingleton('checkout/session');
         $recurrent = $session->getMundipaggRecurrency();
 
