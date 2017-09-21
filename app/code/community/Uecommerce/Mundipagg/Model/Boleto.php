@@ -76,6 +76,24 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
      */
     public function assignData($data) 
     {
+        $info = $this->getInfoInstance();
+        $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
+        $info->getQuote()->preventSaving();
+        $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
+        foreach ($info->getQuote()->getAllAddresses() as $address) {
+            $grandTotal = $address->getGrandTotal();
+            if ($grandTotal) {
+                $address->setMundipaggInterest(0);
+                $address->setGrandTotal($grandTotal - $discount);
+                if ($discount) {
+                    $address->setDiscountAmount(($address->getDiscountAmount() - $discount));
+                    $address->setDiscountDescription(
+                        $address->getDiscountDescription() . ' + ' .
+                        Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
+                    );
+                }
+            }
+        }
         parent::assignData($data);
 
         return $this;

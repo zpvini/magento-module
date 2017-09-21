@@ -1,5 +1,5 @@
 <_>
-   <form_key>nkUw3Fq46iiodFlA</form_key>
+   <form_key>TxZr73xakvF6Ix92</form_key>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -27,9 +27,9 @@ IMPORTANTE
 Em qualquer procedimento de instalação ou update existem riscos, aconselhamos sempre criar backups de sua loja e efetuar qualquer procedimento em ambiente de desenvolvimento antes, nunca diretamente em produção. Não nos responsabilizamos por eventuais incidentes causados por negligenciar este alerta ou por uso de produtos ou serviços de terceiros.</description>
    <license>MIT</license>
    <license_uri/>
-   <version>2.12.07</version>
+   <version>2.12.09</version>
    <stability>stable</stability>
-   <notes>- fix: increase performance, only use recurrence when necessary</notes>
+   <notes>- fix: bug with interest</notes>
    <authors>
       <name>
          <name>mundipagg</name>
@@ -42,7 +42,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
       </email>
    </authors>
    <depends_php_min>5.4.0</depends_php_min>
-   <depends_php_max>7.1.0</depends_php_max>
+   <depends_php_max>7.1.8</depends_php_max>
    <depends>
       <package>
          <name>
@@ -58,7 +58,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>    </files>
+            <files>       </files>
          </files>
       </package>
       <extension>
@@ -90,8 +90,6 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
          <target>mageskin</target>
          <target>mageskin</target>
          <target>mageskin</target>
-         <target>mage</target>
-         <target>mage</target>
       </target>
       <path>
          <path/>
@@ -109,8 +107,6 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
          <path>frontend/base/default/css/mundipagg.css</path>
          <path>frontend/base/default/images/mundipagg</path>
          <path>frontend/default/default/images/mundipagg/</path>
-         <path>README.md</path>
-         <path>modman</path>
       </path>
       <type>
          <type>file</type>
@@ -128,8 +124,6 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
          <type>file</type>
          <type>dir</type>
          <type>dir</type>
-         <type>file</type>
-         <type>file</type>
       </type>
       <include>
          <include/>
@@ -147,12 +141,8 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
          <include/>
          <include/>
          <include/>
-         <include/>
-         <include/>
       </include>
       <ignore>
-         <ignore/>
-         <ignore/>
          <ignore/>
          <ignore/>
          <ignore/>

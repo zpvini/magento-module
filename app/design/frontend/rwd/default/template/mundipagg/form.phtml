@@ -4,6 +4,7 @@ $standard = $this->getStandard();
 // Get Quote
 /* @var Mage_Sales_Model_Quote $quote */
 $quote = $standard->getQuote();
+$quote->setTotalsCollectedFlag(false)->collectTotals();
 
 $installmentsHelper = Mage::helper('mundipagg/installments');
 
@@ -16,8 +17,6 @@ if ($quote->isVirtual()) {
 // Partial payment?
 $isPartial = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
 
-$this->getInstallments();
-
 $orderGrandTotal = $standard->getQuote()->getBaseGrandTotal();
 if ($isPartial === 'partial'):
 	$order = $this->loadOrder();
@@ -27,6 +26,12 @@ if ($isPartial === 'partial'):
 else :
 	$baseGrandTotal = $orderGrandTotal;
 endif;
+
+// Payment method
+$_code = $this->getMethodCode();
+if ($_code != 'mundipagg_recurrencepayment') {
+    $baseGrandTotal-= Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($quote);
+}
 
 if ($data->getMundipaggInterest()) {
 	$baseGrandTotal = $baseGrandTotal - $data->getMundipaggInterest();
@@ -50,10 +55,6 @@ $currencySymbol =
 $ccs = $this->getCcs();
 
 $countCcs = count($ccs);
-
-// Payment method
-$_code = $this->getMethodCode();
-
 
 $cart = Mage::getSingleton('checkout/cart');
 $cartQuote = $cart->getQuote();
@@ -289,7 +290,6 @@ if ($recurrent) {
                                             <div class="field">
                                                 <label class="required"><?php echo $this->__('Credit options') ?></label>
                                                 <div class="input-box">
-                                                    <?php $this->getInstallments(); ?>
                                                     <select id="<?php echo $_code . '_credito_parcelamento_' .  $num . '_' . $c; ?>"
                                                             name="payment[<?php echo $_code . '_credito_parcelamento_' . $num . '_' . $c; ?>]"
                                                             class="required-entry installment-token <?php echo 'group_' . $num . '_' . $c; ?>"
