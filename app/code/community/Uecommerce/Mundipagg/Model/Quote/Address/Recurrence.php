@@ -18,7 +18,6 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Recurrence extends Mage_Sales_Mod
             Uecommerce_Mundipagg_Model_Observer::checkItemAlone($quote) &&
             Uecommerce_Mundipagg_Model_Observer::checkRecurrenceMix($quote)
         ) {
-            $frequency = 1;
             foreach($items as $item) {
                 $product = $item->getProduct();
                 if ($product->getMundipaggRecurrent()) {
@@ -28,6 +27,8 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Recurrence extends Mage_Sales_Mod
                 }
             }
             $msg = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrent_mix_message');
+            $freq = strtolower(Mage::helper('mundipagg')->__($frequency));
+            $msg .= ' ' . $freq . ' (' . $interval . 'x)';
             $quoteId = Mage::getSingleton('checkout/session')->getQuoteId();
             $quote = Mage::getModel("sales/quote")->load($quoteId);
             $address->addTotal(array(
