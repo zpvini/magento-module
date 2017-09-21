@@ -72,8 +72,14 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
                         break;
                     }
                 }
+
                 $address->setMundipaggInterest($interest);
-                $address->setGrandTotal(($grandTotal + $interest) / $interval);
+
+                if (Uecommerce_Mundipagg_Model_Observer::checkRecurrenceMix($info->getQuote())) {
+                    $address->setGrandTotal(($grandTotal + $interest) / $interval);
+                } else {
+                    $address->setGrandTotal($grandTotal + $interest);
+                }
             }
         }
 
