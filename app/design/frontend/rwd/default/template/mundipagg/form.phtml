@@ -102,11 +102,13 @@ if ($recurrent) {
             $freq = 'Month';
             break;
     }
-    $recFinal = strtotime('+' . $interval . ' ' . $freq . 's');
+    $recFinal = strtotime('+' . ($interval -1) . ' ' . $freq . 's');
     $recurrenceFinalDate = date('Y/m/01', $recFinal);
     if ($recurrenceMix) {
-                        
         $newBaseGrandTotal = $baseGrandTotal / $interval;
+    } else {
+        $newBaseGrandTotal = $baseGrandTotal;
+    }
     $recurrenceTotalString =
         '<strong>' .
                $currencySymbol .
@@ -117,7 +119,6 @@ if ($recurrent) {
                $this->__($frequencyType[$frequency] .'s') .
            '</strong>'.
         '<p>Fim do ciclo: ' . date("m/Y", $recFinal) . "</p>";
-    }
 }
 ?>
 
