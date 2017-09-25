@@ -1215,7 +1215,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 				$logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
 
 			} else {
-				$logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
+                            $this->saveNsu($data, $orderReference);
+                            $logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
 			}
 
 			$helperLog->info($logMessage);
@@ -2416,4 +2417,23 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 }
             }
         }
+
+    /**
+     * Save updated NSU
+     * @param array $data
+     * @param array $orderReference
+     */
+    private function saveNsu($data, $orderReference)
+    {
+        if (isset($data['CreditCardTransaction']) && isset($data['CreditCardTransaction']['UniqueSequentialNumber'])) {
+            try {
+                $nsu = $data['CreditCardTransaction']['UniqueSequentialNumber'];
+                $order = Mage::getModel('sales/order')->loadByIncrementId($orderReference);
+                $payment = $order->getPayment();
+                $payment->setAdditionalInformation('mundipagg_creditcard_payment_capture_nsu', $nsu);
+                $payment->save();
+            } catch (Exception $exc) {
+            }
+        }
+    }
 }
