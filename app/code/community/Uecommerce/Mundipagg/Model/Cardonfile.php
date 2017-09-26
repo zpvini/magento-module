@@ -38,7 +38,7 @@ class Uecommerce_Mundipagg_Model_Cardonfile extends Mage_Core_Model_Abstract
     }
 
     public function loadByToken($token)
-	{
-		return $this->load($token, 'token');
-	}
+    {
+        return $this->load($token, 'token');
+    }
 }

@@ -59,7 +59,7 @@ class Uecommerce_Mundipagg_Model_Creditcardoneinstallment extends Uecommerce_Mun
      * @param array $data
      * @return Uecommerce_Mundipagg_Model_Standard
      */
-    public function assignData($data) 
+    public function assignData($data)
     {
         if (!($data instanceof Varien_Object)) {
             $data = new Varien_Object($data);
@@ -93,7 +93,7 @@ class Uecommerce_Mundipagg_Model_Creditcardoneinstallment extends Uecommerce_Mun
     {
         $standard = Mage::getModel('mundipagg/standard');
 
-        switch($standard->getConfigData('payment_action')) {
+        switch ($standard->getConfigData('payment_action')) {
             case 'order':
                 $this->setCreditCardOperationEnum('AuthAndCapture');
 

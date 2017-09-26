@@ -30,14 +30,14 @@
 
 class Uecommerce_Mundipagg_Model_Source_PaymentAction
 {
-    public function toOptionArray() 
+    public function toOptionArray()
     {
         return array(
-        	array(
+            array(
                 'value' => 'order',
                 'label' => Mage::helper('mundipagg')->__('AuthAndCapture')
             ),
-        	array(
+            array(
                 'value' => 'authorize',
                 'label' => Mage::helper('mundipagg')->__('AuthOnly')
             ),

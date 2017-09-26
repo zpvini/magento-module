@@ -89,56 +89,72 @@ UPDATE ".$prefix."sales_flat_order_payment SET `method` = 'mundipagg_creditcard'
     $installer = Mage::getResourceModel('sales/setup', 'default_setup');
 
 // Interests
-    $installer->addAttribute('quote', 'mundipagg_base_interest',
+    $installer->addAttribute(
+        'quote',
+        'mundipagg_base_interest',
         array(
             'label' => 'Base Interest',
             'type'  => 'decimal',
         )
     );
 
-    $installer->addAttribute('quote', 'mundipagg_interest',
+    $installer->addAttribute(
+        'quote',
+        'mundipagg_interest',
         array(
             'label' => 'Interest',
             'type'  => 'decimal',
         )
     );
 
-    $installer->addAttribute('order', 'mundipagg_base_interest',
+    $installer->addAttribute(
+        'order',
+        'mundipagg_base_interest',
         array(
             'label' => 'Base Interest',
             'type'  => 'decimal',
         )
     );
 
-    $installer->addAttribute('order', 'mundipagg_interest',
+    $installer->addAttribute(
+        'order',
+        'mundipagg_interest',
         array(
             'label' => 'Interest',
             'type'  => 'decimal',
         )
     );
 
-    $installer->addAttribute('invoice', 'mundipagg_base_interest',
+    $installer->addAttribute(
+        'invoice',
+        'mundipagg_base_interest',
         array(
             'label' => 'Base Interest',
             'type'  => 'decimal',
         )
     );
 
-    $installer->addAttribute('invoice', 'mundipagg_interest',
+    $installer->addAttribute(
+        'invoice',
+        'mundipagg_interest',
         array(
             'label' => 'Interest',
             'type'  => 'decimal',
         )
     );
 
-    $installer->addAttribute('creditmemo', 'mundipagg_base_interest',
+    $installer->addAttribute(
+        'creditmemo',
+        'mundipagg_base_interest',
         array(
             'label' => 'Base Interest',
             'type'  => 'decimal',
         )
     );
 
-    $installer->addAttribute('creditmemo', 'mundipagg_interest',
+    $installer->addAttribute(
+        'creditmemo',
+        'mundipagg_interest',
         array(
             'label' => 'Interest',
             'type'  => 'decimal',

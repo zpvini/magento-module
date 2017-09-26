@@ -27,12 +27,14 @@
  * @package    Uecommerce_Mundipagg
  * @author     Uecommerce Dev Team
  */
-class Uecommerce_Mundipagg_Model_Source_Environment {
-	public function toOptionArray() {
-		return
-			array(
-				'development' => 'Sandbox',
-				'production'  => Mage::helper('mundipagg')->__('Production'),
-			);
-	}
+class Uecommerce_Mundipagg_Model_Source_Environment
+{
+    public function toOptionArray()
+    {
+        return
+            array(
+                'development' => 'Sandbox',
+                'production'  => Mage::helper('mundipagg')->__('Production'),
+            );
+    }
 }

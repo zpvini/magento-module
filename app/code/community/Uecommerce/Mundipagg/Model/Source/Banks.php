@@ -30,10 +30,10 @@
 
 class Uecommerce_Mundipagg_Model_Source_Banks
 {
-    public function toOptionArray() 
+    public function toOptionArray()
     {
         return array(
-        	array('value' => '234', 'label' => 'Bradesco'),
+            array('value' => '234', 'label' => 'Bradesco'),
             array('value' => '341', 'label' => 'Itaú'),
             array('value' => '033', 'label' => 'Santander'),
         );

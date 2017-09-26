@@ -8,9 +8,9 @@ class Uecommerce_Mundipagg_Block_Checkout_Onepage_Payment_Methods extends Mage_C
         $session = Mage::getSingleton('checkout/session');
         $paymentMethod = $session->getData('payment_method_in_session');
 
-        if(isset($payment['method'])) {
+        if (isset($payment['method'])) {
             // If payment method in request is different from the value set in the session
-            if($paymentMethod != $payment['method']) {
+            if ($paymentMethod != $payment['method']) {
                 // Reset payment
                 $this->setPaymentMethod('');
                 // Set new payment method

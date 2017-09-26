@@ -58,7 +58,7 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
      * @param array $data
      * @return Uecommerce_Mundipagg_Model_Standard
      */
-    public function assignData($data) 
+    public function assignData($data)
     {
         if (isset($data[$this->_code.'_token_1_1']) && $data[$this->_code.'_token_1_1'] != 'new') {
             $parcelsNumber = $data[$this->_code.'_credito_parcelamento_1_1'];
@@ -75,14 +75,14 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
         $info = $this->resetInterest($info);
 
         $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
-        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber , $cctype, $info->getQuote()->getGrandTotal() - $discount);
+        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber, $cctype, $info->getQuote()->getGrandTotal() - $discount);
 
         if ($interest > 0) {
             $interestInformation = array();
             $interestInformation[$this->_code.'_1_1'] = new Varien_Object();
-            $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',','.',$interest));
+            $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',', '.', $interest));
             $info->setAdditionalInformation('mundipagg_interest_information', array());
-            $info->setAdditionalInformation('mundipagg_interest_information',$interestInformation);
+            $info->setAdditionalInformation('mundipagg_interest_information', $interestInformation);
             $this->applyInterest($info, $interest);
         } else {
             // If none of Cc parcels doens't have interest we reset interest
@@ -126,7 +126,7 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
     {
         $standard = Mage::getModel('mundipagg/standard');
 
-        switch($standard->getConfigData('payment_action')) {
+        switch ($standard->getConfigData('payment_action')) {
             case 'order':
                 $this->setCreditCardOperationEnum('AuthAndCapture');
 

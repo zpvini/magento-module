@@ -30,15 +30,15 @@
 
 class Uecommerce_Mundipagg_Block_Adminhtml_Sales_Order_Invoice_View extends Mage_Adminhtml_Block_Sales_Order_Invoice_View
 {
-	public function __construct()
+    public function __construct()
     {
-    	parent::__construct();
+        parent::__construct();
 
-    	$this->_removeButton('void');
+        $this->_removeButton('void');
 
-    	$orderPayment = $this->getInvoice()->getOrder()->getPayment();
+        $orderPayment = $this->getInvoice()->getOrder()->getPayment();
 
-        if ($this->_isAllowedAction('creditmemo') ) {
+        if ($this->_isAllowedAction('creditmemo')) {
             if (($orderPayment->canRefundPartialPerInvoice()
                 && $this->getInvoice()->canRefund()
                 && $orderPayment->getAmountPaid() > $orderPayment->getAmountRefunded())
@@ -47,8 +47,7 @@ class Uecommerce_Mundipagg_Block_Adminhtml_Sales_Order_Invoice_View extends Mage
                     'label'     => Mage::helper('sales')->__('Credit Memo'),
                     'class'     => 'go',
                     'onclick'   => 'setLocation(\''.$this->getCreditMemoUrl().'\')'
-                    )
-                );
+                    ));
             }
         }
     }

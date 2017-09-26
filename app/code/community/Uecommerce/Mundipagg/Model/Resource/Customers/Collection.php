@@ -30,14 +30,14 @@
 
 class Uecommerce_Mundipagg_Model_Resource_Customers_Collection extends Mage_Core_Model_Mysql4_Collection_Abstract
 {
-	protected function _construct()
-	{
-		$this->_init('mundipagg/customers');
-	}
-	
-	public function addEntityIdFilter($entityId)
-	{
-		$this->addFieldToFilter('entity_id', $entityId);
+    protected function _construct()
+    {
+        $this->_init('mundipagg/customers');
+    }
+    
+    public function addEntityIdFilter($entityId)
+    {
+        $this->addFieldToFilter('entity_id', $entityId);
         return $this;
-	}
+    }
 }

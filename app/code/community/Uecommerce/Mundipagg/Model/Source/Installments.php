@@ -30,7 +30,7 @@
 
 class Uecommerce_Mundipagg_Model_Source_Installments
 {
-    public function toOptionArray() 
+    public function toOptionArray()
     {
         return array(
             array('value' => '2', 'label' => '2'),

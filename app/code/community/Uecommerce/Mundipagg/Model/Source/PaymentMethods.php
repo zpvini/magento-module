@@ -30,31 +30,31 @@
 
 class Uecommerce_Mundipagg_Model_Source_PaymentMethods
 {
-    public function toOptionArray() 
+    public function toOptionArray()
     {
         return array(
             array(
-            	'value' => 'BoletoBancario', 
-            	'label' => Mage::helper('mundipagg')->__('Boleto Bancário')
+                'value' => 'BoletoBancario',
+                'label' => Mage::helper('mundipagg')->__('Boleto Bancário')
             ),
             array(
-            	'value' => '1CreditCards', 
-            	'label' => Mage::helper('mundipagg')->__('1 Credit Card')
+                'value' => '1CreditCards',
+                'label' => Mage::helper('mundipagg')->__('1 Credit Card')
             ),
             array(
-                'value' => '2CreditCards', 
+                'value' => '2CreditCards',
                 'label' => Mage::helper('mundipagg')->__('2 Credit Cards')
             ),
             array(
-                'value' => '3CreditCards', 
+                'value' => '3CreditCards',
                 'label' => Mage::helper('mundipagg')->__('3 Credit Cards')
             ),
             array(
-                'value' => '4CreditCards', 
+                'value' => '4CreditCards',
                 'label' => Mage::helper('mundipagg')->__('4 Credit Cards')
             ),
             array(
-                'value' => '5CreditCards', 
+                'value' => '5CreditCards',
                 'label' => Mage::helper('mundipagg')->__('5 Credit Cards')
             ),
         );

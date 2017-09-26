@@ -30,14 +30,14 @@
 
 class Uecommerce_Mundipagg_Block_Standard_Partial extends Mage_Checkout_Block_Onepage_Payment_Methods
 {
-	/**
+    /**
      * Internal constructor
      * Set template for redirect
      *
      */
-	public function __construct() 
-	{
-		parent::_construct();
+    public function __construct()
+    {
+        parent::_construct();
 
         $this->setTemplate('mundipagg/partial.phtml');
 
@@ -66,7 +66,7 @@ class Uecommerce_Mundipagg_Block_Standard_Partial extends Mage_Checkout_Block_On
     /**
      * Return Standard model
      */
-    public function getStandard() 
+    public function getStandard()
     {
         return Mage::getModel('mundipagg/standard');
     }
@@ -74,7 +74,7 @@ class Uecommerce_Mundipagg_Block_Standard_Partial extends Mage_Checkout_Block_On
     /**
      * Return creditcard model
      */
-    public function getCreditcard() 
+    public function getCreditcard()
     {
         return Mage::getModel('mundipagg/creditcard');
     }
@@ -82,7 +82,7 @@ class Uecommerce_Mundipagg_Block_Standard_Partial extends Mage_Checkout_Block_On
     /**
      * Return twocreditcards model
      */
-    public function getTwocreditcards() 
+    public function getTwocreditcards()
     {
         return Mage::getModel('mundipagg/twocreditcards');
     }
@@ -90,7 +90,7 @@ class Uecommerce_Mundipagg_Block_Standard_Partial extends Mage_Checkout_Block_On
     /**
      * Return threecreditcards model
      */
-    public function getThreecreditcards() 
+    public function getThreecreditcards()
     {
         return Mage::getModel('mundipagg/threecreditcards');
     }
@@ -98,7 +98,7 @@ class Uecommerce_Mundipagg_Block_Standard_Partial extends Mage_Checkout_Block_On
     /**
      * Return fourcreditcards model
      */
-    public function getFourcreditcards() 
+    public function getFourcreditcards()
     {
         return Mage::getModel('mundipagg/fourcreditcards');
     }
@@ -106,7 +106,7 @@ class Uecommerce_Mundipagg_Block_Standard_Partial extends Mage_Checkout_Block_On
     /**
      * Return fivecreditcards model
      */
-    public function getFivecreditcards() 
+    public function getFivecreditcards()
     {
         return Mage::getModel('mundipagg/fivecreditcards');
     }

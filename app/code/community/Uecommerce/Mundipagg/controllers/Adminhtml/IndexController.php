@@ -33,8 +33,8 @@ class Uecommerce_Mundipagg_Adminhtml_IndexController extends Mage_Adminhtml_Cont
     /**
      * Constructor
      */
-    protected function _construct() 
-    {        
+    protected function _construct()
+    {
         $this->setUsedModuleName('mundipagg');
     }
 
@@ -44,15 +44,15 @@ class Uecommerce_Mundipagg_Adminhtml_IndexController extends Mage_Adminhtml_Cont
         $result = array();
         $installmentsHelper = Mage::helper('mundipagg/installments');
         
-        if(isset($post['cctype'])){
+        if (isset($post['cctype'])) {
             $total = $post['total'];
             $cctype = $post['cctype'];
 
-            if(!$total || $total == 0) {
+            if (!$total || $total == 0) {
                 $total = null;
             }
 
-            $installments = $installmentsHelper->getInstallmentForCreditCardType($cctype,$total);
+            $installments = $installmentsHelper->getInstallmentForCreditCardType($cctype, $total);
 
             $result['installments'] = $installments;
             $result['brand'] = $cctype;
@@ -68,16 +68,16 @@ class Uecommerce_Mundipagg_Adminhtml_IndexController extends Mage_Adminhtml_Cont
     {
         $path = 'payment/mundipagg_standard/';
         
-        if(!Mage::getStoreConfig($path.'parcelamento_de2')) {
+        if (!Mage::getStoreConfig($path.'parcelamento_de2')) {
             $this->getResponse()->setBody(Mage::helper('core')->jsonEncode(array('error' => $this->__('Probably you had not installed the old version.'))));
             return;
-        }      
+        }
         
         $settings = array();
         
         $settings[0] = array(Mage::getStoreConfig($path.'parcelamento_de2'),'1','');
 
-        for($i=2;$i<=12;$i++) {
+        for ($i=2; $i<=12; $i++) {
             $settings[] = array(Mage::getStoreConfig($path.'parcelamento_ate'.$i),$i, '');
         }
         
