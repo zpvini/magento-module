@@ -58,7 +58,7 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
      * @param array $data
      * @return Uecommerce_Mundipagg_Model_Standard
      */
-    public function assignData($data) 
+    public function assignData($data)
     {
         $info = $this->getInfoInstance();
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
@@ -93,33 +93,32 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
         $interest2 = 0;
         $interestInformation = array();
         
-        if(Mage::app()->getRequest()->getActionName() == 'partialPost'){
+        if (Mage::app()->getRequest()->getActionName() == 'partialPost') {
             $keyCode = $this->_code.'_partial';
             $interestInformation = $info->getAdditionalInformation('mundipagg_interest_information');
-        }else{
+        } else {
             $keyCode = $this->_code;
         }
-        if($parcelsNumber1 > 1) {
-            $interest1 = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber1 , $cctype1, $value1);
+        if ($parcelsNumber1 > 1) {
+            $interest1 = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber1, $cctype1, $value1);
             
             
             $interestInformation[$keyCode.'_2_1'] = new Varien_Object();
-            $interestInformation[$keyCode.'_2_1']->setInterest(str_replace(',','.',$interest1))->setValue(str_replace(',','.',$value1));
+            $interestInformation[$keyCode.'_2_1']->setInterest(str_replace(',', '.', $interest1))->setValue(str_replace(',', '.', $value1));
         }
 
-        if($parcelsNumber2 > 1){
-            $interest2 = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber2 , $cctype2, str_replace(',','.',$value2));
+        if ($parcelsNumber2 > 1) {
+            $interest2 = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber2, $cctype2, str_replace(',', '.', $value2));
             $interestInformation[$keyCode.'_2_2'] = new Varien_Object();
-            $interestInformation[$keyCode.'_2_2']->setInterest(str_replace(',','.',$interest2))->setValue(str_replace(',','.',$value2));
+            $interestInformation[$keyCode.'_2_2']->setInterest(str_replace(',', '.', $interest2))->setValue(str_replace(',', '.', $value2));
         }
         
         $interest = $interest1+$interest2;
         
         if ($interest > 0) {
             $info->setAdditionalInformation('mundipagg_interest_information', array());
-            $info->setAdditionalInformation('mundipagg_interest_information',$interestInformation);
+            $info->setAdditionalInformation('mundipagg_interest_information', $interestInformation);
             $this->applyInterest($info, $interest);
-            
         } else {
             // If none of Cc parcels doens't have interest we reset interest
             $info = $this->resetInterest($info);
@@ -135,7 +134,7 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
                     $address->setDiscountDescription(
                         $address->getDiscountDescription() . ' + ' .
                         Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
-                        );
+                    );
                 }
             }
         }
@@ -165,7 +164,7 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
         $this->setCreditCardOperationEnum('AuthAndCapture');
         
         $payment = $this->getInfoInstance();
-        $order = $payment->getOrder();               
+        $order = $payment->getOrder();
 
         parent::authorize($payment, $order->getBaseTotalDue());
         

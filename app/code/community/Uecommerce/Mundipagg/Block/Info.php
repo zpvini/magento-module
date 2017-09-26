@@ -27,116 +27,126 @@
  * @package    Uecommerce_Mundipagg
  * @author     Uecommerce Dev Team
  */
-class Uecommerce_Mundipagg_Block_Info extends Mage_Payment_Block_Info {
+class Uecommerce_Mundipagg_Block_Info extends Mage_Payment_Block_Info
+{
 
-	protected function _construct() {
-		parent::_construct();
-		$this->setTemplate('mundipagg/payment/info/mundipagg.phtml');
-	}
+    protected function _construct()
+    {
+        parent::_construct();
+        $this->setTemplate('mundipagg/payment/info/mundipagg.phtml');
+    }
 
-	/**
-	 * Retrieve order model instance
-	 *
-	 * @return Mage_Sales_Model_Order
-	 */
-	public function getOrder() {
-		return Mage::registry('current_order');
-	}
+    /**
+     * Retrieve order model instance
+     *
+     * @return Mage_Sales_Model_Order
+     */
+    public function getOrder()
+    {
+        return Mage::registry('current_order');
+    }
 
-	/**
-	 * Retrieve invoice model instance
-	 *
-	 * @return Mage_Sales_Model_Order_Invoice
-	 */
-	public function getInvoice() {
-		return Mage::registry('current_invoice');
-	}
+    /**
+     * Retrieve invoice model instance
+     *
+     * @return Mage_Sales_Model_Order_Invoice
+     */
+    public function getInvoice()
+    {
+        return Mage::registry('current_invoice');
+    }
 
-	/**
-	 * Retrieve shipment model instance
-	 *
-	 * @return Mage_Sales_Model_Order_Shipment
-	 */
-	public function getShipment() {
-		return Mage::registry('current_shipment');
-	}
+    /**
+     * Retrieve shipment model instance
+     *
+     * @return Mage_Sales_Model_Order_Shipment
+     */
+    public function getShipment()
+    {
+        return Mage::registry('current_shipment');
+    }
 
-	/**
-	 * Retrieve payment method
-	 */
-	public function getFormaPagamento() {
-		return $this->getInfo()->getAdditionalInformation('PaymentMethod');
-	}
+    /**
+     * Retrieve payment method
+     */
+    public function getFormaPagamento()
+    {
+        return $this->getInfo()->getAdditionalInformation('PaymentMethod');
+    }
 
-	/**
-	 * @param $ccQty credit card quantity
-	 * @param $ccPos credit card position
-	 * @return array|mixed|null
-	 */
-	public function getCcBrand($ccPos) {
-		return $this->getInfo()->getAdditionalInformation("{$ccPos}_CreditCardBrand");
-	}
+    /**
+     * @param $ccQty credit card quantity
+     * @param $ccPos credit card position
+     * @return array|mixed|null
+     */
+    public function getCcBrand($ccPos)
+    {
+        return $this->getInfo()->getAdditionalInformation("{$ccPos}_CreditCardBrand");
+    }
 
-	public function getCcValue($ccPos) {
-		$value = $this->getInfo()->getAdditionalInformation("{$ccPos}_AmountInCents") * 0.01;
+    public function getCcValue($ccPos)
+    {
+        $value = $this->getInfo()->getAdditionalInformation("{$ccPos}_AmountInCents") * 0.01;
 
-		return Mage::helper('core')->currency($value, true, false);
-	}
+        return Mage::helper('core')->currency($value, true, false);
+    }
 
-	public function getInstallmentsNumber($ccQty, $ccPos) {
-		if ($ccQty == 1) {
-			$installments = $this
+    public function getInstallmentsNumber($ccQty, $ccPos)
+    {
+        if ($ccQty == 1) {
+            $installments = $this
                 ->getInfo()
                 ->getAdditionalInformation(
                     "mundipagg_creditcard_credito_parcelamento_1_1"
                 );
 
             if (!$installments) {
-			    $installments = $this
+                $installments = $this
                     ->getInfo()
                     ->getAdditionalInformation(
                         "mundipagg_creditcard_new_credito_parcelamento_1_1"
                     );
             }
-		} else {
-			$installments = $this
+        } else {
+            $installments = $this
                 ->getInfo()
-				->getAdditionalInformation(
+                ->getAdditionalInformation(
                     "mundipagg_twocreditcards_credito_parcelamento_{$ccQty}_{$ccPos}"
                 );
 
             if (!$installments) {
-			    $installments = $this
+                $installments = $this
                     ->getInfo()
-				    ->getAdditionalInformation(
+                    ->getAdditionalInformation(
                         "mundipagg_twocreditcards_new_credito_parcelamento_{$ccQty}_{$ccPos}"
                     );
             }
-		}
+        }
 
-		$installments .= "x";
+        $installments .= "x";
 
-		return $installments;
-	}
+        return $installments;
+    }
 
-	public function getAuthorizationCode($ccPos) {
-		$authCode = $this->getInfo()->getAdditionalInformation("{$ccPos}_AuthorizationCode");
+    public function getAuthorizationCode($ccPos)
+    {
+        $authCode = $this->getInfo()->getAdditionalInformation("{$ccPos}_AuthorizationCode");
 
-		if (empty($authCode)) {
-			$authCode = "N/A";
-		}
+        if (empty($authCode)) {
+            $authCode = "N/A";
+        }
 
-		return $authCode;
-	}
+        return $authCode;
+    }
 
-	public function getTransactionId($ccPos) {
-		$txnId = $this->getInfo()->getAdditionalInformation("{$ccPos}_TransactionIdentifier");
+    public function getTransactionId($ccPos)
+    {
+        $txnId = $this->getInfo()->getAdditionalInformation("{$ccPos}_TransactionIdentifier");
 
-		if (empty($txnId)) {
-			$txnId = "N/A";
-		}
+        if (empty($txnId)) {
+            $txnId = "N/A";
+        }
 
-		return $txnId;
-	}
-
+        return $txnId;
+    }
 }

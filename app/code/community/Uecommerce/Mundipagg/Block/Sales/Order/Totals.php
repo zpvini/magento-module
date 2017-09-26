@@ -40,17 +40,16 @@ class Uecommerce_Mundipagg_Block_Sales_Order_Totals extends Mage_Sales_Block_Ord
         parent::_initTotals();
         
         $source = $this->getSource();
-		
-		if($this->getSource()->getMundipaggInterest() > 0)
-		{
-			$this->addTotalBefore(new Varien_Object(array
-			(
-					'code'  => 'mundipagg_interest',
-					'field' => 'interest',
-					'value' => $this->getSource()->getMundipaggInterest(),
-					'label' => $this->__('Interest')
-			)), 'grand_total');
-		}
+        
+        if ($this->getSource()->getMundipaggInterest() > 0) {
+            $this->addTotalBefore(new Varien_Object(array
+            (
+                    'code'  => 'mundipagg_interest',
+                    'field' => 'interest',
+                    'value' => $this->getSource()->getMundipaggInterest(),
+                    'label' => $this->__('Interest')
+            )), 'grand_total');
+        }
         
         return $this;
     }

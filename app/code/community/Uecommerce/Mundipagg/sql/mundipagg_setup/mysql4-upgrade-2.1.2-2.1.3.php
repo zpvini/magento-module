@@ -32,10 +32,9 @@
 
     $installer->startSetup();
 
-    Mage::getConfig()->saveConfig('payment/mundipagg_standard/apiUrlStaging','https://sandbox.mundipaggone.com/sale/');
+    Mage::getConfig()->saveConfig('payment/mundipagg_standard/apiUrlStaging', 'https://sandbox.mundipaggone.com/sale/');
     Mage::getConfig()->reinit();
     Mage::getConfig()->cleanCache();
     Mage::app()->reinitStores();
 
     $installer->endSetup();
-    

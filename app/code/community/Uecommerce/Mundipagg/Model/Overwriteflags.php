@@ -15,4 +15,3 @@ class Uecommerce_Mundipagg_Model_Overwriteflags extends Mage_Core_Model_Config_D
         return parent::save();
     }
 }
-

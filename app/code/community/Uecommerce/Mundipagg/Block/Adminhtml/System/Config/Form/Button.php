@@ -33,14 +33,15 @@ class Uecommerce_Mundipagg_Block_Adminhtml_System_Config_Form_Button extends Mag
     /**
      * Set template
      */
-    protected function _construct() {
+    protected function _construct()
+    {
         parent::_construct();
         $this->setTemplate('mundipagg/system/config/button.phtml');
     }
     
     /**
      * Return element html
-     * 
+     *
      * @param Varien_Data_Form_Element_Abstract $element
      * @return string
      */
@@ -51,19 +52,21 @@ class Uecommerce_Mundipagg_Block_Adminhtml_System_Config_Form_Button extends Mag
     
     /**
      * Return ajax url for button
-     * 
+     *
      * @return string
      */
-    public function getAjaxOldSettingsUrl(){
+    public function getAjaxOldSettingsUrl()
+    {
         return Mage::helper('adminhtml')->getUrl('mundipagg/adminhtml_index/setoldsettings');
     }
     
     /**
      * Generate button html
-     * 
+     *
      * @return string
      */
-    public function getButtonHtml(){
+    public function getButtonHtml()
+    {
         $button = $this->getLayout()->createBlock('adminhtml/widget_button')
                 ->setData(array(
                     'id' => 'mundipagg_button',

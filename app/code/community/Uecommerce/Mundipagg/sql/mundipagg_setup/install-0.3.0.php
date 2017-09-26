@@ -89,4 +89,4 @@ CREATE TABLE IF NOT EXISTS `".$prefix."mundipagg_card_on_file` (
 
 ");
 
-$installer->endSetup(); 
+$installer->endSetup();

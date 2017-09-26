@@ -30,18 +30,18 @@
 
 class Uecommerce_Mundipagg_Block_Standard_Boleto extends Mage_Payment_Block_Form
 {
-    protected function _construct() 
+    protected function _construct()
     {
         parent::_construct();
 
-    	$this->setTemplate('mundipagg/boleto.phtml');
+        $this->setTemplate('mundipagg/boleto.phtml');
     }
     
     /**
      * Return Standard model
      */
-    public function getStandard() 
+    public function getStandard()
     {
-    	return Mage::getModel('mundipagg/standard');
+        return Mage::getModel('mundipagg/standard');
     }
 }

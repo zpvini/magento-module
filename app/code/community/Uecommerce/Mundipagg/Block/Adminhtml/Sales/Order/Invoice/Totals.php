@@ -40,17 +40,16 @@ class Uecommerce_Mundipagg_Block_Adminhtml_Sales_Order_Invoice_Totals extends Ma
         parent::_initTotals();
         
         $source = $this->getSource();
-		
-		if($this->getSource()->getMundipaggInterest() > 0)
-		{
-			$this->addTotalBefore(new Varien_Object(array
-			(
-					'code'  => 'mundipagg_interest',
-					'field' => 'interest',
-					'value' => $this->getSource()->getMundipaggInterest(),
-					'label' => $this->__('Interest')
-			)), 'grand_total');
-		}
+        
+        if ($this->getSource()->getMundipaggInterest() > 0) {
+            $this->addTotalBefore(new Varien_Object(array
+            (
+                    'code'  => 'mundipagg_interest',
+                    'field' => 'interest',
+                    'value' => $this->getSource()->getMundipaggInterest(),
+                    'label' => $this->__('Interest')
+            )), 'grand_total');
+        }
         
         return $this;
     }

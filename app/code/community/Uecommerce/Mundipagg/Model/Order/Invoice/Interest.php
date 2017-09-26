@@ -31,12 +31,12 @@
 class Uecommerce_Mundipagg_Model_Order_Invoice_Interest extends Mage_Sales_Model_Order_Invoice_Total_Abstract
 {
     public function collect(Mage_Sales_Model_Order_Invoice $invoice)
-	{
-		$order = $invoice->getOrder();
+    {
+        $order = $invoice->getOrder();
         
         $invoice->setGrandTotal($invoice->getGrandTotal() + $order->getMundipaggInterest());
         $invoice->setBaseGrandTotal($invoice->getBaseGrandTotal() + $order->getMundipaggBaseInterest());
-		
-		return $this;
-	}
+        
+        return $this;
+    }
 }

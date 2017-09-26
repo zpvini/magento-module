@@ -31,8 +31,7 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
      */
     public function assignData($data)
     {
-        if (
-            isset($data[$this->_code.'_token_1_1']) &&
+        if (isset($data[$this->_code.'_token_1_1']) &&
             $data[$this->_code.'_token_1_1'] != 'new'
         ) {
             $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($data[$this->_code.'_token_1_1']);
@@ -46,14 +45,14 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
         $info->getQuote()->preventSaving();
         $info = $this->resetInterest($info);
 
-        $interest = Mage::helper('mundipagg/installments')->getInterestForCard(1 , $cctype);
+        $interest = Mage::helper('mundipagg/installments')->getInterestForCard(1, $cctype);
 
         if ($interest > 0) {
             $interestInformation = array();
             $interestInformation[$this->_code.'_1_1'] = new Varien_Object();
-            $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',','.',$interest));
+            $interestInformation[$this->_code.'_1_1']->setInterest(str_replace(',', '.', $interest));
             $info->setAdditionalInformation('mundipagg_interest_information', array());
-            $info->setAdditionalInformation('mundipagg_interest_information',$interestInformation);
+            $info->setAdditionalInformation('mundipagg_interest_information', $interestInformation);
             $this->applyInterest($info, $interest);
         } else {
             // If none of Cc parcels doens't have interest we reset interest
@@ -64,7 +63,7 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
             if ($grandTotal) {
                 $items = $info->getQuote()->getAllItems();
                 $frequency = 1;
-                foreach($items as $item) {
+                foreach ($items as $item) {
                     $product = $item->getProduct();
                     if ($product->getMundipaggRecurrent()) {
                         $frequency = $product->getMundipaggFrequencyEnum();
