@@ -10,4 +10,6 @@
         <exclude name="PSR2.Methods.MethodDeclaration" />
         <exclude name="PSR2.Classes.PropertyDeclaration" />
     </rule>
+
+    <rule ref="Generic.Arrays.DisallowShortArraySyntax"/>
 </ruleset>
