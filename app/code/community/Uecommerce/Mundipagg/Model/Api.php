@@ -1508,37 +1508,34 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					break;
 
 				case 'notauthorized':
-					$helper = Mage::helper('mundipagg');
-					$grandTotal = $order->getGrandTotal();
-					$grandTotalInCents = $helper->formatPriceToCents($grandTotal);
-					$amountInCents = $transactionData['AmountInCents'];
+                                    $helper = Mage::helper('mundipagg');
+                                    $grandTotal = $order->getGrandTotal();
+                                    $grandTotalInCents = $helper->formatPriceToCents($grandTotal);
+                                    $amountInCents = $transactionData['AmountInCents'];
 
-					// if not authorized amount equal to order grand total, order must be canceled
-					if (sprintf($amountInCents) != sprintf($grandTotalInCents)) {
-						$returnMessage = "OK | {$returnMessageLabel} | Order grand_total not equal to transaction AmountInCents";
-						$helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-
+                                    // if not authorized amount equal to order grand total, order must be canceled
+                                    if (sprintf($amountInCents) != sprintf($grandTotalInCents)) {
+                                        $returnMessage = "OK | {$returnMessageLabel} | Order grand_total not equal to transaction AmountInCents";
+                                        $helperLog->info($returnMessage);
+                                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 						return $returnMessage;
 					}
 
 					try {
-						// set flag to prevent send back a cancelation to Mundi via API
-						$this->setCanceledByNotificationFlag($order, true);
-
-						$this->tryCancelOrder($order);
+                                            // set flag to prevent send back a cancelation to Mundi via API
+                                            $this->setCanceledByNotificationFlag($order, true);
+                                            $this->tryCancelOrder($order);
 
 					} catch (Exception $e) {
-						$returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
-						$helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-
-						return $returnMessage;
+                                            $returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
+                                            $helperLog->info($returnMessage);
+                                            $helperLog->info("Current order status: " . $order->getStatusLabel());
+                                            return $returnMessage;
 					}
 
 					$returnMessage = "OK | {$returnMessageLabel} | Order canceled: total amount not authorized";
 					$helperLog->info($returnMessage);
-                    $helperLog->info("Current order status: " . $order->getStatusLabel());
+                                        $helperLog->info("Current order status: " . $order->getStatusLabel());
 
 					return $returnMessage;
 					break;
