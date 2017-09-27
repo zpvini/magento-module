@@ -724,7 +724,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
     private function insertOldVersionNotification($oldVersion, $newVersion)
     {
         $notification = mage::getModel("adminnotification/inbox");
-        $data = [
+        $data = array(
             'severity'=>Mage_AdminNotification_Model_Inbox::SEVERITY_MINOR
             ,'title'=> 'Nova versão do módulo de integração Mundipagg disponível.'
             ,'description'=>
@@ -736,7 +736,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             ,'is_read' => 0
             ,'is_remove'=>0
             ,'date_added'=> now()
-        ];
+        );
         $notification->setData($data);
         $notification->save();
     }

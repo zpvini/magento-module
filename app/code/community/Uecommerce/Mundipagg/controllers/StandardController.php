@@ -116,7 +116,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
      */
     public function partialPostAction()
     {
-        $postData = $this->getRequest()->getPost('payment', []);
+        $postData = $this->getRequest()->getPost('payment', array());
 
         if ($postData == false) {
             $this->_redirect();
@@ -206,10 +206,10 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
     {
         $order = Mage::getModel('sales/order')->loadByIncrementId($orderId);
         if (!$order || !$order->getPayment()) {
-            return ['status_code' => 404];
+            return array('status_code' => 404);
         }
 
-        return ['message' => $order->getPayment()->getAdditionalInformation()];
+        return array('message' => $order->getPayment()->getAdditionalInformation());
     }
 
     private function getKeyFromAuthorizationHeader($basicAuth)
@@ -263,19 +263,19 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         $endpoint = key($this->getRequest()->getParams()) . 'RestAction';
 
         if ($this->getRequest()->isPost()) {
-            return ['status_code' => 404];
+            return array('status_code' => 404);
         }
 
         if ($this->isNotAuthorizedRequest(Mage::app()->getRequest()->getHeader('Authorization'))) {
-            return ['status_code' => 401];
+            return array('status_code' => 401);
         }
 
         if ($this->wrongRestApiUsage($this->getRequest()->getParams())) {
-            return ['status_code' => 404];
+            return array('status_code' => 404);
         }
 
         if (!method_exists($this, $endpoint)) {
-            return ['status_code' => 404];
+            return array('status_code' => 404);
         }
 
         return false;
