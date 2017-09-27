@@ -411,10 +411,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $helper = Mage::helper('mundipagg');
 
             // Set Data
-            $_request = [];
-            $_request["Order"] = [];
+            $_request = array();
+            $_request["Order"] = array();
             $_request["Order"]["OrderReference"] = $order->getIncrementId();
-            $_request["BoletoTransactionCollection"] = [];
+            $_request["BoletoTransactionCollection"] = array();
 
             $boletoTransactionCollection = new stdclass();
 
@@ -1168,11 +1168,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $ch = curl_init();
 
         // Header
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/json',
             "MerchantKey: {$key}",
             'Accept: application/json'
-        ]);
+        ));
 
         // Set the url, number of POST vars, POST data
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -1703,8 +1703,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         /** @var Mage_Sales_Model_Resource_Order_Payment_Transaction_Collection $transactions */
         $transactions = Mage::getModel('sales/order_payment_transaction')
             ->getCollection()
-            ->addAttributeToFilter('order_id', ['eq' => $order->getEntityId()])
-            ->addAttributeToFilter('txn_id', ['eq' => "{$transactionKey}-authorization"]);
+            ->addAttributeToFilter('order_id', array('eq' => $order->getEntityId()))
+            ->addAttributeToFilter('txn_id', array('eq' => "{$transactionKey}-authorization"));
 
         $transaction = $transactions->getFirstItem();
         $txnsFound = count($transactions);
@@ -1921,7 +1921,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $fromEmail = Mage::getStoreConfig('trans_email/ident_sales/email');
         $toEmail = Mage::getStoreConfig('trans_email/ident_custom1/email');
         $toName = Mage::getStoreConfig('trans_email/ident_custom1/name');
-        $bcc = [];
+        $bcc = array();
         $subject = 'Error Report - MundiPagg Magento Integration';
         $body = "Error Report from: {$_SERVER['HTTP_HOST']}<br><br>{$message}";
 
@@ -2301,7 +2301,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     {
         $helper = Mage::helper('mundipagg');
         $ccTxnsCollection = null;
-        $transactions = [];
+        $transactions = array();
 
         // request json
         $ccTxnsCollection = $helper->issetOr($data['CreditCardTransactionCollection']);
@@ -2319,7 +2319,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         // for each transaction, check sensible fields and obfuscate them
         foreach ($ccTxnsCollection as $transaction) {
             $creditCard = $helper->issetOr($transaction['CreditCard']);
-            $ccSensibleFields = ['CreditCardNumber', 'SecurityCode', 'ExpMonth', 'ExpYear', 'InstantBuyKey'];
+            $ccSensibleFields = array('CreditCardNumber', 'SecurityCode', 'ExpMonth', 'ExpYear', 'InstantBuyKey');
 
             foreach ($ccSensibleFields as $idx) {
                 $fieldValue = $helper->issetOr($creditCard[$idx]);
@@ -2343,7 +2343,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
 
         // check Buyer sensible fields and obfuscate them
-        $buyerSensibleFields = ['DocumentNumber', 'Email', 'HomePhone', 'MobilePhone'];
+        $buyerSensibleFields = array('DocumentNumber', 'Email', 'HomePhone', 'MobilePhone');
 
         foreach ($buyerSensibleFields as $idx) {
             $fieldValue = $helper->issetOr($buyer[$idx]);

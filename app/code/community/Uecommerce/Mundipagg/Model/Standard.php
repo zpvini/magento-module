@@ -24,14 +24,14 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
     protected $_canManageRecurringProfiles = false;
     protected $_allowCurrencyCode = array('BRL', 'USD', 'EUR');
     protected $_isInitializeNeeded = true;
-    private $brands = [
+    private $brands = array(
         'VI' => 'Visa',
         'MC' => 'Mastercard',
         'AE' => 'Amex',
         'DI' => 'Diners',
         'HI' => 'Hipercard',
         'EL' => 'Elo'
-    ];
+    );
 
     /**
      * Transaction ID
@@ -714,7 +714,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             /* @var Uecommerce_Mundipagg_Model_Api $api */
             $api = Mage::getModel('mundipagg/api');
             //Call Gateway Api
-            $capture = $api->saleCapture(['OrderKey' => $orderkey], $payment->getOrder()->getIncrementId());
+            $capture = $api->saleCapture(array('OrderKey' => $orderkey), $payment->getOrder()->getIncrementId());
             $ccTxnResultCollection = $helper->issetOr($capture['CreditCardTransactionResultCollection']);
 
             if (!is_array($ccTxnResultCollection) || is_null($ccTxnResultCollection) || empty($ccTxnResultCollection)
@@ -1511,7 +1511,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 $orderKeys = (array) $orderPayment->getAdditionalInformation('OrderKey');
 
                 if (is_null($orderKeys) || !is_array($orderKeys)) {
-                    $orderKeys = [];
+                    $orderKeys = array();
                 }
 
                 if (!in_array($newOrderKey, $orderKeys)) {
@@ -2489,8 +2489,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $info = $payment->getAdditionalInformation();
         $ccQty = $info['mundipagg_type'][0];
         $keys = array_keys($info);
-        $ccsData = [];
-        $otherData = [];
+        $ccsData = array();
+        $otherData = array();
 
         // separate credit cards payment additional information
         foreach ($keys as $key) {
@@ -2539,7 +2539,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
     public function extractTxnKeys($txn)
     {
-        $keys = [];
+        $keys = array();
 
         foreach ($txn as $key => $val) {
             if (is_array($txn[$key]) && !empty($txn[$key])) {
