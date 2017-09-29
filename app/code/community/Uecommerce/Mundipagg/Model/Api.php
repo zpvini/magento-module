@@ -529,6 +529,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 					$result['CreateDate'] = $createDate;
 				}
 
+				// remove boleto promo discount from session
+				$this->removeBoletoPromoDiscount();
+
 				return $result;
 			}
 		} catch (Exception $e) {
@@ -563,7 +566,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		foreach ($boletoTransactionCollectionRequest as $boletoTransItem) {
 			$boletoTrans = array();
 
-			$boletoTrans["AmountInCents"] = $boletoTransItem->AmountInCents;
+			$boletoTrans["AmountInCents"] = $boletoTransItem->AmountInCents - $this->getBoletoPromoDiscount();
 			$boletoTrans["BankNumber"] = isset($boletoTransItem->BankNumber) ? $boletoTransItem->BankNumber : '';
 			$boletoTrans["Instructions"] = $boletoTransItem->Instructions;
 			$boletoTrans["DocumentNumber"] = $boletoTransItem->DocumentNumber;
@@ -577,6 +580,26 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		return $newBoletoTransCollection;
 	}
+
+	/**
+	 * Get boleto promo discount
+	 */
+	private function getBoletoPromoDiscount()
+    {
+        $session = Mage::getSingleton('checkout/session');
+        $boletoDiscount = $session->getData('boleto_promo_discount');
+
+        return $boletoDiscount ?  $boletoDiscount * 100 : 0;
+    }
+
+    /**
+     * Invalidate boleto promo discount
+     */
+    private function removeBoletoPromoDiscount()
+    {
+        $session = Mage::getSingleton('checkout/session');
+        $session->setData('boleto_promo_discount', 0);
+    }
 
 	/**
 	 * Debit transaction

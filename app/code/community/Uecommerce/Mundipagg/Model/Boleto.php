@@ -77,9 +77,18 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
     public function assignData($data) 
     {
         $info = $this->getInfoInstance();
+
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
         $info->getQuote()->preventSaving();
+
         $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
+
+        $boletoDiscount = $this->getShoppingCartRulesBoletoDiscount();
+        if ($boletoDiscount) {
+            $session = Mage::getSingleton('checkout/session');
+            $session->setData('boleto_promo_discount', $boletoDiscount['value']);
+        }
+
         foreach ($info->getQuote()->getAllAddresses() as $address) {
             $grandTotal = $address->getGrandTotal();
             if ($grandTotal) {
@@ -92,12 +101,58 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
                         Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
                     );
                 }
+
+                if ($boletoDiscount) {
+                    $address->setDiscountAmount($boletoDiscount['value'] * -1);
+                    $address->setDiscountDescription($boletoDiscount['message']);
+                }
             }
         }
+
         parent::assignData($data);
 
         return $this;
     }
+
+    private function getShoppingCartRulesBoletoDiscount()
+    {
+        $appliedRuleIds = Mage::getSingleton('checkout/session')->getQuote()->getAppliedRuleIds();
+        $discount = array();
+
+        foreach (explode(',', $appliedRuleIds) as $ruleId) {
+            $rule = Mage::getModel('salesrule/rule')->load($ruleId);
+
+            $discount = $this->getBoletoDiscountFromRule($rule);
+            if ($discount) {
+                break;
+            }
+        }
+
+        return $discount;
+    }
+
+    private function getBoletoDiscountFromRule($rule)
+    {
+        $conditions = unserialize($rule->getConditionsSerialized())['conditions'];
+        $conditionsInfo = $conditions[0];
+
+        if (count($conditions) != 1 || $conditionsInfo['value'] !== 'mundipagg_boleto') {
+            return array();
+        }
+
+        $quote = Mage::getModel('checkout/session')->getQuote();
+        $quoteData = $quote->getData();
+        $subtotal = $quoteData['subtotal'];
+
+        $ruleData = $rule->getData();
+        $percent = $ruleData['discount_amount'];
+
+        return array(
+            'value' => (floatval($percent)/100) * $subtotal,
+            'message' => $ruleData['name']
+        );
+    }
+
 
     /**
      * Prepare info instance for save

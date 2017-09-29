@@ -124,4 +124,21 @@
             </action>
         </reference>
     </mundipagg_standard_success>
+
+    <idecheckoutvm_index_index translate="label">
+        <reference name="head">
+            <action method="addItem">
+                <type>skin_css</type>
+                <name>css/mundipagg.css</name>
+            </action>
+        </reference>
+        <reference name="before_body_end">
+            <block type="page/html_head" name="extra_js" as="extra_js" after="-" template="mundipagg/extras.phtml">
+                <action method="addItem">
+                    <type>js</type>
+                    <name>uecommerce/mundipagg.js</name>
+                </action>
+            </block>
+        </reference>
+    </idecheckoutvm_index_index>
 </layout>
