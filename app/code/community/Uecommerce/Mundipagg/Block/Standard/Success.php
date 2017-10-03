@@ -177,24 +177,15 @@ class Uecommerce_Mundipagg_Block_Standard_Success extends Mage_Sales_Block_Items
      **/
     public function getBoletoUrl()
     {
-        $customerSession = Mage::getSingleton('customer/session');
-        $orders = Mage::getModel('sales/order')
-            ->getCollection()
-            ->addFieldToFilter('customer_id', $customerSession->getId())
-            ->addFieldToFilter('increment_id', $this->_getData('order_id'));
-
-        $ordersFound = count($orders);
-
-        if ($ordersFound == 1) {
+        if (!empty($this->_getData('boleto_url'))) {
             return $this->_getData('boleto_url');
         } else {
+            $customerSession = Mage::getSingleton('customer/session');
             $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-            $api = new Uecommerce_Mundipagg_Model_Api();
             $orderId = $this->_getData('order_id');
             $errMsg = "Order #{$orderId} don't belongs to customer {$customerSession->getId()}. Boleto url won't be showed on success.phtml";
 
             $helperLog->error($errMsg);
-            $api->mailError($errMsg);
 
             return false;
         }
