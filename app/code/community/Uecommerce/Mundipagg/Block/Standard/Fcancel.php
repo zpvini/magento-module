@@ -30,14 +30,14 @@
 
 class Uecommerce_Mundipagg_Block_Standard_Fcancel extends Mage_Core_Block_Template
 {
-	/**
+    /**
      * Internal constructor
      * Set template for redirect
      *
      */
-	public function __construct() 
+    public function __construct()
     {
-		parent::_construct();
+        parent::_construct();
         $this->setTemplate('mundipagg/fcancel.phtml');
     }
 }

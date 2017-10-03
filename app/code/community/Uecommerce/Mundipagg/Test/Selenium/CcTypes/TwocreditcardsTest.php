@@ -1,15 +1,18 @@
 <?php
 
-class Uecommerce_Mundipagg_Test_Selenium_CcTypes_TwocreditcardsTest extends Uecommerce_Mundipagg_Test_Selenium_CcTypes {
+class Uecommerce_Mundipagg_Test_Selenium_CcTypes_TwocreditcardsTest extends Uecommerce_Mundipagg_Test_Selenium_CcTypes
+{
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->_paymentType = 'twocreditcards';
         $this->_ccLength = 2;
         parent::setUp();
         $this->setCCValues($this->_ccLength);
     }
     
-    public function testTwoCreditcardsRegistered() {
+    public function testTwoCreditcardsRegistered()
+    {
         $this->_isLogged = false;
         $this->runProcess();
     }
@@ -17,7 +20,8 @@ class Uecommerce_Mundipagg_Test_Selenium_CcTypes_TwocreditcardsTest extends Ueco
     /**
      * @depends testTwoCreditcardsRegistered
      */
-    public function testTwoCreditcardsLogged(){
+    public function testTwoCreditcardsLogged()
+    {
         $this->_isLogged = true;
         //$this->runCardonfile();
         $this->runProcess();
@@ -32,7 +36,4 @@ class Uecommerce_Mundipagg_Test_Selenium_CcTypes_TwocreditcardsTest extends Ueco
         $this->_isPj = true;
         $this->runProcess();
     }
-
-
-
 }

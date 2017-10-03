@@ -114,8 +114,9 @@ class Uecommerce_Mundipagg_Block_Standard_Redirect extends Mage_Core_Block_Templ
      * Set template for redirect
      *
      */
-	public function __construct() {
-		parent::_construct();
+    public function __construct()
+    {
+        parent::_construct();
         $this->setTemplate('mundipagg/redirect.phtml');
     }
 
@@ -137,8 +138,10 @@ class Uecommerce_Mundipagg_Block_Standard_Redirect extends Mage_Core_Block_Templ
         if ($orderId) {
             $order = Mage::getModel('sales/order')->load($orderId);
             if ($order->getId()) {
-                $isVisible = !in_array($order->getState(),
-                    Mage::getSingleton('sales/order_config')->getInvisibleOnFrontStates());
+                $isVisible = !in_array(
+                    $order->getState(),
+                    Mage::getSingleton('sales/order_config')->getInvisibleOnFrontStates()
+                );
                 $this->addData(array(
                     'is_order_visible' => $isVisible,
                     'view_order_id' => $this->getUrl('sales/order/view/', array('order_id' => $orderId)),
@@ -152,7 +155,7 @@ class Uecommerce_Mundipagg_Block_Standard_Redirect extends Mage_Core_Block_Templ
         }
     }
 
-    public function getInfoInstance() 
+    public function getInfoInstance()
     {
         return Mage::getModel('mundipagg/standard')->getInfoInstance();
     }
@@ -161,7 +164,7 @@ class Uecommerce_Mundipagg_Block_Standard_Redirect extends Mage_Core_Block_Templ
     * Return Boleto URL in order to print it
     * @return string
     **/
-    public function getBoletoUrl() 
+    public function getBoletoUrl()
     {
         $session = Mage::getSingleton('checkout/session');
         $session->setQuoteId($session->getMundipaggStandardQuoteId(true));
@@ -169,7 +172,7 @@ class Uecommerce_Mundipagg_Block_Standard_Redirect extends Mage_Core_Block_Templ
         if ($session->getLastRealOrderId()) {
             $order = Mage::getModel('sales/order')->loadByIncrementId($session->getLastRealOrderId());
             
-            return $order->getPayment()->getAdditionalInformation('BoletoUrl'); 
+            return $order->getPayment()->getAdditionalInformation('BoletoUrl');
         }
     }
 }

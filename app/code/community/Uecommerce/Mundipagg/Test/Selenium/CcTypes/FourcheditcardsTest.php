@@ -1,16 +1,18 @@
 <?php
 
-class Uecommerce_Mundipagg_Test_Selenium_CcTypes_FourcreditcardisTest extends Uecommerce_Mundipagg_Test_Selenium_CcTypes {
+class Uecommerce_Mundipagg_Test_Selenium_CcTypes_FourcreditcardisTest extends Uecommerce_Mundipagg_Test_Selenium_CcTypes
+{
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->_paymentType = 'fourcreditcards';
         $this->_ccLength = 4;
         parent::setUp();
         $this->setCCValues($this->_ccLength);
-        
     }
     
-    public function testFourCreditcardsRegistered() {
+    public function testFourCreditcardsRegistered()
+    {
         $this->_isLogged = false;
         $this->runProcess();
     }
@@ -18,7 +20,8 @@ class Uecommerce_Mundipagg_Test_Selenium_CcTypes_FourcreditcardisTest extends Ue
     /**
      * @depends testFourCreditcardsRegistered
      */
-    public function testFourCreditcardsLogged(){
+    public function testFourCreditcardsLogged()
+    {
         $this->_isLogged = true;
         $this->runProcess();
     }
@@ -32,5 +35,4 @@ class Uecommerce_Mundipagg_Test_Selenium_CcTypes_FourcreditcardisTest extends Ue
         $this->_isPj = true;
         $this->runProcess();
     }
-
 }

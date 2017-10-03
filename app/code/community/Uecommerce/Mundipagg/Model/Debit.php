@@ -79,7 +79,7 @@ class Uecommerce_Mundipagg_Model_Debit extends Uecommerce_Mundipagg_Model_Standa
      * @param array $data
      * @return Uecommerce_Mundipagg_Model_Standard
      */
-    public function assignData($data) 
+    public function assignData($data)
     {
         $info = $this->getInfoInstance();
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
@@ -94,7 +94,7 @@ class Uecommerce_Mundipagg_Model_Debit extends Uecommerce_Mundipagg_Model_Standa
                 if ($discount) {
                     $address->setDiscountAmount(($address->getDiscountAmount() - $discount));
                     $address->setDiscountDescription(
-                        $address->getDiscountDescription() . ' + ' . 
+                        $address->getDiscountDescription() . ' + ' .
                         Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
                     );
                 }

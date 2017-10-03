@@ -1,6 +1,7 @@
 <?php
 
-class Uecommerce_Mundipagg_Model_Quote_Address_Recurrence extends Mage_Sales_Model_Quote_Address_Total_Abstract {
+class Uecommerce_Mundipagg_Model_Quote_Address_Recurrence extends Mage_Sales_Model_Quote_Address_Total_Abstract
+{
 
     public function __construct()
     {
@@ -12,13 +13,12 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Recurrence extends Mage_Sales_Mod
         $quote = $address->getQuote();
         $payment = $quote->getPayment()->getMethod();
         $items = $quote->getAllItems();
-        if(
-            $address->getGrandTotal() &&
-            $payment == 'mundipagg_recurrencepayment' && 
+        if ($address->getGrandTotal() &&
+            $payment == 'mundipagg_recurrencepayment' &&
             Uecommerce_Mundipagg_Model_Observer::checkItemAlone($quote) &&
             Uecommerce_Mundipagg_Model_Observer::checkRecurrenceMix($quote)
         ) {
-            foreach($items as $item) {
+            foreach ($items as $item) {
                 $product = $item->getProduct();
                 if ($product->getMundipaggRecurrent()) {
                     $frequency = $product->getMundipaggFrequencyEnum();
@@ -39,7 +39,7 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Recurrence extends Mage_Sales_Mod
         }
     }
     
-    private function getRecurrenceValue($quote, $baseGrandTotal) 
+    private function getRecurrenceValue($quote, $baseGrandTotal)
     {
         $items = $quote->getAllItems();
         

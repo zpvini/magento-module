@@ -1,7 +1,8 @@
 <?php
 
 
-class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Selenium2TestCase {
+class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Selenium2TestCase
+{
 
     public $_installmentActive;
     public $_Recurrency;
@@ -49,7 +50,8 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
    
 
 
-    public function setUp(){
+    public function setUp()
+    {
         parent::setUp();
 
         $this->setBrowser('firefox');
@@ -62,7 +64,7 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
         
         self::initFrontend(1);
 
-        if(Mage::getIsDeveloperMode()){
+        if (Mage::getIsDeveloperMode()) {
             self::$_defaultSleep = 4;
         }
 
@@ -71,13 +73,13 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
         $this->setMundipaggConfig();
         $this->createSimpleProduct();
         shell_exec('echo "" > ../var/log/Uecommerce_Mundipagg.log');
-        
     }
 
     /**
      * Set default settings Mundipagg
      */
-    public function setMundipaggConfig() {
+    public function setMundipaggConfig()
+    {
         $config = $this->getConfig();
 
         $config->saveConfig('payment/mundipagg_standard/merchantKeyStaging', '5efae21a-3ce0-4a63-884a-b8b6fb6ad1e3');
@@ -97,8 +99,8 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
             $config->saveConfig('payment/mundipagg_standard/enable_installments', '0');
         }
 
-        if(is_array($this->_additionalSaveSettings) && count($this->_additionalSaveSettings)){
-            foreach($this->_additionalSaveSettings as $path => $value){
+        if (is_array($this->_additionalSaveSettings) && count($this->_additionalSaveSettings)) {
+            foreach ($this->_additionalSaveSettings as $path => $value) {
                 $config->saveConfig($path, $value);
             }
         }
@@ -112,8 +114,9 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
     /**
      * Set default settings Magento
      */
-    public function setConfigMagento() {
-        if(self::$_setConfigMagento){
+    public function setConfigMagento()
+    {
+        if (self::$_setConfigMagento) {
             return false;
         }
         $config = $this->getConfig();
@@ -131,8 +134,9 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
     /**
      * Create a simple product to test
      */
-    public function createSimpleProduct() {
-        if(self::$_createProduct){
+    public function createSimpleProduct()
+    {
+        if (self::$_createProduct) {
             return false;
         }
         Mage::app()->setCurrentStore(Mage_Core_Model_App::ADMIN_STORE_ID);
@@ -172,8 +176,7 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
 //                        'max_sale_qty' => 2, //Maximum Qty Allowed in Shopping Cart
 //                        'is_in_stock' => 1, //Stock Availability
 //                        'qty' => 999 //qty
-                            )
-            );
+                            ));
             //->setCategoryIds(array(3, 10)); //assign product to categories
             $product->save();
             self::$_createProduct = true;
@@ -187,17 +190,18 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
     
     /**
      * Disable all Magento caches
-     * 
+     *
      * @return boolean
      */
-    public function disableCaches(){
-        if(self::$_disableCaches){
+    public function disableCaches()
+    {
+        if (self::$_disableCaches) {
             return false;
         }
         /** @var $model Mage_Core_Model_Cache */
         $model = Mage::getModel('core/cache');
         $options = $model->canUse();
-        foreach($options as $option => $value){
+        foreach ($options as $option => $value) {
             $options[$option] = 0;
         }
         $model->saveOptions($option);
@@ -206,9 +210,10 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
     
     
     
-    public function runMundipagg(){
+    public function runMundipagg()
+    {
         //Mage::log(Mage::app()->getResponse());
-        if(!$this->_isLogged){
+        if (!$this->_isLogged) {
             $this->deleteCustomerIfExists();
         }
 
@@ -237,24 +242,23 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
                 $btn->click();
             }
         }
-        $this->assertContains('checkout/cart',$this->url());
+        $this->assertContains('checkout/cart', $this->url());
         // Go to checkout
         $this->byCssSelector('.btn-proceed-checkout')->click();
         $this->assertContains('checkout/onepage/', $this->url());
         //Customer onepage
-        if(!$this->_isLogged){
+        if (!$this->_isLogged) {
             $this->registerCustomer();
-        }else{
+        } else {
             $this->loginCustomer();
         }
-        
-        
     }
     
     /**
      * Selenium register Customer
      */
-    public function registerCustomer(){
+    public function registerCustomer()
+    {
         $customer = $this->getCustomer();
         $this->byId('login:register')->click();
         $this->byId('onepage-guest-register-button')->click();
@@ -265,7 +269,7 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
         $this->byId('billing:street1')->value($customer['street1']);
         $this->byId('billing:city')->value($customer['city']);
         $this->byId('billing:country_id')->value($customer['country_id']);
-        if($this->byName('billing[region]')->displayed()) {
+        if ($this->byName('billing[region]')->displayed()) {
             $this->byId('billing:region')->value($customer['region']);
         }
         $this->byId('billing:postcode')->value($customer['postcode']);
@@ -285,7 +289,8 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
     /**
      * Login Customer
      */
-    public function loginCustomer(){
+    public function loginCustomer()
+    {
         $this->byId('login-email')->value(self::$_custmerTest['email']);
         $this->byId('login-password')->value(self::$_custmerTest['customer_password']);
         $this->byId('login-form')->submit();
@@ -296,15 +301,15 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
         $this->assertElementHasClass('active', $this->byId('opc-shipping_method'));
         
         sleep(self::$_defaultSleep);
-        
     }
     
     /**
      * Delete Test customer
-     * 
+     *
      * @return boolean
      */
-    public function deleteCustomerIfExists(){
+    public function deleteCustomerIfExists()
+    {
         $website = Mage::app()->getWebsite()->getId();
         
         /** @var $customer Mage_Customer_Model_Customer */
@@ -316,15 +321,16 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
             $customer->setIsDeleteable(true);
             $customer->delete();
             return true;
-        }else{
+        } else {
             return false;
         }
     }
     
      /**
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element 
+     * @return PHPUnit_Extensions_Selenium2TestCase_Element
      */
-    public function findElementsByCssSelector($selector, \PHPUnit_Extensions_Selenium2TestCase_Element $root_element = null) {
+    public function findElementsByCssSelector($selector, \PHPUnit_Extensions_Selenium2TestCase_Element $root_element = null)
+    {
         if (!$root_element) {
             $root_element = $this;
         }
@@ -333,10 +339,11 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
 
     /**
      * Performs a click on the child element the id of the last container as a parameter
-     * 
+     *
      * @param string $container
      */
-    public function clickButtonByContainer($container) {
+    public function clickButtonByContainer($container)
+    {
         $buttons = $this->findElementsByCssSelector('.button', $this->byId($container));
         foreach ($buttons as $b) {
             if ($b->displayed()) {
@@ -347,10 +354,11 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
     
     /**
      * Get Http Response Code
-     * 
+     *
      * @return int
      */
-    public function getHttpCode(){
+    public function getHttpCode()
+    {
         return Mage::app()->getResponse()->getHttpResponseCode();
     }
     
@@ -358,16 +366,16 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
      * @param $class
      * @param PHPUnit_Extensions_Selenium2TestCase_Element $element
      */
-    public function assertElementHasClass( $class, \PHPUnit_Extensions_Selenium2TestCase_Element $element )
+    public function assertElementHasClass($class, \PHPUnit_Extensions_Selenium2TestCase_Element $element)
     {
-        $classes = explode(' ', $element->attribute('class') );
+        $classes = explode(' ', $element->attribute('class'));
         $this->assertContains($class, $classes);
     }
     
-    protected function tearDown(){
+    protected function tearDown()
+    {
         //$this->deleteCustomerIfExists();
         print shell_exec('cat ../var/log/Uecommerce_Mundipagg.log');
-        
     }
     public static function initFrontend($code = null)
     {
@@ -411,13 +419,14 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
         return Mage::getConfig();
     }
     
-    public function selectOptionByValue(PHPUnit_Extensions_Selenium2TestCase_Element $element, $value){
+    public function selectOptionByValue(PHPUnit_Extensions_Selenium2TestCase_Element $element, $value)
+    {
         PHPUnit_Extensions_Selenium2TestCase_Element_Select::fromElement($element)->selectOptionByValue($value);
     }
 
     public function getCustomer()
     {
-        if($this->_isPj) {
+        if ($this->_isPj) {
             $customer = self::$_customerPjTest;
         } else {
             $customer = self::$_custmerTest;
@@ -428,14 +437,12 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
 
     public function execSuccessTest($url = false)
     {
-        if(!$url) {
+        if (!$url) {
             $url = 'mundipagg/standard/success';
         }
-        if(!getenv($this->_envCI)) {
+        if (!getenv($this->_envCI)) {
             sleep(self::$_defaultSleep+20);
-            $this->assertContains($url,$this->url());
+            $this->assertContains($url, $this->url());
         }
     }
-    
-
 }

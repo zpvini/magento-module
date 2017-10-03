@@ -30,7 +30,7 @@
 
 class Uecommerce_Mundipagg_Model_Source_Cctypes
 {
-    public function toOptionArray() 
+    public function toOptionArray()
     {
         return array(
             array('value' => 'VI', 'label' => 'Visa'),
@@ -42,10 +42,11 @@ class Uecommerce_Mundipagg_Model_Source_Cctypes
         );
     }
 
-    public function getCcTypeForLabel($label){
+    public function getCcTypeForLabel($label)
+    {
         $ccTypes = $this->toOptionArray();
-        foreach($ccTypes as $cc){
-            if($cc['value'] == $label){
+        foreach ($ccTypes as $cc) {
+            if ($cc['value'] == $label) {
                 return $cc['label'];
             }
         }

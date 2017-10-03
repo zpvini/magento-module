@@ -28,20 +28,18 @@
      * @author     Uecommerce Dev Team
      */
 
-    class Uecommerce_Mundipagg_Model_Source_CctypeProductInstallments
+class Uecommerce_Mundipagg_Model_Source_CctypeProductInstallments
+{
+    public function toOptionArray()
     {
-        public function toOptionArray()
-        {
-            return array(
-                array('value' => '', 'label' => 'Padrões'),
-                array('value' => 'VI', 'label' => 'Visa'),
-                array('value' => 'MC', 'label' => 'Mastercard'),
-                array('value' => 'AE', 'label' => 'Amex'),
-                array('value' => 'DI', 'label' => 'Diners'),
-                array('value' => 'EL', 'label' => 'Elo'),
-                array('value' => 'HI', 'label' => 'Hipercard'),
-            );
-        }
-
-
+        return array(
+            array('value' => '', 'label' => 'Padrões'),
+            array('value' => 'VI', 'label' => 'Visa'),
+            array('value' => 'MC', 'label' => 'Mastercard'),
+            array('value' => 'AE', 'label' => 'Amex'),
+            array('value' => 'DI', 'label' => 'Diners'),
+            array('value' => 'EL', 'label' => 'Elo'),
+            array('value' => 'HI', 'label' => 'Hipercard'),
+        );
     }
+}
