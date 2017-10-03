@@ -393,6 +393,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         }
     }
 
+
     public function installmentsandinterestAction()
     {
         $post = $this->getRequest()->getPost();
@@ -475,12 +476,15 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         }
     }
 
+    /**
+     * @todo Verificar este método.
+     */
     public function indexAction()
     {
-        $order = Mage::getModel('sales/order')->loadByIncrementId($this->getRequest()->getParam('order'));
+        $order = Mage::getModel('sales/order')
+                ->loadByIncrementId($this->getRequest()->getParam('order'));
         $payment = $order->getPayment();
         $info = $payment->getAdditionalInformation();
-
-        var_dump($info);
     }
+
 }

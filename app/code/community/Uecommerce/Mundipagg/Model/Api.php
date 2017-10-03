@@ -882,7 +882,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 case '1':
                     $gender = 'M';
                     break;
-
                 case '2':
                     $gender = 'F';
                     break;
@@ -2417,6 +2416,25 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         'ErrorDescription' => urldecode($transaction['AcquirerMessage'])
                 );
                 return $notAuthorizedTransaction;
+            }
+        }
+    }
+    
+    /**
+     * Save updated NSU
+     * @param array $data
+     * @param array $orderReference
+     */
+    private function saveNsu($data, $orderReference)
+    {
+        if (isset($data['CreditCardTransaction']) && isset($data['CreditCardTransaction']['UniqueSequentialNumber'])) {
+            try {
+                $nsu = $data['CreditCardTransaction']['UniqueSequentialNumber'];
+                $order = Mage::getModel('sales/order')->loadByIncrementId($orderReference);
+                $payment = $order->getPayment();
+                $payment->setAdditionalInformation('mundipagg_creditcard_payment_capture_nsu', $nsu);
+                $payment->save();
+            } catch (Exception $exc) {
             }
         }
     }
