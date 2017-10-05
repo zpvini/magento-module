@@ -1,32 +1,4 @@
 <?php
-/**
- * Uecommerce
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Uecommerce EULA.
- * It is also available through the world-wide-web at this URL:
- * http://www.uecommerce.com.br/
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade the extension
- * to newer versions in the future. If you wish to customize the extension
- * for your needs please refer to http://www.uecommerce.com.br/ for more information
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
- * @license    http://www.uecommerce.com.br/
- */
-
-/**
- * Mundipagg Payment module
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @author     Uecommerce Dev Team
- */
 
 class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_Standard
 {
@@ -74,8 +46,8 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
         $info->getQuote()->preventSaving();
         $info = $this->resetInterest($info);
 
-        $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
-        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber, $cctype, $info->getQuote()->getGrandTotal() - $discount);
+        $discount = Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($info->getQuote());
+        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber , $cctype, $info->getQuote()->getGrandTotal() - $discount);
 
         if ($interest > 0) {
             $interestInformation = array();
@@ -88,19 +60,28 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
             // If none of Cc parcels doens't have interest we reset interest
             $info = $this->resetInterest($info);
         }
-        $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
+        $discount = Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($info->getQuote());
         foreach ($info->getQuote()->getAllAddresses() as $address) {
             $grandTotal = $address->getGrandTotal();
+            $messages = array();
+            if ($address->getDiscountDescription()) {
+                $messages[] = $address->getDiscountDescription();
+            }
             if ($grandTotal) {
                 $address->setMundipaggInterest($interest);
                 $address->setGrandTotal($grandTotal - $discount + $interest);
                 if ($discount) {
                     $address->setDiscountAmount(($address->getDiscountAmount() - $discount));
-                    $address->setDiscountDescription(
-                        $address->getDiscountDescription() . ' + ' .
-                        Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
-                    );
+                    $msgRecurrence = Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message');
+                    if ($msgRecurrence) {
+                        $messages[] = $msgRecurrence;
+                    }
                 }
+            }
+            if ($messages) {
+                $address->setDiscountDescription(
+                    implode(' + ', $messages)
+                );
             }
         }
         return parent::assignData($data);

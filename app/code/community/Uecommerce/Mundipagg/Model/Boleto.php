@@ -1,32 +1,4 @@
 <?php
-/**
- * Uecommerce
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Uecommerce EULA.
- * It is also available through the world-wide-web at this URL:
- * http://www.uecommerce.com.br/
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade the extension
- * to newer versions in the future. If you wish to customize the extension
- * for your needs please refer to http://www.uecommerce.com.br/ for more information
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @copyright  Copyright (c) 2012 Uecommerce (http://www.uecommerce.com.br/)
- * @license    http://www.uecommerce.com.br/
- */
-
-/**
- * Mundipagg Payment module
- *
- * @category   Uecommerce
- * @package    Uecommerce_Mundipagg
- * @author     Uecommerce Dev Team
- */
 
 class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Standard
 {
@@ -51,6 +23,7 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
     protected $_canManageRecurringProfiles = false;
     protected $_allowCurrencyCode = array('BRL', 'USD', 'EUR');
     protected $_isInitializeNeeded = true;
+    protected $mundipaggDiscounts = null;
 
     public function __construct($Store = null)
     {
@@ -77,19 +50,37 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
     public function assignData($data)
     {
         $info = $this->getInfoInstance();
+
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
         $info->getQuote()->preventSaving();
-        $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
-        foreach ($info->getQuote()->getAllAddresses() as $address) {
-            $grandTotal = $address->getGrandTotal();
-            if ($grandTotal) {
-                $address->setMundipaggInterest(0);
-                $address->setGrandTotal($grandTotal - $discount);
-                if ($discount) {
-                    $address->setDiscountAmount(($address->getDiscountAmount() - $discount));
+
+        $mundipaggDiscounts = $this->getMundipaggDiscounts($info->getQuote());
+
+        foreach ($mundipaggDiscounts as $discount) {
+            foreach ($info->getQuote()->getAllAddresses() as $address) {
+                $grandTotal = $address->getGrandTotal();
+                $messages = array();
+                if ($grandTotal) {
+                    $address->setMundipaggInterest(0);
+
+                    if ($discount['pct']) {
+                        $discount['value'] = $this->getDiscountValue($grandTotal, $discount['value']);
+                    }
+                    $totalWithDiscount = $grandTotal - $discount['value'];
+                    $address->setGrandTotal($totalWithDiscount);
+                    $address->setBaseGrandTotal($totalWithDiscount);
+
+                    if ($address->getDiscountDescription()) {
+                        $messages[] = $address->getDiscountDescription();
+                        $address->setDiscountAmount($discount['value']);
+                    }
+
+                    $messages[] = $discount['description'];
+
+                }
+                if ($messages) {
                     $address->setDiscountDescription(
-                        $address->getDiscountDescription() . ' + ' .
-                        Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message')
+                        implode(' + ', $messages)
                     );
                 }
             }
@@ -97,6 +88,11 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
         parent::assignData($data);
 
         return $this;
+    }
+
+    private function getDiscountValue($grandTotal, $discountPercentual)
+    {
+        return $grandTotal * ($discountPercentual/100);
     }
 
     /**
@@ -129,5 +125,32 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
         $order = $payment->getOrder();
 
         parent::order($payment, $order->getBaseTotalDue());
+    }
+
+    private function getMundipaggDiscounts($quote) {
+        //Recurrence
+        $this->getMundipaggDiscountArray(
+            Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($quote),
+            Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscountMessage()
+        );
+
+        //Boleto
+        $this->getMundipaggDiscountArray(
+            Mage::getStoreConfig('payment/mundipagg_boleto/boleto_discount_value'),
+            Mage::getStoreConfig('payment/mundipagg_boleto/boleto_discount_message'),
+            true
+        );
+
+        return $this->mundipaggDiscounts;
+    }
+
+    private function getMundipaggDiscountArray($discount, $description, $pct = false){
+        if ($discount > 0 && $discount !== '') {
+            $this->mundipaggDiscounts[] = array(
+                'value' => (float) $discount,
+                'description' => $description,
+                'pct' => $pct
+            );
+        }
     }
 }
