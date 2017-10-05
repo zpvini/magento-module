@@ -70,18 +70,17 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
                     $address->setGrandTotal($totalWithDiscount);
                     $address->setBaseGrandTotal($totalWithDiscount);
 
-                    if ($address->getDiscountDescription()) {
+                    if (strlen($address->getDiscountDescription()) > 0) {
                         $messages[] = $address->getDiscountDescription();
-                        $address->setDiscountAmount($discount['value']);
                     }
-
                     $messages[] = $discount['description'];
 
-                }
-                if ($messages) {
+
                     $address->setDiscountDescription(
                         implode(' + ', $messages)
                     );
+                    $totalDiscount = $address->getDiscountAmount() - $discount['value'];
+                    $address->setDiscountAmount($totalDiscount);
                 }
             }
         }
