@@ -124,7 +124,7 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
             // If none of Cc parcels doens't have interest we reset interest
             $info = $this->resetInterest($info);
         }
-        $discount = Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($info->getQuote());
+        $discount = Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($info->getQuote());
         foreach ($info->getQuote()->getAllAddresses() as $address) {
             $grandTotal = $address->getGrandTotal();
             if ($grandTotal) {

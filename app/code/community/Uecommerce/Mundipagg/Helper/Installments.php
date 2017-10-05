@@ -216,7 +216,7 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 			// Get pre-authorized amount
 			$authorizedAmount = Mage::getSingleton('checkout/session')->getAuthorizedAmount();
 			$amount = (double)$quote->getGrandTotal() - $quote->getMundipaggInterest() - $authorizedAmount;
-    		$discount = $this->getDiscountOneInstallment($quote);
+    		$discount = $this->getRecurrenceDiscount($quote);
 		} else {
 		    $discount = 0;
 		}
@@ -344,7 +344,7 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 		return 0;
 	}
 
-	public static function getDiscountOneInstallment($quote)
+	public static function getRecurrenceDiscount($quote)
 	{
 		$items = $quote->getAllItems();
 		$discount = 0;
@@ -363,4 +363,9 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
 		}
 		return $discount;
 	}
+
+	public static function getRecurrenceDiscountMessage()
+    {
+        return Mage::getStoreConfig('payment/mundipagg_recurrencepayment/recurrence_discount_message');
+    }
 }

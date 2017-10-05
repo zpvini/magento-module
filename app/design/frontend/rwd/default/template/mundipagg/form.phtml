@@ -30,7 +30,7 @@ endif;
 // Payment method
 $_code = $this->getMethodCode();
 if ($_code != 'mundipagg_recurrencepayment') {
-    $baseGrandTotal-= Uecommerce_Mundipagg_Helper_Installments::getDiscountOneInstallment($quote);
+    $baseGrandTotal-= Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($quote);
 }
 
 if ($data->getMundipaggInterest()) {

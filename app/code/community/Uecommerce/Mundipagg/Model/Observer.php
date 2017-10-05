@@ -773,5 +773,5 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         return str_replace("v", "",$response[0]->tag_name);
 
     }
-
+    
 }

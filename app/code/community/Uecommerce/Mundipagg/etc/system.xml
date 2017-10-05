@@ -775,6 +775,24 @@
                             <comment>
                                 <![CDATA[Texto sobre as instruções caixa customizado por você que irá aparecer nos seus Boletos Bancários]]></comment>
                         </instrucoes_caixa>
+                        <boleto_discount_value translate="label">
+                            <label>Valor de desconto para pagamento com boleto(%)</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>52</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Defina a porcentagem caso deseje dar desconto para pagamento com boleto.</comment>
+                        </boleto_discount_value>
+                        <boleto_discount_message translate="label">
+                            <label>Mensagem de desconto para pagamento com boleto</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>53</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Defina uma mensagem de desconto caso deseje dar desconto para pagamento com boleto.</comment>
+                        </boleto_discount_message>
 
                         <allowspecific translate="label">
                             <label>Payment from Applicable Countries</label>
@@ -957,13 +975,13 @@
                             <frontend_class>validate-number</frontend_class>
                         </sort_order>
                         <recurrence_discount_message translate="label">
-                            <label>Mensagem de deesconto em pagamento avulso</label>
+                            <label>Mensagem de desconto em pagamento avulso</label>
                             <frontend_type>text</frontend_type>
                             <sort_order>100</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-                            <comment>Defina uma mensagem de deesconto em pagamento avulso.</comment>
+                            <comment>Defina uma mensagem de desconto em pagamento avulso.</comment>
                         </recurrence_discount_message>
                         <conflict_message_recurrent_others translate="label">
                             <label>Mensagem de conflito Recorrente + Qualquer tipo</label>
