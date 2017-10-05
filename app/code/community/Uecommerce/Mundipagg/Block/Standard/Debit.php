@@ -30,24 +30,23 @@
 
 class Uecommerce_Mundipagg_Block_Standard_Debit extends Mage_Payment_Block_Form
 {
-    protected function _construct() 
+    protected function _construct()
     {
         parent::_construct();
 
-    	$this->setTemplate('mundipagg/debit.phtml');
+        $this->setTemplate('mundipagg/debit.phtml');
     }
 
     /**
      * Debit Types
      */
-    public function getDebitTypes() 
+    public function getDebitTypes()
     {
         $debitTypes = Mage::getStoreConfig('payment/mundipagg_debit/debit_types');
         
         if ($debitTypes != '') {
             $debitTypes = explode(",", $debitTypes);
-        }
-        else {
+        } else {
             $debitTypes = array();
         }
         

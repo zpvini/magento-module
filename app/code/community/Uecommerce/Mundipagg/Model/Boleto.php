@@ -34,7 +34,7 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
         
         $validadeBoleto = $this->getConfigData('dias_validade_boleto', $Store);
         
-        if(empty($validadeBoleto) || $validadeBoleto == ' ' || is_null($validadeBoleto) || $validadeBoleto == ''){
+        if (empty($validadeBoleto) || $validadeBoleto == ' ' || is_null($validadeBoleto) || $validadeBoleto == '') {
             $validadeBoleto = '3';
         }
         $this->setDiasValidadeBoleto(trim($validadeBoleto));
@@ -47,7 +47,7 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
      * @param array $data
      * @return Uecommerce_Mundipagg_Model_Standard
      */
-    public function assignData($data) 
+    public function assignData($data)
     {
         $info = $this->getInfoInstance();
 

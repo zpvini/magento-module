@@ -51,13 +51,14 @@ class Uecommerce_Mundipagg_Model_Debit extends Uecommerce_Mundipagg_Model_Standa
      * @param array $data
      * @return Uecommerce_Mundipagg_Model_Standard
      */
-    public function assignData($data) 
+    public function assignData($data)
     {
         $info = $this->getInfoInstance();
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
         $info->getQuote()->preventSaving();
         $info = $this->resetInterest($info);
         $discount = Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($info->getQuote());
+        $interest = '';
         foreach ($info->getQuote()->getAllAddresses() as $address) {
             $grandTotal = $address->getGrandTotal();
             $messages = array();

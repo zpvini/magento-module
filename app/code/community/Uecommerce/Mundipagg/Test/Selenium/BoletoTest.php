@@ -1,19 +1,21 @@
 <?php
 
 
-class Uecommerce_Mundipagg_Test_Selenium_BoletoTest extends Uecommerce_Mundipagg_Test_Selenium_Abstract {
+class Uecommerce_Mundipagg_Test_Selenium_BoletoTest extends Uecommerce_Mundipagg_Test_Selenium_Abstract
+{
 
-    public function setUp() {
+    public function setUp()
+    {
         $this->_installmentActive=false;
         $this->_additionalSaveSettings['payment/mundipagg_boleto/active'] = '1';
         parent::setUp();
-        
     }
     
    /**
     * Test boleto registering a new customer.
     */
-    public function testBoletoRegistered(){
+    public function testBoletoRegistered()
+    {
         $this->_isLogged = false;
         $this->runMundipagg();
         $this->setBoleto();
@@ -32,10 +34,11 @@ class Uecommerce_Mundipagg_Test_Selenium_BoletoTest extends Uecommerce_Mundipagg
     
     /**
      * Test boleto with the logged customer.
-     * 
+     *
      * @depends testBoletoRegistered
      */
-    public function testBoletoLogged(){
+    public function testBoletoLogged()
+    {
         $this->_isLogged = true;
         $this->runMundipagg();
         $this->setBoleto();
@@ -57,7 +60,8 @@ class Uecommerce_Mundipagg_Test_Selenium_BoletoTest extends Uecommerce_Mundipagg
     /**
      * Set all values to boleto and test.
      */
-    protected function setBoleto(){
+    protected function setBoleto()
+    {
         $customer = $this->getCustomer();
         $this->clickButtonByContainer('shipping-method-buttons-container');
         sleep(self::$_defaultSleep);
@@ -68,14 +72,13 @@ class Uecommerce_Mundipagg_Test_Selenium_BoletoTest extends Uecommerce_Mundipagg
         $this->clickButtonByContainer('review-buttons-container');
         sleep(self::$_defaultSleep);
 
-        if(!getenv($this->_envCI)) {
+        if (!getenv($this->_envCI)) {
             $elements = $this->byCssSelector('.pagSucess')->elements($this->using('css selector')->value('a'));
-            foreach($elements as $element){
+            foreach ($elements as $element) {
                 $element->click();
             }
             sleep(self::$_defaultSleep+20);
-            $this->assertContains('mundipagg/standard/success',$this->url());
+            $this->assertContains('mundipagg/standard/success', $this->url());
         }
     }
-    
 }

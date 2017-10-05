@@ -30,22 +30,22 @@
 
 class Uecommerce_Mundipagg_Block_Standard_Cancel extends Mage_Core_Block_Template
 {
-	/**
+    /**
      * Internal constructor
      * Set template for redirect
      *
      */
-	public function __construct() 
+    public function __construct()
     {
-		parent::_construct();
+        parent::_construct();
         $this->setTemplate('mundipagg/cancel.phtml');
     }
 
     /**
     * Get Error Description
     * @return string
-    **/ 
-    public function getErrorDescription() 
+    **/
+    public function getErrorDescription()
     {
         $session = Mage::getSingleton('checkout/session');
         $session->setQuoteId($session->getMundipaggStandardQuoteId(true));
@@ -53,7 +53,7 @@ class Uecommerce_Mundipagg_Block_Standard_Cancel extends Mage_Core_Block_Templat
         if ($session->getLastRealOrderId()) {
             $order = Mage::getModel('sales/order')->loadByIncrementId($session->getLastRealOrderId());
             
-            return $order->getPayment()->getAdditionalInformation('ErrorDescription'); 
+            return $order->getPayment()->getAdditionalInformation('ErrorDescription');
         }
     }
 }

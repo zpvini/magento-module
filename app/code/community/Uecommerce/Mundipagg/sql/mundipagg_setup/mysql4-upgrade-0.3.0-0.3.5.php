@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
  * Uecommerce
  *
@@ -54,28 +54,28 @@ CREATE TABLE IF NOT EXISTS `".$prefix."mundipagg_card_on_file` (
 
 $mageVersion = Mage::helper('mundipagg/version')->convertVersionToCommunityVersion(Mage::getVersion());
 
-if (version_compare($mageVersion, '1.6.0', '>')) {          
-	// UnderPaid
-	$status = Mage::getModel('sales/order_status')->load('underpaid', 'status');
+if (version_compare($mageVersion, '1.6.0', '>')) {
+    // UnderPaid
+    $status = Mage::getModel('sales/order_status')->load('underpaid', 'status');
 
-	if (!$status->getStatus()) { 
-		$status = Mage::getModel('sales/order_status');
-		$status->setStatus('underpaid');
-		$status->setLabel('Underpaid');
-		$status->assignState('pending');
-		$status->save();
-	}
+    if (!$status->getStatus()) {
+        $status = Mage::getModel('sales/order_status');
+        $status->setStatus('underpaid');
+        $status->setLabel('Underpaid');
+        $status->assignState('pending');
+        $status->save();
+    }
 
-	// OverPaid
-	$status = Mage::getModel('sales/order_status')->load('overpaid', 'status');
+    // OverPaid
+    $status = Mage::getModel('sales/order_status')->load('overpaid', 'status');
 
-	if (!$status->getStatus()) { 
-		$status = Mage::getModel('sales/order_status');
-		$status->setStatus('overpaid');
-		$status->setLabel('Overpaid');
-		$status->assignState('processing');
-		$status->save();
-	}
+    if (!$status->getStatus()) {
+        $status = Mage::getModel('sales/order_status');
+        $status->setStatus('overpaid');
+        $status->setLabel('Overpaid');
+        $status->assignState('processing');
+        $status->save();
+    }
 }
 
-$installer->endSetup(); 
+$installer->endSetup();

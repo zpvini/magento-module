@@ -27,164 +27,176 @@
  * @package    Uecommerce_Mundipagg
  * @author     Uecommerce Dev Team
  */
-class Uecommerce_Mundipagg_Block_Standard_Success extends Mage_Sales_Block_Items_Abstract {
-	/**
-	 * @deprecated after 1.4.0.1
-	 */
-	private $_order;
+class Uecommerce_Mundipagg_Block_Standard_Success extends Mage_Sales_Block_Items_Abstract
+{
+    /**
+     * @deprecated after 1.4.0.1
+     */
+    private $_order;
 
-	/**
-	 * Retrieve identifier of created order
-	 *
-	 * @return string
-	 * @deprecated after 1.4.0.1
-	 */
-	public function getOrderId() {
-		return $this->_getData('order_id');
-	}
+    /**
+     * Retrieve identifier of created order
+     *
+     * @return string
+     * @deprecated after 1.4.0.1
+     */
+    public function getOrderId()
+    {
+        return $this->_getData('order_id');
+    }
 
-	public function getBaseGrandTotal() {
-		return $this->_getData('base_grand_total');
-	}
+    public function getBaseGrandTotal()
+    {
+        return $this->_getData('base_grand_total');
+    }
 
-	/**
-	 * Check order print availability
-	 *
-	 * @return bool
-	 * @deprecated after 1.4.0.1
-	 */
-	public function canPrint() {
-		return $this->_getData('can_view_order');
-	}
+    /**
+     * Check order print availability
+     *
+     * @return bool
+     * @deprecated after 1.4.0.1
+     */
+    public function canPrint()
+    {
+        return $this->_getData('can_view_order');
+    }
 
-	/**
-	 * Get url for order detale print
-	 *
-	 * @return string
-	 * @deprecated after 1.4.0.1
-	 */
-	public function getPrintUrl() {
-		return $this->_getData('print_url');
-	}
+    /**
+     * Get url for order detale print
+     *
+     * @return string
+     * @deprecated after 1.4.0.1
+     */
+    public function getPrintUrl()
+    {
+        return $this->_getData('print_url');
+    }
 
-	/**
-	 * Get url for view order details
-	 *
-	 * @return string
-	 * @deprecated after 1.4.0.1
-	 */
-	public function getViewOrderUrl() {
-		return $this->_getData('view_order_id');
-	}
+    /**
+     * Get url for view order details
+     *
+     * @return string
+     * @deprecated after 1.4.0.1
+     */
+    public function getViewOrderUrl()
+    {
+        return $this->_getData('view_order_id');
+    }
 
-	/**
-	 * See if the order has state, visible on frontend
-	 *
-	 * @return bool
-	 */
-	public function isOrderVisible() {
-		return (bool)$this->_getData('is_order_visible');
-	}
+    /**
+     * See if the order has state, visible on frontend
+     *
+     * @return bool
+     */
+    public function isOrderVisible()
+    {
+        return (bool)$this->_getData('is_order_visible');
+    }
 
-	/**
-	 * Get payment method
-	 *
-	 * @return string
-	 */
-	public function getPaymentMethod() {
-		return $this->_getData('payment_method');
-	}
+    /**
+     * Get payment method
+     *
+     * @return string
+     */
+    public function getPaymentMethod()
+    {
+        return $this->_getData('payment_method');
+    }
 
-	/**
-	 * Getter for recurring profile view page
-	 *
-	 * @param $profile
-	 */
-	public function getProfileUrl(Varien_Object $profile) {
-		return $this->getUrl('sales/recurring_profile/view', array('profile' => $profile->getId()));
-	}
+    /**
+     * Getter for recurring profile view page
+     *
+     * @param $profile
+     */
+    public function getProfileUrl(Varien_Object $profile)
+    {
+        return $this->getUrl('sales/recurring_profile/view', array('profile' => $profile->getId()));
+    }
 
-	/**
-	 * Internal constructor
-	 * Set template for redirect
-	 *
-	 */
-	public function __construct() {
-		parent::_construct();
-		$this->setTemplate('mundipagg/success.phtml');
-	}
+    /**
+     * Internal constructor
+     * Set template for redirect
+     *
+     */
+    public function __construct()
+    {
+        parent::_construct();
+        $this->setTemplate('mundipagg/success.phtml');
+    }
 
-	/**
-	 * Initialize data and prepare it for output
-	 */
-	protected function _beforeToHtml() {
-		$this->_prepareLastOrder();
+    /**
+     * Initialize data and prepare it for output
+     */
+    protected function _beforeToHtml()
+    {
+        $this->_prepareLastOrder();
 
-		return parent::_beforeToHtml();
-	}
+        return parent::_beforeToHtml();
+    }
 
-	/**
-	 * Get last order ID from session, fetch it and check whether it can be viewed, printed etc
-	 */
-	protected function _prepareLastOrder() {
-		$customer = Mage::getSingleton('customer/session')->getCustomer();
-		$session = Mage::getSingleton('checkout/session')->setCustomer($customer);
-		$orderId = $session->getLastOrderId();
+    /**
+     * Get last order ID from session, fetch it and check whether it can be viewed, printed etc
+     */
+    protected function _prepareLastOrder()
+    {
+        $customer = Mage::getSingleton('customer/session')->getCustomer();
+        $session = Mage::getSingleton('checkout/session')->setCustomer($customer);
+        $orderId = $session->getLastOrderId();
 
-		if ($orderId) {
-			$order = Mage::getModel('sales/order')->load($orderId);
+        if ($orderId) {
+            $order = Mage::getModel('sales/order')->load($orderId);
 
-			if ($order->getId()) {
-				$isVisible = !in_array($order->getState(), Mage::getSingleton('sales/order_config')->getInvisibleOnFrontStates());
-				$payment = $order->getPayment();
-				$paymentMethod = $payment->getAdditionalInformation('PaymentMethod');
+            if ($order->getId()) {
+                $isVisible = !in_array($order->getState(), Mage::getSingleton('sales/order_config')->getInvisibleOnFrontStates());
+                $payment = $order->getPayment();
+                $paymentMethod = $payment->getAdditionalInformation('PaymentMethod');
 
-				$this->addData(array(
-					'is_order_visible' => $isVisible,
-					'view_order_id'    => $this->getUrl('sales/order/view/', array('order_id' => $orderId)),
-					'print_url'        => $this->getUrl('sales/order/print', array('order_id' => $orderId)),
-					'can_print_order'  => $isVisible,
-					'can_view_order'   => Mage::getSingleton('customer/session')->isLoggedIn() && $isVisible,
-					'order_id'         => $order->getIncrementId(),
-					'payment_method'   => $paymentMethod,
-					'base_grand_total' => $order->getBaseGrandTotal(),
-				));
+                $this->addData(array(
+                    'is_order_visible' => $isVisible,
+                    'view_order_id'    => $this->getUrl('sales/order/view/', array('order_id' => $orderId)),
+                    'print_url'        => $this->getUrl('sales/order/print', array('order_id' => $orderId)),
+                    'can_print_order'  => $isVisible,
+                    'can_view_order'   => Mage::getSingleton('customer/session')->isLoggedIn() && $isVisible,
+                    'order_id'         => $order->getIncrementId(),
+                    'payment_method'   => $paymentMethod,
+                    'base_grand_total' => $order->getBaseGrandTotal(),
+                ));
 
-				if ($paymentMethod == 'mundipagg_boleto') {
-					$this->addData(array(
-						'boleto_url' => $payment->getAdditionalInformation('BoletoUrl')
-					));
-				}
-			}
-		}
-	}
+                if ($paymentMethod == 'mundipagg_boleto') {
+                    $this->addData(array(
+                        'boleto_url' => $payment->getAdditionalInformation('BoletoUrl')
+                    ));
+                }
+            }
+        }
+    }
 
-	/**
-	 * Return Boleto URL in order to print it
-	 * @return string
-	 **/
-	public function getBoletoUrl() {
-		$customerSession = Mage::getSingleton('customer/session');
-		$orders = Mage::getModel('sales/order')
-			->getCollection()
-			->addFieldToFilter('customer_id', $customerSession->getId())
-			->addFieldToFilter('increment_id', $this->_getData('order_id'));
+    /**
+     * Return Boleto URL in order to print it
+     * @return string
+     **/
+    public function getBoletoUrl()
+    {
+        $customerSession = Mage::getSingleton('customer/session');
+        $orders = Mage::getModel('sales/order')
+            ->getCollection()
+            ->addFieldToFilter('customer_id', $customerSession->getId())
+            ->addFieldToFilter('increment_id', $this->_getData('order_id'));
 
-		$ordersFound = count($orders);
+        $ordersFound = count($orders);
 
-		if ($ordersFound == 1) {
-			return $this->_getData('boleto_url');
+        if ($ordersFound == 1) {
+            return $this->_getData('boleto_url');
+        } else {
+            $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+            $api = new Uecommerce_Mundipagg_Model_Api();
+            $orderId = $this->_getData('order_id');
+            $errMsg = "Order #{$orderId} don't belongs to customer {$customerSession->getId()}. Boleto url won't be showed on success.phtml";
 
-		} else {
-			$helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-			$api = new Uecommerce_Mundipagg_Model_Api();
-			$orderId = $this->_getData('order_id');
-			$errMsg = "Order #{$orderId} don't belongs to customer {$customerSession->getId()}. Boleto url won't be showed on success.phtml";
+            $helperLog->error($errMsg);
+            $api->mailError($errMsg);
 
-			$helperLog->error($errMsg);
-			$api->mailError($errMsg);
-
-			return false;
-		}
-	}
+            return false;
+        }
+    }
 }

@@ -8,4 +8,3 @@ Mage::getConfig()->cleanCache();
 Mage::app()->reinitStores();
 
 $installer->endSetup();
-    

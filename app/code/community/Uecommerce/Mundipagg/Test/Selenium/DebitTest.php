@@ -19,7 +19,7 @@ class Uecommerce_Mundipagg_Test_Selenium_DebitTest extends Uecommerce_Mundipagg_
     {
         $this->_installmentActive = false;
         $this->_additionalSaveSettings['payment/mundipagg_debit/active'] = '1';
-        $this->_additionalSaveSettings['payment/mundipagg_debit/debit_types'] = implode(',',$this->_debitTypes);
+        $this->_additionalSaveSettings['payment/mundipagg_debit/debit_types'] = implode(',', $this->_debitTypes);
         $this->_additionalSaveSettings['payment/mundipagg_debit/apiDebitStagingUrl'] = 'https://32616eb84cb7487a81b748ab2eeeeac5.cloudapp.net/Order/OnlineDebit/';
         $this->_additionalSaveSettings['payment/mundipagg_standard/merchantKeyStaging'] = '41CAA365-1A75-4FB7-BF1B-2EAA089264DB';
 
@@ -29,7 +29,8 @@ class Uecommerce_Mundipagg_Test_Selenium_DebitTest extends Uecommerce_Mundipagg_
     /**
      * Test debit registering a new customer.
      */
-    public function testDebitRegistered(){
+    public function testDebitRegistered()
+    {
         $this->_isLogged = false;
         $this->runMundipagg();
         $this->setDebit();
@@ -59,7 +60,8 @@ class Uecommerce_Mundipagg_Test_Selenium_DebitTest extends Uecommerce_Mundipagg_
     /**
      * Set all values to debit and test.
      */
-    protected function setDebit(){
+    protected function setDebit()
+    {
         $customer = $this->getCustomer();
         $this->clickButtonByContainer('shipping-method-buttons-container');
         sleep(self::$_defaultSleep);
@@ -88,11 +90,10 @@ class Uecommerce_Mundipagg_Test_Selenium_DebitTest extends Uecommerce_Mundipagg_
 
     protected function getRandonBanck()
     {
-        if(!$this->_randonBanck) {
+        if (!$this->_randonBanck) {
             $this->_randonBanck = $this->_debitTypes[array_rand($this->_debitTypes)];
         }
 
         return $this->_randonBanck;
     }
-
 }

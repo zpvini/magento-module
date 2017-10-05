@@ -2,8 +2,8 @@
 
 class Uecommerce_Mundipagg_Model_Quote_Address_Interest extends Mage_Sales_Model_Quote_Address_Total_Abstract
 {
-    /** 
-     * Constructor that should initialize 
+    /**
+     * Constructor that should initialize
      */
     public function __construct()
     {
@@ -12,8 +12,7 @@ class Uecommerce_Mundipagg_Model_Quote_Address_Interest extends Mage_Sales_Model
 
     public function fetch(Mage_Sales_Model_Quote_Address $address)
     {
-        if ($address->getMundipaggInterest() != 0)
-        {
+        if ($address->getMundipaggInterest() != 0) {
             $address->addTotal(array
             (
                 'code' => $this->getCode(),

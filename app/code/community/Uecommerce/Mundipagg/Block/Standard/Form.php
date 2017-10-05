@@ -30,11 +30,11 @@
 
 class Uecommerce_Mundipagg_Block_Standard_Form extends Mage_Payment_Block_Form
 {
-    protected function _construct() 
+    protected function _construct()
     {
         parent::_construct();
 
-    	$this->setTemplate('mundipagg/form.phtml');
+        $this->setTemplate('mundipagg/form.phtml');
 
         // Get Customer Credit Cards Saved On File
         if ($this->helper('customer')->isLoggedIn()) {
@@ -45,7 +45,7 @@ class Uecommerce_Mundipagg_Block_Standard_Form extends Mage_Payment_Block_Form
                 ->addExpiresAtFilter();
 
             $this->setCcs($ccsCollection);
-        } else if (Mage::getSingleton('adminhtml/session_quote')->getQuote()->getCustomerId()) { 
+        } elseif (Mage::getSingleton('adminhtml/session_quote')->getQuote()->getCustomerId()) {
             $entityId = Mage::getSingleton('adminhtml/session_quote')->getQuote()->getCustomerId();
 
             $ccsCollection = Mage::getResourceModel('mundipagg/cardonfile_collection')
@@ -61,9 +61,9 @@ class Uecommerce_Mundipagg_Block_Standard_Form extends Mage_Payment_Block_Form
     /**
      * Return Standard model
      */
-    public function getStandard() 
+    public function getStandard()
     {
-    	return Mage::getModel('mundipagg/standard');
+        return Mage::getModel('mundipagg/standard');
     }
 
     /**
@@ -85,19 +85,19 @@ class Uecommerce_Mundipagg_Block_Standard_Form extends Mage_Payment_Block_Form
         $quote->save();
 
         return Mage::helper('mundipagg/installments')->getInstallmentForCreditCardType($ccType);
-
     }
 
-	/**
-	 * @return Mage_Sales_Model_Order
-	 */
-    public function loadOrder(){
-    	/** @var Mage_Sales_Model_Quote $quote */
-    	$quote = Mage::getSingleton('checkout/session')->getQuote();
+    /**
+     * @return Mage_Sales_Model_Order
+     */
+    public function loadOrder()
+    {
+        /** @var Mage_Sales_Model_Quote $quote */
+        $quote = Mage::getSingleton('checkout/session')->getQuote();
 
-    	/** @var Mage_Sales_Model_Order $order */
-    	$order = Mage::getModel('sales/order')->loadByIncrementId($quote->getReservedOrderId());
+        /** @var Mage_Sales_Model_Order $order */
+        $order = Mage::getModel('sales/order')->loadByIncrementId($quote->getReservedOrderId());
 
-    	return $order;
+        return $order;
     }
 }
