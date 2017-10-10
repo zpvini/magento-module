@@ -274,23 +274,16 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
                 switch ($mundipagg['method']) {
                     case 'mundipagg_creditcard':
-                        if (isset($mundipagg['mundipagg_creditcard_1_1_cc_type'])) {
-                            if (array_key_exists('mundipagg_creditcard_credito_parcelamento_1_1', $mundipagg)) {
-                                if ($mundipagg['mundipagg_creditcard_credito_parcelamento_1_1'] > $helperInstallments->getMaxInstallments($mundipagg['mundipagg_creditcard_1_1_cc_type'])) {
-                                    Mage::throwException($helper->__('it is not possible to divide by %s times', $mundipagg['mundipagg_creditcard_credito_parcelamento_1_1']));
-                                }
-                            }
-                            $info->setCcType($mundipagg['mundipagg_creditcard_1_1_cc_type'])
-                                    ->setCcOwner($mundipagg['mundipagg_creditcard_cc_holder_name_1_1'])
-                                    ->setCcLast4(substr($mundipagg['mundipagg_creditcard_1_1_cc_number'], -4))
-                                    ->setCcNumber($mundipagg['mundipagg_creditcard_1_1_cc_number'])
-                                    ->setCcCid($mundipagg['mundipagg_creditcard_cc_cid_1_1'])
-                                    ->setCcExpMonth($mundipagg['mundipagg_creditcard_expirationMonth_1_1'])
-                                    ->setCcExpYear($mundipagg['mundipagg_creditcard_expirationYear_1_1']);
-                        } else {
-                            $info->setAdditionalInformation('mundipagg_creditcard_token_1_1', $mundipagg['mundipagg_creditcard_token_1_1']);
-                        }
+                        try {
+                            $mundipagg['mundipagg_creditcard_1_1_cc_type_max_installments'] =
+                                $helperInstallments->getMaxInstallments($mundipagg['mundipagg_creditcard_1_1_cc_type']);
+                            $this->saveCreditCardAdditionalInformation($mundipagg, $info);
 
+                        } catch (Exception $e) {
+                            $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+                            $helperLog->error($e->getMessage(), true);
+                            return false;
+                        }
                         break;
 
                     default:
@@ -305,83 +298,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                         break;
                 }
 
-                foreach ($mundipagg as $key => $value) {
-                    // We don't save CcNumber
-                    $posCcNumber = strpos($key, 'number');
+                $this->saveAllAdditionalInformation($mundipagg, $info, $helper);
 
-                    // We don't save Security Code
-                    $posCid = strpos($key, 'cid');
+                $this->validateInstallmentsAmount($mundipagg, $info, $helper, $helperInstallments);
 
-                    // We don't save Cc Holder name
-                    $posHolderName = strpos($key, 'holder_name');
-
-                    if ($value != '' &&
-                            $posCcNumber === false &&
-                            $posCid === false &&
-                            $posHolderName === false
-                    ) {
-                        if (strpos($key, 'cc_type')) {
-                            $value = $helper->issuer($value);
-                        }
-
-                        $info->setAdditionalInformation($key, $value);
-                    }
-                }
-
-                // We check if quote grand total is equal to installments sum
-                if ($mundipagg['method'] != 'mundipagg_boleto' && $mundipagg['method'] != 'mundipagg_creditcardoneinstallment' && $mundipagg['method'] != 'mundipagg_creditcard'
-                ) {
-                    $num = $helper->getCreditCardsNumber($mundipagg['method']);
-                    $method = $helper->getPaymentMethod($num);
-
-                    (float) $grandTotal = $info->getQuote()->getGrandTotal();
-                    (float) $totalInstallmentsToken = 0;
-                    (float) $totalInstallmentsNew = 0;
-                    (float) $totalInstallments = 0;
-
-                    for ($i = 1; $i <= $num; $i++) {
-                        if (isset($mundipagg[$method . '_token_' . $num . '_' . $i]) && $mundipagg[$method . '_token_' . $num . '_' . $i] != 'new') {
-                            (float) $value = str_replace(',', '.', $mundipagg[$method . '_value_' . $num . '_' . $i]);
-
-                            if (array_key_exists($method . '_credito_parcelamento_' . $num . '_' . $i, $mundipagg)) {
-                                if (!array_key_exists($method . '_' . $num . '_' . $i . '_cc_type', $mundipagg)) {
-                                    $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($mundipagg[$method . '_token_' . $num . '_' . $i]);
-
-                                    $mundipagg[$method . '_' . $num . '_' . $i . '_cc_type'] = Mage::helper('mundipagg')->getCardTypeByIssuer($cardonFile->getCcType());
-                                }
-
-                                if ($mundipagg[$method . '_credito_parcelamento_' . $num . '_' . $i] > $helperInstallments->getMaxInstallments($mundipagg[$method . '_' . $num . '_' . $i . '_cc_type'], $value)) {
-                                    Mage::throwException($helper->__('it is not possible to divide by %s times', $mundipagg[$method . '_credito_parcelamento_' . $num . '_' . $i]));
-                                }
-                            }
-
-                            (float) $totalInstallmentsToken += $value;
-                        } else {
-                            (float) $value = str_replace(',', '.', $mundipagg[$method . '_new_value_' . $num . '_' . $i]);
-
-                            if (array_key_exists($method . '_new_credito_parcelamento_' . $num . '_' . $i, $mundipagg)) {
-                                if ($mundipagg[$method . '_new_credito_parcelamento_' . $num . '_' . $i] > $helperInstallments->getMaxInstallments($mundipagg[$method . '_' . $num . '_' . $i . '_cc_type'], $value)) {
-                                    Mage::throwException($helper->__('it is not possible to divide by %s times', $mundipagg[$method . '_new_credito_parcelamento_' . $num . '_' . $i]));
-                                }
-                            }
-
-                            (float) $totalInstallmentsNew += $value;
-                        }
-                    }
-
-                    // Total Installments from token and Credit Card
-                    (float) $totalInstallments = $totalInstallmentsToken + $totalInstallmentsNew;
-
-                    // If an amount has already been authorized
-                    if (isset($mundipagg['multi']) && Mage::getSingleton('checkout/session')->getAuthorizedAmount()) {
-                        (float) $totalInstallments += (float) Mage::getSingleton('checkout/session')->getAuthorizedAmount();
-
-                        // Unset session
-                        Mage::getSingleton('checkout/session')->setAuthorizedAmount();
-                    }
-
-                    $epsilon = 0.00001;
-                }
             } else {
                 if (isset($mundipagg['method'])) {
                     $info->setAdditionalInformation('PaymentMethod', $mundipagg['method']);
@@ -2407,18 +2327,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                     $standard = Mage::getModel('mundipagg/twocreditcards');
                     break;
 
-                case 'mundipagg_threecreditcards':
-                    $standard = Mage::getModel('mundipagg/threecreditcards');
-                    break;
-
-                case 'mundipagg_fourcreditcards':
-                    $standard = Mage::getModel('mundipagg/fourcreditcards');
-                    break;
-
-                case 'mundipagg_fivecreditcards':
-                    $standard = Mage::getModel('mundipagg/fivecreditcards');
-                    break;
-
                 case 'mundipagg_recurrencepayment':
                     $standard = Mage::getModel('mundipagg/recurrencepayment');
                     break;
@@ -2552,5 +2460,147 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         }
 
         return $keys;
+    }
+
+    /**
+     * Save Mundipagg payment data in the database
+     * @param array $mundipagg
+     * @param Mage_Payment_Model_Info $info
+     * @throws Mage_Core_Exception
+     */
+    private function saveCreditCardAdditionalInformation($mundipagg, $info)
+    {
+        if (isset($mundipagg['mundipagg_creditcard_1_1_cc_type'])) {
+
+            $this->blockNotAllowedInstallments();
+
+            $info->setCcType($mundipagg['mundipagg_creditcard_1_1_cc_type'])
+                ->setCcOwner($mundipagg['mundipagg_creditcard_cc_holder_name_1_1'])
+                ->setCcLast4(substr($mundipagg['mundipagg_creditcard_1_1_cc_number'], -4))
+                ->setCcNumber($mundipagg['mundipagg_creditcard_1_1_cc_number'])
+                ->setCcCid($mundipagg['mundipagg_creditcard_cc_cid_1_1'])
+                ->setCcExpMonth($mundipagg['mundipagg_creditcard_expirationMonth_1_1'])
+                ->setCcExpYear($mundipagg['mundipagg_creditcard_expirationYear_1_1']);
+        } else {
+            $info->setAdditionalInformation('mundipagg_creditcard_token_1_1', $mundipagg['mundipagg_creditcard_token_1_1']);
+        }
+    }
+
+    /**
+     * Block script execution when installments number
+     * exists and is highest than max installments number
+     * @param array $mundipagg
+     * @return bool
+     * @throws Mage_Core_Exception
+     */
+    private function blockNotAllowedInstallments($mundipagg)
+    {
+        if (array_key_exists('mundipagg_creditcard_credito_parcelamento_1_1', $mundipagg)) {
+            if (
+                $mundipagg['mundipagg_creditcard_credito_parcelamento_1_1'] >
+                $mundipagg['mundipagg_creditcard_1_1_cc_type_max_installments']
+            ) {
+                Mage::throwException(
+                    "Installments number not allowed. \n" .
+                    "Insallments selected:" . $mundipagg['mundipagg_creditcard_credito_parcelamento_1_1'] . "\n" .
+                    "Max installents allowed: " . $mundipagg['mundipagg_creditcard_1_1_cc_type_max_installments']
+                );
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @param $mundipagg
+     * @param $info
+     * @param $helper
+     * @return void
+     */
+    private function saveAllAdditionalInformation($mundipagg, $info, $helper)
+    {
+        foreach ($mundipagg as $key => $value) {
+            // We don't save CcNumber
+            $posCcNumber = strpos($key, 'number');
+
+            // We don't save Security Code
+            $posCid = strpos($key, 'cid');
+
+            // We don't save Cc Holder name
+            $posHolderName = strpos($key, 'holder_name');
+
+            if ($value != '' &&
+                $posCcNumber === false &&
+                $posCid === false &&
+                $posHolderName === false
+            ) {
+                if (strpos($key, 'cc_type')) {
+                    $value = $helper->issuer($value);
+                }
+
+                $info->setAdditionalInformation($key, $value);
+            }
+        }
+    }
+    /**
+     * We check if quote grand total is equal to installments sum
+     * @param array $mundipagg
+     * @param $info
+     * @param $helper
+     * @throws Mage_Core_Exception
+     */
+    private function validateInstallmentsAmount($mundipagg, $info, $helper, $helperInstallments)
+    {
+        if ($mundipagg['method'] != 'mundipagg_boleto' && $mundipagg['method'] != 'mundipagg_creditcardoneinstallment' && $mundipagg['method'] != 'mundipagg_creditcard'
+        ) {
+            $num = $helper->getCreditCardsNumber($mundipagg['method']);
+            $method = $helper->getPaymentMethod($num);
+
+            (float) $grandTotal = $info->getQuote()->getGrandTotal();
+            (float) $totalInstallmentsToken = 0;
+            (float) $totalInstallmentsNew = 0;
+            (float) $totalInstallments = 0;
+
+            for ($i = 1; $i <= $num; $i++) {
+                if (isset($mundipagg[$method . '_token_' . $num . '_' . $i]) && $mundipagg[$method . '_token_' . $num . '_' . $i] != 'new') {
+                    (float) $value = str_replace(',', '.', $mundipagg[$method . '_value_' . $num . '_' . $i]);
+
+                    if (array_key_exists($method . '_credito_parcelamento_' . $num . '_' . $i, $mundipagg)) {
+                        if (!array_key_exists($method . '_' . $num . '_' . $i . '_cc_type', $mundipagg)) {
+                            $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($mundipagg[$method . '_token_' . $num . '_' . $i]);
+
+                            $mundipagg[$method . '_' . $num . '_' . $i . '_cc_type'] = Mage::helper('mundipagg')->getCardTypeByIssuer($cardonFile->getCcType());
+                        }
+
+                        if ($mundipagg[$method . '_credito_parcelamento_' . $num . '_' . $i] > $helperInstallments->getMaxInstallments($mundipagg[$method . '_' . $num . '_' . $i . '_cc_type'], $value)) {
+                            Mage::throwException($helper->__('it is not possible to divide by %s times', $mundipagg[$method . '_credito_parcelamento_' . $num . '_' . $i]));
+                        }
+                    }
+
+                    (float) $totalInstallmentsToken += $value;
+                } else {
+                    (float) $value = str_replace(',', '.', $mundipagg[$method . '_new_value_' . $num . '_' . $i]);
+
+                    if (array_key_exists($method . '_new_credito_parcelamento_' . $num . '_' . $i, $mundipagg)) {
+                        if ($mundipagg[$method . '_new_credito_parcelamento_' . $num . '_' . $i] > $helperInstallments->getMaxInstallments($mundipagg[$method . '_' . $num . '_' . $i . '_cc_type'], $value)) {
+                            Mage::throwException($helper->__('it is not possible to divide by %s times', $mundipagg[$method . '_new_credito_parcelamento_' . $num . '_' . $i]));
+                        }
+                    }
+
+                    (float) $totalInstallmentsNew += $value;
+                }
+
+            }
+
+            // Total Installments from token and Credit Card
+            (float) $totalInstallments = $totalInstallmentsToken + $totalInstallmentsNew;
+
+            // If an amount has already been authorized$helperInstallments = Mage::helper('mundipagg/Installments');
+            if (isset($mundipagg['multi']) && Mage::getSingleton('checkout/session')->getAuthorizedAmount()) {
+                (float) $totalInstallments += (float) Mage::getSingleton('checkout/session')->getAuthorizedAmount();
+
+                // Unset session
+                Mage::getSingleton('checkout/session')->setAuthorizedAmount();
+            }
+        }
     }
 }
