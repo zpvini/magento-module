@@ -94,7 +94,7 @@ $standard = Mage::getModel('mundipagg/standard');
 
         switch ($PaymentMethod){
             case 'mundipagg_creditcard' :
-            case 'mundipagg_two_creditcards' :
+            case 'mundipagg_twocreditcards' :
 
                 $ccQty = $info->getAdditionalInformation('mundipagg_type');
                 $ccQty = str_replace('CreditCards', '', $ccQty);
@@ -104,14 +104,20 @@ $standard = Mage::getModel('mundipagg/standard');
                         $authorizationCode = $this->getAuthorizationCode($i);
                         $txnId = $this->getTransactionId($i);
 
+                        $brand = $this->getCcBrand($i);
+                        $maskedCreditCardNumber = $info->getAdditionalInformation($i . "_MaskedCreditCardNumber");
+                        $ccValue = $this->getCcValue($i);
+                        $installmentsNumber = $this->getInstallmentsNumber($ccQty, $i);
+                        $acquireMessage = $info->getAdditionalInformation($i . "_AcquirerMessage");
+
                         echo "<p>";
-                        echo "{$helper->__('Credit card issuer')}: {$this->getCcBrand($i)}<br/>";
-                        echo "{$helper->__('Masked number')}: {$info->getAdditionalInformation("{$i}_MaskedCreditCardNumber")}<br/>";
-                        echo "{$helper->__('Amount')}: {$this->getCcValue($i)}<br/>";
-                        echo "{$helper->__('Installments')}: {$this->getInstallmentsNumber($ccQty, $i)}<br/>";
+                        echo "{$helper->__('Credit card issuer')}: {$brand}<br/>";
+                        echo "{$helper->__('Masked number')}: {$maskedCreditCardNumber}<br/>";
+                        echo "{$helper->__('Amount')}: {$ccValue}<br/>";
+                        echo "{$helper->__('Installments')}: {$installmentsNumber}<br/>";
                         echo "{$helper->__('Authorization code')}: {$authorizationCode}<br/>";
                         echo "{$helper->__('Transaction ID')}: {$txnId}<br/>";
-                        echo "{$helper->__('Acquirer message')}: {$info->getAdditionalInformation("{$i}_AcquirerMessage")}<br/>";
+                        echo "{$helper->__('Acquirer message')}: {$acquireMessage}<br/>";
                         echo "</p>";
                     }
                 }
@@ -143,9 +149,9 @@ $standard = Mage::getModel('mundipagg/standard');
                             $barcode = $txDetail['Barcode'];
                         }
                     }
-                    echo $helper->__('Nosso Número') . ":" . "<b>" . $nossoNumero . "</b>";
-                    echo $helper->__('Código de Barras') . ":" . $barcode;
-                    echo "<a href='" . $boletoUrl . "' target='_blank'>" . $helper->__('Print boleto') . "</a>";
+                    echo $helper->__('Nosso Número') . ": " . "<b>" . $nossoNumero . "</b><br>";
+                    echo $helper->__('Código de Barras') . ":" . $barcode . "<br>";
+                    echo "<a href='" . $boletoUrl . "' target='_blank'>" . $helper->__('Print boleto') . "</a><br>";
                 }
                 break;
 
@@ -160,9 +166,6 @@ $standard = Mage::getModel('mundipagg/standard');
                 }
             break;
         }
-
-
-
     ?>
     </p>
 
