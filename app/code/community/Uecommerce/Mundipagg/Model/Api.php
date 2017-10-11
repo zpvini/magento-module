@@ -2138,6 +2138,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 		);
 
 		$url = $this->modelStandard->getUrl();
+        $log->info("Request url:\n{$url}\n");
 
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
