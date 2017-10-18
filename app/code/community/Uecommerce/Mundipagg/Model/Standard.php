@@ -579,6 +579,9 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                     $order->save();
                 }
             }
+
+            $this->clearCart();
+
             return $this;
         } catch (Exception $e) {
             Mage::logException($e);
@@ -1008,203 +1011,17 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             if ($method != 'mundipagg_boleto' &&
                     $method != 'mundipagg_debit'
             ) {
-                $num = $helper->getCreditCardsNumber($method);
-
-                if ($num == 0) {
-                    $num = 1;
-                }
-                if ($num > 1) {
-                    $method = $helper->getPaymentMethod($num);
-                }
-
-                for ($i = 1; $i <= $num; $i++) {
-                    // New Credit Card
-                    if (!isset($postData['payment'][$method . '_token_' . $num . '_' . $i]) ||
-                            (isset($postData['payment'][$method . '_token_' . $num . '_' . $i]) &&
-                            $postData['payment'][$method . '_token_' . $num . '_' . $i] == 'new'
-                            )
-                    ) {
-                        if (isset($postData['payment'][$method . '_cc_holder_name_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['HolderName'] = $postData['payment'][$method . '_cc_holder_name_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['HolderName'] = $mundipaggData[$method . '_cc_holder_name_' . $num . '_' . $i];
-                        }
-
-                        if (isset($postData['payment'][$method . '_' . $num . '_' . $i . '_cc_number'])) {
-                            $data['payment'][$i]['CreditCardNumber'] = $postData['payment'][$method . '_' . $num . '_' . $i . '_cc_number'];
-                        } else {
-                            $data['payment'][$i]['CreditCardNumber'] = $mundipaggData[$method . '_' . $num . '_' . $i . '_cc_number'];
-                        }
-
-                        if (isset($postData['payment'][$method . '_expirationMonth_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['ExpMonth'] = $postData['payment'][$method . '_expirationMonth_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['ExpMonth'] = $mundipaggData[$method . '_expirationMonth_' . $num . '_' . $i];
-                        }
-
-                        if (isset($postData['payment'][$method . '_expirationYear_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['ExpYear'] = $postData['payment'][$method . '_expirationYear_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['ExpYear'] = $mundipaggData[$method . '_expirationYear_' . $num . '_' . $i];
-                        }
-
-                        if (isset($postData['payment'][$method . '_cc_cid_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['SecurityCode'] = $postData['payment'][$method . '_cc_cid_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['SecurityCode'] = $mundipaggData[$method . '_cc_cid_' . $num . '_' . $i];
-                        }
-
-                        if (Mage::helper('mundipagg')->issuer(isset($postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type']))) {
-                            $data['payment'][$i]['CreditCardBrandEnum'] = $this->brands[$postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type']];
-                        } else {
-                            $data['payment'][$i]['CreditCardBrandEnum'] = $this->brands[$mundipaggData[$method . '_' . $num . '_' . $i . '_cc_type']];
-                        }
-
-                        if (isset($postData['payment'][$method . '_new_credito_parcelamento_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['InstallmentCount'] = $postData['payment'][$method . '_new_credito_parcelamento_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['InstallmentCount'] = 1;
-                        }
-
-                        if (isset($postData['payment'][$method . '_save_token_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['token'] = $postData['payment'][$method . '_save_token_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['token'] = null;
-                        }
-
-                        $new = $method . '_new_value_' . $num . '_' . $i;
-                        if (isset($postData['payment'][$new]) &&
-                                $postData['payment'][$new] != ''
-                        ) {
-                            $data['payment'][$i]['AmountInCents'] = str_replace(',', '.', $postData['payment'][$new]);
-
-                            if (isset($postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type'])) {
-                                $cctype = $postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type'];
-                            } else {
-                                $cctype = $mundipaggData[$method . '_' . $num . '_' . $i . '_cc_type'];
-                            }
-                            
-                            $interest =
-                            Mage::helper('mundipagg/installments')->getInterestForCard(
-                                $data['payment'][$i]['InstallmentCount'],
-                                $cctype,
-                                $data['payment'][$i]['AmountInCents']
-                            );
-
-                            $amountInCents = $data['payment'][$i]['AmountInCents'] + $interest;
-                            $data['payment'][$i]['AmountInCents'] = $amountInCents * 100;
-                        } else {
-                            if (!isset($postData['partial'])) {
-                                $data['payment'][$i]['AmountInCents'] = $order->getGrandTotal() * 100;
-                            } else { // If partial payment we deduct authorized amount already processed
-                                if (Mage::getSingleton('checkout/session')->getAuthorizedAmount()) {
-                                    $data['payment'][$i]['AmountInCents'] = ($order->getGrandTotal()) * 100 - Mage::getSingleton('checkout/session')->getAuthorizedAmount() * 100;
-                                } else {
-                                    $data['payment'][$i]['AmountInCents'] = ($order->getGrandTotal()) * 100;
-                                }
-                            }
-                        }
-
-                        if (isset($postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['TaxDocumentNumber'] = $postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['TaxDocumentNumber'] = $taxvat;
-                        }
-                    } else { // Token
-                        if (isset($postData['payment'][$method . '_token_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['card_on_file_id'] = $postData['payment'][$method . '_token_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['card_on_file_id'] = $mundipaggData[$method . '_token_' . $num . '_' . $i];
-                        }
-
-                        if (isset($postData['payment'][$method . '_credito_parcelamento_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['InstallmentCount'] = $postData['payment'][$method . '_credito_parcelamento_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['InstallmentCount'] = 1;
-                        }
-
-                        if (isset($postData['payment'][$method . '_value_' . $num . '_' . $i]) &&
-                                $postData['payment'][$method . '_value_' . $num . '_' . $i] != ''
-                        ) {
-                            $data['payment'][$i]['AmountInCents'] = str_replace(',', '.', $postData['payment'][$method . '_value_' . $num . '_' . $i]);
-                            $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($postData['payment'][$method . '_token_' . $num . '_' . $i]);
-                            $tokenCctype = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cardonFile->getCcType());
-                            $data['payment'][$i]['AmountInCents'] = $data['payment'][$i]['AmountInCents'] + Mage::helper('mundipagg/installments')
-                                            ->getInterestForCard(
-                                                $data['payment'][$i]['InstallmentCount'],
-                                                $tokenCctype,
-                                                $data['payment'][$i]['AmountInCents']
-                                            );
-                            $data['payment'][$i]['AmountInCents'] = $data['payment'][$i]['AmountInCents'] * 100;
-                        } else {
-                            if (!isset($postData['partial'])) {
-                                $data['payment'][$i]['AmountInCents'] = $order->getGrandTotal() * 100;
-                            } else { // If partial payment we deduct authorized amount already processed
-                                if (Mage::getSingleton('checkout/session')->getAuthorizedAmount()) {
-                                    $data['payment'][$i]['AmountInCents'] = ($order->getGrandTotal()) * 100 - Mage::getSingleton('checkout/session')->getAuthorizedAmount() * 100;
-                                } else {
-                                    $data['payment'][$i]['AmountInCents'] = $order->getGrandTotal() * 100;
-                                }
-                            }
-                        }
-
-                        if (isset($postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i])) {
-                            $data['payment'][$i]['TaxDocumentNumber'] = $postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i];
-                        } else {
-                            $data['payment'][$i]['TaxDocumentNumber'] = $taxvat;
-                        }
-                    }
-
-                    if (Mage::helper('mundipagg')->validateCPF($data['payment'][$i]['TaxDocumentNumber'])) {
-                        $data['PersonTypeEnum'] = 'Person';
-                        $data['TaxDocumentTypeEnum'] = 'CPF';
-                        $data['TaxDocumentNumber'] = $data['payment'][$i]['TaxDocumentNumber'];
-                    }
-
-                    // We verify if a CNPJ is informed
-                    if (Mage::helper('mundipagg')->validateCNPJ($data['payment'][$i]['TaxDocumentNumber'])) {
-                        $data['PersonTypeEnum'] = 'Company';
-                        $data['TaxDocumentTypeEnum'] = 'CNPJ';
-                        $data['TaxDocumentNumber'] = $data['payment'][$i]['TaxDocumentNumber'];
-                    }
-                }
+                $data = $this->doCreditCardsPayment($method, $postData, $helper, $mundipaggData, $order, $taxvat);
             }
 
             // Boleto Payment
             if ($data['payment_method'] == 'mundipagg_boleto') {
-                $data['TaxDocumentNumber'] = isset($postData['payment']['boleto_taxvat']) ? $postData['payment']['boleto_taxvat'] : $taxvat;
-                $data['boleto_parcelamento'] = isset($postData['payment']['boleto_parcelamento']) ? $postData['payment']['boleto_parcelamento'] : 1;
-                $data['boleto_dates'] = isset($postData['payment']['boleto_dates']) ? $postData['payment']['boleto_dates'] : null;
-
-                // We verify if a CPF is informed
-                if (Mage::helper('mundipagg')->validateCPF($data['TaxDocumentNumber'])) {
-                    $data['PersonTypeEnum'] = 'Person';
-                    $data['TaxDocumentTypeEnum'] = 'CPF';
-                }
-
-                // We verify if a CNPJ is informed
-                if (Mage::helper('mundipagg')->validateCNPJ($data['TaxDocumentNumber'])) {
-                    $data['PersonTypeEnum'] = 'Company';
-                    $data['TaxDocumentTypeEnum'] = 'CNPJ';
-                }
+                $data = $this->doBoletoPayment($data, $postData, $taxvat);
             }
 
             // Debit Payment
             if ($data['payment_method'] == 'mundipagg_debit') {
-                $data['TaxDocumentNumber'] = isset($postData['payment']['taxvat']) ? $postData['payment']['taxvat'] : $taxvat;
-                $data['Bank'] = isset($postData['payment']['mundipagg_debit']) ? $postData['payment']['mundipagg_debit'] : $mundipaggData['mundipagg_debit'];
-
-                // We verify if a CPF is informed
-                if (Mage::helper('mundipagg')->validateCPF($data['TaxDocumentNumber'])) {
-                    $data['PersonTypeEnum'] = 'Person';
-                    $data['TaxDocumentTypeEnum'] = 'CPF';
-                }
-
-                // We verify if a CNPJ is informed
-                if (Mage::helper('mundipagg')->validateCNPJ($data['TaxDocumentNumber'])) {
-                    $data['PersonTypeEnum'] = 'Company';
-                    $data['TaxDocumentTypeEnum'] = 'CNPJ';
-                }
+                $data = $this->doDebitPayment($data, $postData, $mundipaggData, $taxvat);
             }
 
             // Unset MundipaggData data
@@ -1448,6 +1265,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             if ($authorizedAmount == $order->getGrandTotal()) {
                 Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
             }
+
+            $this->clearCart();
 
             return $approvalRequest;
         } catch (Exception $e) {
@@ -2602,5 +2421,229 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 Mage::getSingleton('checkout/session')->setAuthorizedAmount();
             }
         }
+    }
+
+    private function doCreditCardsPayment($method, $postData, $helper, $mundipaggData, $order, $taxvat)
+    {
+        $num = $helper->getCreditCardsNumber($method);
+
+        if ($num == 0) {
+            $num = 1;
+        }
+        if ($num > 1) {
+            $method = $helper->getPaymentMethod($num);
+        }
+
+        for ($i = 1; $i <= $num; $i++) {
+            // New Credit Card
+            if (!isset($postData['payment'][$method . '_token_' . $num . '_' . $i]) ||
+                (isset($postData['payment'][$method . '_token_' . $num . '_' . $i]) &&
+                    $postData['payment'][$method . '_token_' . $num . '_' . $i] == 'new'
+                )
+            ) {
+                if (isset($postData['payment'][$method . '_cc_holder_name_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['HolderName'] = $postData['payment'][$method . '_cc_holder_name_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['HolderName'] = $mundipaggData[$method . '_cc_holder_name_' . $num . '_' . $i];
+                }
+
+                if (isset($postData['payment'][$method . '_' . $num . '_' . $i . '_cc_number'])) {
+                    $data['payment'][$i]['CreditCardNumber'] = $postData['payment'][$method . '_' . $num . '_' . $i . '_cc_number'];
+                } else {
+                    $data['payment'][$i]['CreditCardNumber'] = $mundipaggData[$method . '_' . $num . '_' . $i . '_cc_number'];
+                }
+
+                if (isset($postData['payment'][$method . '_expirationMonth_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['ExpMonth'] = $postData['payment'][$method . '_expirationMonth_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['ExpMonth'] = $mundipaggData[$method . '_expirationMonth_' . $num . '_' . $i];
+                }
+
+                if (isset($postData['payment'][$method . '_expirationYear_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['ExpYear'] = $postData['payment'][$method . '_expirationYear_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['ExpYear'] = $mundipaggData[$method . '_expirationYear_' . $num . '_' . $i];
+                }
+
+                if (isset($postData['payment'][$method . '_cc_cid_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['SecurityCode'] = $postData['payment'][$method . '_cc_cid_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['SecurityCode'] = $mundipaggData[$method . '_cc_cid_' . $num . '_' . $i];
+                }
+
+                if (Mage::helper('mundipagg')->issuer(isset($postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type']))) {
+                    $data['payment'][$i]['CreditCardBrandEnum'] = $this->brands[$postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type']];
+                } else {
+                    $data['payment'][$i]['CreditCardBrandEnum'] = $this->brands[$mundipaggData[$method . '_' . $num . '_' . $i . '_cc_type']];
+                }
+
+                if (isset($postData['payment'][$method . '_new_credito_parcelamento_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['InstallmentCount'] = $postData['payment'][$method . '_new_credito_parcelamento_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['InstallmentCount'] = 1;
+                }
+
+                if (isset($postData['payment'][$method . '_save_token_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['token'] = $postData['payment'][$method . '_save_token_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['token'] = null;
+                }
+
+                $new = $method . '_new_value_' . $num . '_' . $i;
+                if (isset($postData['payment'][$new]) &&
+                    $postData['payment'][$new] != ''
+                ) {
+                    $data['payment'][$i]['AmountInCents'] = str_replace(',', '.', $postData['payment'][$new]);
+
+                    if (isset($postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type'])) {
+                        $cctype = $postData['payment'][$method . '_' . $num . '_' . $i . '_cc_type'];
+                    } else {
+                        $cctype = $mundipaggData[$method . '_' . $num . '_' . $i . '_cc_type'];
+                    }
+
+                    $interest =
+                        Mage::helper('mundipagg/installments')->getInterestForCard(
+                            $data['payment'][$i]['InstallmentCount'],
+                            $cctype,
+                            $data['payment'][$i]['AmountInCents']
+                        );
+
+                    $amountInCents = $data['payment'][$i]['AmountInCents'] + $interest;
+                    $data['payment'][$i]['AmountInCents'] = $amountInCents * 100;
+                } else {
+                    if (!isset($postData['partial'])) {
+                        $data['payment'][$i]['AmountInCents'] = $order->getGrandTotal() * 100;
+                    } else { // If partial payment we deduct authorized amount already processed
+                        if (Mage::getSingleton('checkout/session')->getAuthorizedAmount()) {
+                            $data['payment'][$i]['AmountInCents'] = ($order->getGrandTotal()) * 100 - Mage::getSingleton('checkout/session')->getAuthorizedAmount() * 100;
+                        } else {
+                            $data['payment'][$i]['AmountInCents'] = ($order->getGrandTotal()) * 100;
+                        }
+                    }
+                }
+
+                if (isset($postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['TaxDocumentNumber'] = $postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['TaxDocumentNumber'] = $taxvat;
+                }
+            } else { // Token
+                if (isset($postData['payment'][$method . '_token_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['card_on_file_id'] = $postData['payment'][$method . '_token_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['card_on_file_id'] = $mundipaggData[$method . '_token_' . $num . '_' . $i];
+                }
+
+                if (isset($postData['payment'][$method . '_credito_parcelamento_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['InstallmentCount'] = $postData['payment'][$method . '_credito_parcelamento_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['InstallmentCount'] = 1;
+                }
+
+                if (isset($postData['payment'][$method . '_value_' . $num . '_' . $i]) &&
+                    $postData['payment'][$method . '_value_' . $num . '_' . $i] != ''
+                ) {
+                    $data['payment'][$i]['AmountInCents'] = str_replace(',', '.', $postData['payment'][$method . '_value_' . $num . '_' . $i]);
+                    $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($postData['payment'][$method . '_token_' . $num . '_' . $i]);
+                    $tokenCctype = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cardonFile->getCcType());
+                    $data['payment'][$i]['AmountInCents'] = $data['payment'][$i]['AmountInCents'] + Mage::helper('mundipagg/installments')
+                            ->getInterestForCard(
+                                $data['payment'][$i]['InstallmentCount'],
+                                $tokenCctype,
+                                $data['payment'][$i]['AmountInCents']
+                            );
+                    $data['payment'][$i]['AmountInCents'] = $data['payment'][$i]['AmountInCents'] * 100;
+                } else {
+                    if (!isset($postData['partial'])) {
+                        $data['payment'][$i]['AmountInCents'] = $order->getGrandTotal() * 100;
+                    } else { // If partial payment we deduct authorized amount already processed
+                        if (Mage::getSingleton('checkout/session')->getAuthorizedAmount()) {
+                            $data['payment'][$i]['AmountInCents'] = ($order->getGrandTotal()) * 100 - Mage::getSingleton('checkout/session')->getAuthorizedAmount() * 100;
+                        } else {
+                            $data['payment'][$i]['AmountInCents'] = $order->getGrandTotal() * 100;
+                        }
+                    }
+                }
+
+                if (isset($postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['TaxDocumentNumber'] = $postData['payment'][$method . '_cc_taxvat_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['TaxDocumentNumber'] = $taxvat;
+                }
+            }
+
+            if (Mage::helper('mundipagg')->validateCPF($data['payment'][$i]['TaxDocumentNumber'])) {
+                $data['PersonTypeEnum'] = 'Person';
+                $data['TaxDocumentTypeEnum'] = 'CPF';
+                $data['TaxDocumentNumber'] = $data['payment'][$i]['TaxDocumentNumber'];
+            }
+
+            // We verify if a CNPJ is informed
+            if (Mage::helper('mundipagg')->validateCNPJ($data['payment'][$i]['TaxDocumentNumber'])) {
+                $data['PersonTypeEnum'] = 'Company';
+                $data['TaxDocumentTypeEnum'] = 'CNPJ';
+                $data['TaxDocumentNumber'] = $data['payment'][$i]['TaxDocumentNumber'];
+            }
+        }
+
+        return $data;
+    }
+
+    private function doBoletoPayment($data, $postData, $taxvat)
+    {
+        $data['TaxDocumentNumber'] = isset($postData['payment']['boleto_taxvat']) ? $postData['payment']['boleto_taxvat'] : $taxvat;
+        $data['boleto_parcelamento'] = isset($postData['payment']['boleto_parcelamento']) ? $postData['payment']['boleto_parcelamento'] : 1;
+        $data['boleto_dates'] = isset($postData['payment']['boleto_dates']) ? $postData['payment']['boleto_dates'] : null;
+
+        // We verify if a CPF is informed
+        if (Mage::helper('mundipagg')->validateCPF($data['TaxDocumentNumber'])) {
+            $data['PersonTypeEnum'] = 'Person';
+            $data['TaxDocumentTypeEnum'] = 'CPF';
+        }
+
+        // We verify if a CNPJ is informed
+        if (Mage::helper('mundipagg')->validateCNPJ($data['TaxDocumentNumber'])) {
+            $data['PersonTypeEnum'] = 'Company';
+            $data['TaxDocumentTypeEnum'] = 'CNPJ';
+        }
+
+        return $data;
+    }
+
+    private function doDebitPayment($data, $postData, $mundipaggData, $taxvat)
+    {
+        $data['TaxDocumentNumber'] = isset($postData['payment']['taxvat']) ? $postData['payment']['taxvat'] : $taxvat;
+        $data['Bank'] = isset($postData['payment']['mundipagg_debit']) ? $postData['payment']['mundipagg_debit'] : $mundipaggData['mundipagg_debit'];
+
+        // We verify if a CPF is informed
+        if (Mage::helper('mundipagg')->validateCPF($data['TaxDocumentNumber'])) {
+            $data['PersonTypeEnum'] = 'Person';
+            $data['TaxDocumentTypeEnum'] = 'CPF';
+        }
+
+        // We verify if a CNPJ is informed
+        if (Mage::helper('mundipagg')->validateCNPJ($data['TaxDocumentNumber'])) {
+            $data['PersonTypeEnum'] = 'Company';
+            $data['TaxDocumentTypeEnum'] = 'CNPJ';
+        }
+
+        return $data;
+    }
+
+    private function clearCart()
+    {
+        // Clear Magento cart and quote items
+        $cart = Mage::getModel('checkout/cart');
+        $cart->truncate()->save(); // remove all active items in cart page
+        $cart->init();
+        $session= Mage::getSingleton('checkout/session');
+        $quote = $session->getQuote();
+        $cart = Mage::getModel('checkout/cart');
+        $cartItems = $cart->getItems();
+        foreach ($cartItems as $item)
+        {
+            $quote->removeItem($item->getId())->save();
+        }
+        Mage::getSingleton('checkout/session')->clear();
     }
 }
