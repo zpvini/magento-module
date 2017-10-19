@@ -580,8 +580,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 }
             }
 
-            $this->clearCart();
-
             return $this;
         } catch (Exception $e) {
             Mage::logException($e);
@@ -1265,8 +1263,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             if ($authorizedAmount == $order->getGrandTotal()) {
                 Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('success');
             }
-
-            $this->clearCart();
 
             return $approvalRequest;
         } catch (Exception $e) {
@@ -2291,7 +2287,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
     {
         if (isset($mundipagg['mundipagg_creditcard_1_1_cc_type'])) {
 
-            $this->blockNotAllowedInstallments();
+            $this->blockNotAllowedInstallments($mundipagg);
 
             $info->setCcType($mundipagg['mundipagg_creditcard_1_1_cc_type'])
                 ->setCcOwner($mundipagg['mundipagg_creditcard_cc_holder_name_1_1'])
@@ -2632,7 +2628,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
     private function clearCart()
     {
-        // Clear Magento cart and quote items
         $cart = Mage::getModel('checkout/cart');
         $cart->truncate()->save(); // remove all active items in cart page
         $cart->init();
