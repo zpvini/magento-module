@@ -819,8 +819,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$telephone = '55(21)88888888';
 		}
 
-		// In case we doesn't have CPF or CNPJ informed we set default value for MundiPagg (required field)
-		$data['DocumentNumber'] = isset($data['TaxDocumentNumber']) ? $data['TaxDocumentNumber'] : $order->getCustomerTaxvat();
+        $data['DocumentNumber'] = $this->getCustomerDocumentNumber($data, $order);
 
 		$invalid = 0;
 
@@ -929,8 +928,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			$data['TaxDocumentNumber'] = $testCpfCnpj;
 		}
 
-		// In case we doesn't have CPF or CNPJ informed we set default value for MundiPagg (required field)
-		$data['DocumentNumber'] = isset($data['TaxDocumentNumber']) ? $data['TaxDocumentNumber'] : $order->getCustomerTaxvat();
+		$data['DocumentNumber'] = $this->getCustomerDocumentNumber($data, $order);
 
 		$invalid = 0;
 
@@ -2440,4 +2438,35 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 }
             }
         }
+
+
+    protected function getCustomer($order)
+    {
+        if ($this->_customer) {
+            return $this->_customer;
+        }
+        $this->_customer = Mage::getModel('customer/customer')->load($order->getCustomerId());
+        return $this->_customer;
+    }
+
+    /**
+     * Get customer cpf/cnpj
+     * @param $data
+     * @param $order
+     * @return mixed|null
+     */
+    private function getCustomerDocumentNumber($data, $order)
+    {
+        $customerDocumentNumber = null;
+
+        if (isset($data['TaxDocumentNumber'])) {
+            $customerDocumentNumber = $data['TaxDocumentNumber'];
+        } elseif (strlen($order->getCustomerTaxvat()) > 0) {
+            $customerDocumentNumber = $order->getCustomerTaxvat();
+        } elseif (strlen($this->getCustomer($order)->getData('cpf')) > 0) {
+            $customerDocumentNumber = $this->getCustomer($order)->getData('cpf');
+        }
+
+        return $customerDocumentNumber;
+    }
 }
