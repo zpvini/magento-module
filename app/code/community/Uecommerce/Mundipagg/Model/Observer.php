@@ -223,7 +223,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         }
 
         $session = Mage::getSingleton('checkout/session');
-        $recurrent = $session->getMundipaggRecurrency();
 
         $instance = $observer->getMethodInstance();
         $result = $observer->getResult();

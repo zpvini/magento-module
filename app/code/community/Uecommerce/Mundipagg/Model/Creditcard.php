@@ -43,7 +43,6 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
 
         $info = $this->getInfoInstance();
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
-        $info->getQuote()->preventSaving();
         $info = $this->resetInterest($info);
 
         $discount = Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($info->getQuote());
