@@ -52,7 +52,6 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
         $info = $this->getInfoInstance();
 
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
-        $info->getQuote()->preventSaving();
 
         $mundipaggDiscounts = $this->getMundipaggDiscounts($info->getQuote());
 

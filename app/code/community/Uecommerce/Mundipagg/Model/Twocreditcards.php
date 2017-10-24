@@ -62,7 +62,6 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
     {
         $info = $this->getInfoInstance();
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
-        $info->getQuote()->preventSaving();
         $info = $this->resetInterest($info);
         
         $cctype1 = $data[$this->_code.'_2_1_cc_type'];
