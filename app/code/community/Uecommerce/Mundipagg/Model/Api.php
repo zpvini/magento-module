@@ -611,135 +611,21 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 			// Get Webservice URL
 			$url = $standard->getURL();
 
-			$baseGrandTotal = str_replace(',', '.', $order->getBaseGrandTotal());
-			$amountInCentsVar = intval(strval(($baseGrandTotal * 100)));
+			$requestData = $this->prepareDebitRequestData($order, $data, $standard);
+			$jsonRequest = json_encode($requestData, JSON_PRETTY_PRINT);
 
-			// Set Data
-			$_request = array();
+			$response = $this->sendDataToApi($url, $jsonRequest, $standard->getMerchantKey(), $helperLog);
+			$response = $this->responseFormatter($response);
 
-			$_request["RequestKey"] = '00000000-0000-0000-0000-000000000000';
-			$_request["AmountInCents"] = $amountInCentsVar;
-			$_request['Bank'] = $data['Bank'];
-			$_request['MerchantKey'] = $standard->getMerchantKey();
+			$helperLog->debug(
+			    "Order #" . $order->getIncrementId() .
+                " | Response \n" .
+                json_encode($response, JSON_PRETTY_PRINT)
+            );
 
-			// Buyer data
-			$_request["Buyer"] = array();
-			$_request["Buyer"] = $this->buyerDebitBillingData($order, $data, $_request, $standard);
+			return $this->debitResponseProcess($response);
 
-			// Order data
-			$_request['InstallmentCount'] = '0';
-			$_request["OrderKey"] = '00000000-0000-0000-0000-000000000000';
-			$_request["OrderRequest"]['AmountInCents'] = $amountInCentsVar;
-			$_request["OrderRequest"]['OrderReference'] = $order->getIncrementId();
 
-			if ($standard->getEnvironment() != 'production') {
-				$_request["OrderRequest"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
-			}
-
-			if ($standard->getEnvironment() != 'production') {
-				$_request['PaymentMethod'] = 'CieloSimulator';
-			}
-
-			$_request['PaymentType'] = null;
-
-			// Cart data
-			$shoppingCart = $this->cartData($order, $data, $_request, $standard);
-			if (!is_array($shoppingCart)) {
-				$shoppingCart = array();
-			}
-			$_request["ShoppingCart"] = $shoppingCart[0];
-			$deliveryAddress = $_request['ShoppingCart']['DeliveryAddress'];
-			unset($_request['ShoppingCart']['DeliveryAddress']);
-			$_request['DeliveryAddress'] = $deliveryAddress;
-			$_request['ShoppingCart']['ShoppingCartItemCollection'][0]['DiscountAmountInCents'] = 0;
-
-			// Data
-			$dataToPost = json_encode($_request);
-
-			$helperLog->debug(print_r($_request, true));
-
-			// Send payment data to MundiPagg
-			$ch = curl_init();
-
-			if (Mage::getStoreConfig('mundipagg_tests_cpf_cnpj') != '') {
-				// If tests runinig
-				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-			}
-
-			// Header
-			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $standard->getMerchantKey() . ''));
-
-			// Set the url, number of POST vars, POST data
-			curl_setopt($ch, CURLOPT_URL, $url);
-
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
-
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-			// Execute post
-			$_response = curl_exec($ch);
-
-			if (curl_errno($ch)) {
-				$helperLog->info(curl_error($ch));
-//				Mage::log(curl_error($ch), null, 'Uecommerce_Mundipagg.log');
-			}
-
-			// Close connection
-			curl_close($ch);
-
-			$helperLog->debug(print_r($_response, true));
-
-			// Is there an error?
-			$xml = simplexml_load_string($_response);
-			$json = json_encode($xml);
-			$data = array();
-			$data = json_decode($json, true);
-
-			$helperLog->debug(print_r($data, true));
-
-			// Error
-			if (isset($data['ErrorReport']) && !empty($data['ErrorReport'])) {
-				$_errorItemCollection = $data['ErrorReport']['ErrorItemCollection'];
-
-				foreach ($_errorItemCollection as $errorItem) {
-					$errorCode = $errorItem['ErrorCode'];
-					$ErrorDescription = $errorItem['Description'];
-				}
-
-				return array(
-					'error'            => 1,
-					'ErrorCode'        => $errorCode,
-					'ErrorDescription' => Mage::helper('mundipagg')->__($ErrorDescription),
-					'result'           => $data
-				);
-			}
-
-			// False
-			if (isset($data['Success']) && (string)$data['Success'] == 'false') {
-				return array(
-					'error'            => 1,
-					'ErrorCode'        => 'WithError',
-					'ErrorDescription' => 'WithError',
-					'result'           => $data
-				);
-			} else {
-				// Success
-				$result = array(
-					'success'              => true,
-					'message'              => 4,
-					'OrderKey'             => $data['OrderKey'],
-					'TransactionKey'       => $data['TransactionKey'],
-					'TransactionKeyToBank' => $data['TransactionKeyToBank'],
-					'TransactionReference' => $data['TransactionReference'],
-					'result'               => $data
-				);
-
-				if (isset($data['CreateDate'])) {
-					$result['CreateDate'] = $data['CreateDate'];
-				}
-
-				return $result;
-			}
 		} catch (Exception $e) {
 			//Redirect to Cancel page
 			Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
@@ -2469,4 +2355,179 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         return $customerDocumentNumber;
     }
+
+    /**
+     * Prepare debit data to send to API
+     * @param $order
+     * @param $data
+     * @param $standard
+     * @return array
+     */
+    private function prepareDebitRequestData($order, $data, $standard)
+    {
+        $request["RequestKey"] = '00000000-0000-0000-0000-000000000000';
+        $request["AmountInCents"] = $this->getAmountInCents($order->getBaseGrandTotal());
+        $request['Bank'] = $this->getDebitServiceName($data['Bank']);
+        $request['MerchantKey'] = $standard->getMerchantKey();
+
+        // Buyer data
+        $request["Buyer"] = array();
+        $request["Buyer"] = $this->buyerDebitBillingData($order, $data, $request, $standard);
+
+        // Order data
+        $request['InstallmentCount'] = '0';
+        $request["OrderKey"] = '00000000-0000-0000-0000-000000000000';
+        $request["OrderRequest"]['AmountInCents'] = $this->getAmountInCents($order->getBaseGrandTotal());
+        $request["OrderRequest"]['OrderReference'] = $order->getIncrementId();
+
+        if ($standard->getEnvironment() != 'production') {
+            $request["OrderRequest"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
+        }
+
+        if ($standard->getEnvironment() != 'production') {
+            $request['Bank'] .= 'Simulator';
+        }
+
+        $request['PaymentType'] = null;
+
+        // Cart data
+        $shoppingCart = $this->cartData($order, $data, $request, $standard);
+        if (!is_array($shoppingCart)) {
+            $shoppingCart = array();
+        }
+        $request["ShoppingCart"] = $shoppingCart[0];
+        $deliveryAddress = $request['ShoppingCart']['DeliveryAddress'];
+        unset($request['ShoppingCart']['DeliveryAddress']);
+        $request['DeliveryAddress'] = $deliveryAddress;
+        $request['ShoppingCart']['ShoppingCartItemCollection'][0]['DiscountAmountInCents'] = 0;
+
+        return $request;
+    }
+
+    /**
+     * Return service name (bank) based on code
+     * @param string $code
+     * @return string
+     */
+    private function getDebitServiceName($code)
+    {
+        $helper = new Uecommerce_Mundipagg_Model_Source_Debit();
+        $services = $helper->getDebitServiceNames();
+        return $services[$code];
+    }
+
+    /**
+     * @param float $baseGrandTotal
+     * @return int
+     */
+    private function getAmountInCents($baseGrandTotal)
+    {
+        $baseGrandTotal = str_replace(',', '.', $baseGrandTotal);
+        return intval(strval(($baseGrandTotal * 100)));
+    }
+
+    /**
+     * @param $url
+     * @param $request
+     * @param $merchantKey
+     * @param $helperLog
+     * @return mixed
+     */
+    private function sendDataToApi($url, $request, $merchantKey, $helperLog)
+    {
+        $helperLog->debug(print_r($url, true));
+        $helperLog->debug(print_r($request, true));
+
+        // Send payment data to MundiPagg
+        $ch = curl_init();
+
+        if (Mage::getStoreConfig('mundipagg_tests_cpf_cnpj') != '') {
+            // If tests runinig
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        }
+
+        // Header
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $merchantKey . ''));
+
+        // Set the url, number of POST vars, POST data
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // Execute post
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            $helperLog->info(curl_error($ch));
+        }
+
+        // Close connection
+        curl_close($ch);
+
+        return $response;
+    }
+
+    /**
+     * @param $response
+     * @return mixed
+     */
+    private function responseFormatter($response)
+    {
+        $xml = simplexml_load_string($response);
+        $json = json_encode($xml);
+        return json_decode($json, true);
+    }
+
+    /**
+     * @param $response
+     * @return array|bool
+     */
+    private function debitResponseProcess($response)
+    {
+        // Error
+        if (isset($response['ErrorReport']) && !empty($response['ErrorReport'])) {
+            $_errorItemCollection = $response['ErrorReport']['ErrorItemCollection'];
+
+            foreach ($_errorItemCollection as $errorItem) {
+                $errorCode = $errorItem['ErrorCode'];
+                $ErrorDescription = $errorItem['Description'];
+            }
+
+            return array(
+                'error'            => 1,
+                'ErrorCode'        => $errorCode,
+                'ErrorDescription' => Mage::helper('mundipagg')->__($ErrorDescription),
+                'result'           => $response
+            );
+        }
+
+        // False
+        if (isset($response['Success']) && (string)$response['Success'] == 'false') {
+            return array(
+                'error'            => 1,
+                'ErrorCode'        => 'WithError',
+                'ErrorDescription' => 'WithError',
+                'result'           => $response
+            );
+        } else {
+            // Success
+            $result = array(
+                'success'              => true,
+                'message'              => 4,
+                'OrderKey'             => $response['OrderKey'],
+                'TransactionKey'       => $response['TransactionKey'],
+                'TransactionKeyToBank' => $response['TransactionKeyToBank'],
+                'TransactionReference' => $response['TransactionReference'],
+                'result'               => $response
+            );
+
+            if (isset($response['CreateDate'])) {
+                $result['CreateDate'] = $response['CreateDate'];
+            }
+
+            return $result;
+        }
+        return false;
+    }
+
 }
