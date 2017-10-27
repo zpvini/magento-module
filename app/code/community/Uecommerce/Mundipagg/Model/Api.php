@@ -609,7 +609,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		try {
 			// Get Webservice URL
-			$url = $standard->getURL();
+			//$url = $standard->getURL();
+            $url = Mage::getStoreConfig('payment/mundipagg_debit/apiDebitUrl');
 
 			$requestData = $this->prepareDebitRequestData($order, $data, $standard);
 			$jsonRequest = json_encode($requestData, JSON_PRETTY_PRINT);
@@ -2447,7 +2448,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
 
         // Header
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $merchantKey . ''));
+        curl_setopt($ch, CURLOPT_HTTPHEADER,
+            array(
+                'Content-Type:application/json',
+                'Accept:application/json'
+            )
+        );
 
         // Set the url, number of POST vars, POST data
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -2473,9 +2479,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      */
     private function responseFormatter($response)
     {
-        $xml = simplexml_load_string($response);
-        $json = json_encode($xml);
-        return json_decode($json, true);
+        return json_decode($response, true);
     }
 
     /**
