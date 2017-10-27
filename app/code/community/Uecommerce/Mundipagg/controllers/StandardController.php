@@ -62,7 +62,6 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
     {
         if (!Mage::getSingleton('checkout/session')->getQuote()->hasItems()) {
             $this->getResponse()->setHeader('HTTP/1.1', '403 Session Expired');
-            exit;
         }
     }
 
@@ -486,5 +485,4 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         $payment = $order->getPayment();
         $info = $payment->getAdditionalInformation();
     }
-
 }

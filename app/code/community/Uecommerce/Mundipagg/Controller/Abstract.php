@@ -11,8 +11,9 @@ class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Fron
 
         if ($environment == 'production') {
             if ($this->requestIsValid() == false) {
-                echo $this->getResponseForInvalidRequest();
-                die();
+                $this->getResponse()->setBody(
+                    $this->getResponseForInvalidRequest()
+                );
             }
         }
     }

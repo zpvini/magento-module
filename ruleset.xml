@@ -12,4 +12,9 @@
     </rule>
 
     <rule ref="Generic.Arrays.DisallowShortArraySyntax"/>
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array" value="print=>echo" />
+        </properties>
+    </rule>
 </ruleset>

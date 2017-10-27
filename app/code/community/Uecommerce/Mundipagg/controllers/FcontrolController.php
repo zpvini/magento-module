@@ -58,8 +58,9 @@ class Uecommerce_Mundipagg_FcontrolController extends Uecommerce_Mundipagg_Contr
     public function reportErrorAction()
     {
         if ($this->requestIsValid() == false) {
-            echo $this->getResponseForInvalidRequest();
-
+            $this->getResponse()->setBody(
+                $this->getResponseForInvalidRequest()
+            );
             return false;
         }
 

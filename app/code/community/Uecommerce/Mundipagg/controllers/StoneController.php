@@ -7,7 +7,9 @@ class Uecommerce_Mundipagg_StoneController extends Uecommerce_Mundipagg_Controll
     {
 
         if ($this->requestIsValid() == false) {
-            echo $this->getResponseForInvalidRequest();
+            $this->getResponse()->setBody(
+                $this->getResponseForInvalidRequest()
+            );
             return false;
         }
 
