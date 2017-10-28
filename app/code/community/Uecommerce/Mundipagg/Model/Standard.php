@@ -2531,7 +2531,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 $posCid === false &&
                 $posHolderName === false
             ) {
-                if (strpos($key, 'cc_type')) {
+                $pos = strpos($key, 'cc_type');
+                if ($pos) {
                     $value = $helper->issuer($value);
                 }
 
