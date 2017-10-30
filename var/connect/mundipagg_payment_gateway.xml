@@ -1,5 +1,6 @@
 <_>
-   <form_key>O49W7jjG5kxYcrlc</form_key>
+   <form_key>88G08Cs6ktCZ33bX</form_key>
+   <_create/>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -27,9 +28,12 @@ IMPORTANTE
 Em qualquer procedimento de instalação ou update existem riscos, aconselhamos sempre criar backups de sua loja e efetuar qualquer procedimento em ambiente de desenvolvimento antes, nunca diretamente em produção. Não nos responsabilizamos por eventuais incidentes causados por negligenciar este alerta ou por uso de produtos ou serviços de terceiros.</description>
    <license>MIT</license>
    <license_uri/>
-   <version>2.13.02</version>
+   <version>2.13.03</version>
    <stability>stable</stability>
-   <notes>- Fix payment information in order&apos;s page.</notes>
+   <notes>- Fix debit request.
+- Remove issue with preventSaving()
+- Clear cart after order
+- Get cpf number from another source.</notes>
    <authors>
       <name>
          <name>mundipagg</name>
@@ -41,7 +45,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
          <email>mundi@mundipagg.com</email>
       </email>
    </authors>
-   <depends_php_min>5.4.0</depends_php_min>
+   <depends_php_min>5.6.1</depends_php_min>
    <depends_php_max>7.1.8</depends_php_max>
    <depends>
       <package>
@@ -58,7 +62,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>          </files>
+            <files>             </files>
          </files>
       </package>
       <extension>
