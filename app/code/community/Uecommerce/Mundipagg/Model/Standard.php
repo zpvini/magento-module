@@ -1005,22 +1005,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $data['payment_method'] = isset($postData['payment']['method']) ? $postData['payment']['method'] : $mundipaggData['method'];
             $method = $data['payment_method'];
 
-            // 1 or more Credit Cards Payment
-            if ($method != 'mundipagg_boleto' &&
-                    $method != 'mundipagg_debit'
-            ) {
-                $data = $this->doCreditCardsPayment($method, $postData, $helper, $mundipaggData, $order, $taxvat);
-            }
-
-            // Boleto Payment
-            if ($data['payment_method'] == 'mundipagg_boleto') {
-                $data = $this->doBoletoPayment($data, $postData, $taxvat);
-            }
-
-            // Debit Payment
-            if ($data['payment_method'] == 'mundipagg_debit') {
-                $data = $this->doDebitPayment($data, $postData, $mundipaggData, $taxvat);
-            }
+            $data = $this->sendPaymentToApi($method, $postData, $helper, $mundipaggData, $order, $taxvat);
 
             // Unset MundipaggData data
             $session->setMundipaggData();
@@ -2640,5 +2625,27 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $quote->removeItem($item->getId())->save();
         }
         Mage::getSingleton('checkout/session')->clear();
+    }
+
+    private function sendPaymentToApi($method, $postData, $helper, $mundipaggData, $order, $taxvat)
+    {
+        // 1 or more Credit Cards Payment
+        if ($method != 'mundipagg_boleto' &&
+            $method != 'mundipagg_debit'
+        ) {
+            $data = $this->doCreditCardsPayment($method, $postData, $helper, $mundipaggData, $order, $taxvat);
+        }
+
+        // Boleto Payment
+        if ($data['payment_method'] == 'mundipagg_boleto') {
+            $data = $this->doBoletoPayment($data, $postData, $taxvat);
+        }
+
+        // Debit Payment
+        if ($data['payment_method'] == 'mundipagg_debit') {
+            $data = $this->doDebitPayment($data, $postData, $mundipaggData, $taxvat);
+        }
+
+        return $data;
     }
 }
