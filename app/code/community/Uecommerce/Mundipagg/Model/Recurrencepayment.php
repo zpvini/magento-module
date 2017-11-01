@@ -42,7 +42,6 @@ class Uecommerce_Mundipagg_Model_RecurrencePayment extends Uecommerce_Mundipagg_
 
         $info = $this->getInfoInstance();
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
-        $info->getQuote()->preventSaving();
         $info = $this->resetInterest($info);
 
         $interest = Mage::helper('mundipagg/installments')->getInterestForCard(1, $cctype);

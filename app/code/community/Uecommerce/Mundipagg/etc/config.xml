@@ -64,8 +64,17 @@
                         <class>Uecommerce_Mundipagg_Model_Observer</class>
                         <method>updateStatus</method>
                     </onhold_order>
+
                 </observers>
             </sales_order_place_after>
+            <checkout_onepage_controller_success_action>
+                <observers>
+                    <clean_cart>
+                        <class>Uecommerce_Mundipagg_Model_Observer</class>
+                        <method>cleanCart</method>
+                    </clean_cart>
+                </observers>
+            </checkout_onepage_controller_success_action>
             <controller_action_postdispatch_checkout_onepage_savePayment>
                 <observers>
                     <removeInterest>

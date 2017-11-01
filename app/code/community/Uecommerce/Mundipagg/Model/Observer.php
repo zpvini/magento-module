@@ -223,7 +223,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         }
 
         $session = Mage::getSingleton('checkout/session');
-        $recurrent = $session->getMundipaggRecurrency();
 
         $instance = $observer->getMethodInstance();
         $result = $observer->getResult();
@@ -771,5 +770,18 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         }
         $response = (json_decode($_response));
         return str_replace("v", "", $response[0]->tag_name);
+    }
+
+    /**
+     * Force cart clean after order payment
+     */
+    public function cleanCart()
+    {
+        Mage::getSingleton('checkout/session')
+            ->getQuote()
+            ->setIsActive(false)
+            ->save();
+
+        Mage::getSingleton('checkout/session')->clear();
     }
 }

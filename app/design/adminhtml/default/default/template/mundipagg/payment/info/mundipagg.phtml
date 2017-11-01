@@ -92,35 +92,17 @@ $standard = Mage::getModel('mundipagg/standard');
             endif;
         }
 
+        $ccQty = 0;
+
         switch ($PaymentMethod){
             case 'mundipagg_creditcard' :
+
+                $ccQty = 1;
+                break;
+
             case 'mundipagg_twocreditcards' :
 
-                $ccQty = $info->getAdditionalInformation('mundipagg_type');
-                $ccQty = str_replace('CreditCards', '', $ccQty);
-
-                if ($ccQty > 0) {
-                    for ($i = 1; $i <= $ccQty; $i++) {
-                        $authorizationCode = $this->getAuthorizationCode($i);
-                        $txnId = $this->getTransactionId($i);
-
-                        $brand = $this->getCcBrand($i);
-                        $maskedCreditCardNumber = $info->getAdditionalInformation($i . "_MaskedCreditCardNumber");
-                        $ccValue = $this->getCcValue($i);
-                        $installmentsNumber = $this->getInstallmentsNumber($ccQty, $i);
-                        $acquireMessage = $info->getAdditionalInformation($i . "_AcquirerMessage");
-
-                        echo "<p>";
-                        echo "{$helper->__('Credit card issuer')}: {$brand}<br/>";
-                        echo "{$helper->__('Masked number')}: {$maskedCreditCardNumber}<br/>";
-                        echo "{$helper->__('Amount')}: {$ccValue}<br/>";
-                        echo "{$helper->__('Installments')}: {$installmentsNumber}<br/>";
-                        echo "{$helper->__('Authorization code')}: {$authorizationCode}<br/>";
-                        echo "{$helper->__('Transaction ID')}: {$txnId}<br/>";
-                        echo "{$helper->__('Acquirer message')}: {$acquireMessage}<br/>";
-                        echo "</p>";
-                    }
-                }
+                $ccQty = 2;
                 break;
 
             case 'mundipagg_boleto' :
@@ -169,6 +151,29 @@ $standard = Mage::getModel('mundipagg/standard');
                         echo $bankPaymentDate;
                     }
             break;
+        }
+
+        if ($ccQty > 0) {
+            for ($i = 1; $i <= $ccQty; $i++) {
+                $authorizationCode = $this->getAuthorizationCode($i);
+                $txnId = $this->getTransactionId($i);
+
+                $brand = $this->getCcBrand($i);
+                $maskedCreditCardNumber = $info->getAdditionalInformation($i . "_MaskedCreditCardNumber");
+                $ccValue = $this->getCcValue($i);
+                $installmentsNumber = $this->getInstallmentsNumber($ccQty, $i);
+                $acquireMessage = $info->getAdditionalInformation($i . "_AcquirerMessage");
+
+                echo "<p>";
+                echo "{$helper->__('Credit card issuer')}: {$brand}<br/>";
+                echo "{$helper->__('Masked number')}: {$maskedCreditCardNumber}<br/>";
+                echo "{$helper->__('Amount')}: {$ccValue}<br/>";
+                echo "{$helper->__('Installments')}: {$installmentsNumber}<br/>";
+                echo "{$helper->__('Authorization code')}: {$authorizationCode}<br/>";
+                echo "{$helper->__('Transaction ID')}: {$txnId}<br/>";
+                echo "{$helper->__('Acquirer message')}: {$acquireMessage}<br/>";
+                echo "</p>";
+            }
         }
     ?>
     </p>
