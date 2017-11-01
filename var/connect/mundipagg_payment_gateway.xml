@@ -1,5 +1,5 @@
 <_>
-   <form_key>O49W7jjG5kxYcrlc</form_key>
+   <form_key>x86TQBJxP74B1xVD</form_key>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -27,9 +27,10 @@ IMPORTANTE
 Em qualquer procedimento de instalação ou update existem riscos, aconselhamos sempre criar backups de sua loja e efetuar qualquer procedimento em ambiente de desenvolvimento antes, nunca diretamente em produção. Não nos responsabilizamos por eventuais incidentes causados por negligenciar este alerta ou por uso de produtos ou serviços de terceiros.</description>
    <license>MIT</license>
    <license_uri/>
-   <version>2.13.02</version>
+   <version>2.13.04</version>
    <stability>stable</stability>
-   <notes>- Fix payment information in order&apos;s page.</notes>
+   <notes>- Open bank page in new page and fix bug in get url of debig API
+- Fix and refact debit code.</notes>
    <authors>
       <name>
          <name>mundipagg</name>
@@ -58,7 +59,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>          </files>
+            <files>           </files>
          </files>
       </package>
       <extension>
