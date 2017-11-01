@@ -894,64 +894,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
                 // Credit Card
                 case 1:
-                    $creditCardTransactionResultCollection = $result['CreditCardTransactionResultCollection'];
-                    $transactionsQty = count($creditCardTransactionResultCollection);
-
-                    // We record transaction(s)
-                    if ($transactionsQty == 1) {
-                        $transaction = $creditCardTransactionResultCollection[0];
-
-                        if (array_key_exists('TransactionKey', $transaction)) {
-                            $this->_addTransaction($payment, $transaction['TransactionKey'], $transactionType, $transaction);
-                        }
-                    } else {
-                        foreach ($creditCardTransactionResultCollection as $key => $trans) {
-                            if (array_key_exists('TransactionKey', $trans)) {
-                                $this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
-                            }
-                        }
-                    }
-
-                    // Send new order email when not in admin
-                    if (Mage::app()->getStore()->getCode() != 'admin') {
-                        $order->sendNewOrderEmail();
-                    }
-
-                    // Invoice
-                    $order = $payment->getOrder();
-
-                    if (!$order->canInvoice()) {
-                        // Log error
-                        Mage::logException(Mage::helper('core')->__('Cannot create an invoice.'));
-                        Mage::throwException(Mage::helper('core')->__('Cannot create an invoice.'));
-                    }
-
-                    // Create invoice
-                    $invoice = Mage::getModel('sales/service_order', $payment->getOrder())->prepareInvoice(array());
-                    $invoice->register();
-
-                    // Set capture case to offline and register the invoice.
-                    $invoice->setTransactionId($this->_transactionId);
-                    $invoice->setCanVoidFlag(true);
-                    $invoice->getOrder()->setIsInProcess(true);
-                    $invoice->setState(2);
-
-                    // Send invoice if enabled
-                    if (Mage::helper('sales')->canSendNewInvoiceEmail($order->getStoreId())) {
-                        $invoice->setEmailSent(true);
-                        $invoice->sendEmail();
-                    }
-
-                    $invoice->save();
-
-                    $order->setBaseTotalPaid($order->getBaseGrandTotal());
-                    $order->setTotalPaid($order->getBaseGrandTotal());
-                    $order->addStatusHistoryComment('Captured online amount of R$' . $order->getBaseGrandTotal(), false);
-                    $order->save();
-
-                    $payment->setLastTransId($this->_transactionId);
-                    $payment->save();
-
+                    $this->orderCreditCard($order, $result['CreditCardTransactionResultCollection'], $payment, $transactionType);
                     break;
 
                 // Debit
@@ -1005,22 +948,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $data['payment_method'] = isset($postData['payment']['method']) ? $postData['payment']['method'] : $mundipaggData['method'];
             $method = $data['payment_method'];
 
-            // 1 or more Credit Cards Payment
-            if ($method != 'mundipagg_boleto' &&
-                    $method != 'mundipagg_debit'
-            ) {
-                $data = $this->doCreditCardsPayment($method, $postData, $helper, $mundipaggData, $order, $taxvat);
-            }
-
-            // Boleto Payment
-            if ($data['payment_method'] == 'mundipagg_boleto') {
-                $data = $this->doBoletoPayment($data, $postData, $taxvat);
-            }
-
-            // Debit Payment
-            if ($data['payment_method'] == 'mundipagg_debit') {
-                $data = $this->doDebitPayment($data, $postData, $mundipaggData, $taxvat);
-            }
+            $data = $this->sendPaymentToApi($method, $postData, $helper, $mundipaggData, $order, $taxvat);
 
             // Unset MundipaggData data
             $session->setMundipaggData();
@@ -1639,9 +1567,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
         switch (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess()) {
             case 'debit':
-                $redirectUrl = Mage::getSingleton('checkout/session')->getBankRedirectUrl();
-                break;
-
             case 'success':
                 $redirectUrl = Mage::getUrl('mundipagg/standard/success', array('_secure' => true));
                 break;
@@ -2641,4 +2566,100 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         }
         Mage::getSingleton('checkout/session')->clear();
     }
+
+    private function sendPaymentToApi($method, $postData, $helper, $mundipaggData, $order, $taxvat)
+    {
+        // 1 or more Credit Cards Payment
+        if ($method != 'mundipagg_boleto' &&
+            $method != 'mundipagg_debit'
+        ) {
+            $data = $this->doCreditCardsPayment($method, $postData, $helper, $mundipaggData, $order, $taxvat);
+        }
+
+        // Boleto Payment
+        if ($data['payment_method'] == 'mundipagg_boleto') {
+            $data = $this->doBoletoPayment($data, $postData, $taxvat);
+        }
+
+        // Debit Payment
+        if ($data['payment_method'] == 'mundipagg_debit') {
+            $data = $this->doDebitPayment($data, $postData, $mundipaggData, $taxvat);
+        }
+
+        return $data;
+    }
+
+    private function orderCreditCard($order, $creditCardTransactionResultCollection, $payment, $transactionType)
+    {
+        // We record transaction(s)
+        $this->recordTransactions($creditCardTransactionResultCollection, $payment, $transactionType);
+
+        // Send new order email when not in admin
+        if (Mage::app()->getStore()->getCode() != 'admin') {
+            $order->sendNewOrderEmail();
+        }
+
+        $order = $payment->getOrder();
+        $this->createInvoice($order, $payment);
+
+        $order->setBaseTotalPaid($order->getBaseGrandTotal());
+        $order->setTotalPaid($order->getBaseGrandTotal());
+        $order->addStatusHistoryComment(
+            'Captured online amount of R$' . $order->getBaseGrandTotal(), 'Pending'
+        );
+
+        $payment->setLastTransId($this->_transactionId);
+        $payment->save();
+    }
+
+    private function recordTransactions($transactions, $payment, $transactionType)
+    {
+        foreach ($transactions as $key => $trans) {
+            if (array_key_exists('TransactionKey', $trans)) {
+                $this->_addTransaction($payment, $trans['TransactionKey'], $transactionType, $trans, $key);
+            }
+        }
+    }
+
+    private function createInvoice($order, $payment)
+    {
+        $invoice = $this->registerInvoice($order, $payment);
+
+        if ($invoice) {
+            $this->captureInvoice($invoice);
+            $this->sendInvoiceMail($invoice, $order->getStoreId());
+            $invoice->save();
+        }
+    }
+
+    private function registerInvoice($order, $payment)
+    {
+        if (!$order->canInvoice()) {
+            // Log error
+            Mage::logException(Mage::helper('core')->__('Cannot create an invoice.'));
+            Mage::throwException(Mage::helper('core')->__('Cannot create an invoice.'));
+            return false;
+        }
+        $invoice = Mage::getModel('sales/service_order', $payment->getOrder())->prepareInvoice(array());
+        $invoice->register();
+        return $invoice;
+    }
+
+    private function captureInvoice($invoice)
+    {
+        $invoice->setTransactionId($this->_transactionId);
+        $invoice->setCanVoidFlag(true);
+        $invoice->getOrder()->setIsInProcess(true);
+        $invoice->setState(2);
+    }
+
+    private function sendInvoiceMail($invoice, $storeId)
+    {
+        // Send invoice if enabled
+        if (Mage::helper('sales')->canSendNewInvoiceEmail($storeId)) {
+            $invoice->setEmailSent(true);
+            $invoice->sendEmail();
+        }
+    }
+
 }
