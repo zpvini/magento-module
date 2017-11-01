@@ -14,7 +14,6 @@ class Uecommerce_Mundipagg_Model_Order_Payment
      */
     public function createInvoice(Mage_Sales_Model_Order $order)
     {
-
         if (!$order->canInvoice()) {
             Mage::throwException(self::ERR_CANNOT_CREATE_INVOICE);
         }
