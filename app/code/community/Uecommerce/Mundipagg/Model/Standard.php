@@ -802,8 +802,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $order->setBaseTotalPaid($order->getBaseGrandTotal());
         $order->setTotalPaid($order->getBaseGrandTotal());
         $order->addStatusHistoryComment('Captured online amount of R$' . $order->getBaseGrandTotal(), false);
-        $order->setState(Mage_Sales_Model_Order::STATE_NEW, true)->save();
-        $status = $order->getStatusLabel();
         $order->save();
 
         $this->closeAuthorizationTxns($order);
