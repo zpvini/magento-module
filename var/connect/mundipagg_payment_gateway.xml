@@ -60,7 +60,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>            </files>
+            <files>           </files>
          </files>
       </package>
       <extension>
