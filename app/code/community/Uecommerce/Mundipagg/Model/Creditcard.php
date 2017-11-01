@@ -146,9 +146,5 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
                 parent::order($payment, $order->getBaseTotalDue());
                 break;
         }
-
-
-
-
     }
 }

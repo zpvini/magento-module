@@ -2633,8 +2633,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $quote = $session->getQuote();
         $cart = Mage::getModel('checkout/cart');
         $cartItems = $cart->getItems();
-        foreach ($cartItems as $item)
-        {
+        foreach ($cartItems as $item) {
             $quote->removeItem($item->getId())->save();
         }
         Mage::getSingleton('checkout/session')->clear();
