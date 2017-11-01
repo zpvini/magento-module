@@ -30,7 +30,8 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
    <version>2.13.04</version>
    <stability>stable</stability>
    <notes>- Open bank page in new page and fix bug in get url of debig API
-- Fix and refact debit code.</notes>
+- Fix and refact debit code.
+- Set first order status as pending, fixing empty status issue.</notes>
    <authors>
       <name>
          <name>mundipagg</name>
