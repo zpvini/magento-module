@@ -1,6 +1,5 @@
 <_>
    <form_key>88G08Cs6ktCZ33bX</form_key>
-   <_create/>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -62,7 +61,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>             </files>
+            <files>               </files>
          </files>
       </package>
       <extension>
