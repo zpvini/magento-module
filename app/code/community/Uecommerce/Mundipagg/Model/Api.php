@@ -609,8 +609,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
 		try {
 			// Get Webservice URL
-			//$url = $standard->getURL();
-            $url = Mage::getStoreConfig('payment/mundipagg_debit/apiDebitUrl');
+		    if ($standard->getEnvironment() == 'production') {
+    		    $url = Mage::getStoreConfig('payment/mundipagg_debit/apiDebitUrl');
+    		} else {
+                $url = Mage::getStoreConfig('payment/mundipagg_debit/apiDebitStagingUrl');
+		    }
 
 			$requestData = $this->prepareDebitRequestData($order, $data, $standard);
 			$jsonRequest = json_encode($requestData, JSON_PRETTY_PRINT);

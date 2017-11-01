@@ -43,8 +43,15 @@ switch ($this->getPaymentMethod()) {
 			echo    $this->__('Your order has not been paid yet. <a href="%s" target="_blank">Click here to print</a> your Boleto Bancário.', $boletoUrl);
 			echo "</p>";
 		}
-
 		break;
+	case 'mundipagg_debit':
+	    $debitUrl = Mage::getSingleton('checkout/session')->getBankRedirectUrl();
+	   ?><script>
+	    window.open('<?php echo $debitUrl; ?>');
+	    </script>
+	    <p class='pagSucess'>
+	    <?php echo $this->__('Your order has not been paid yet. <a href="%s" target="_blank">Click here to pay in</a> your bank.', $debitUrl); ?>
+	    </p><?php
 }
 ?>
 <!--
