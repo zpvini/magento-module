@@ -1265,11 +1265,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
             $lowerStatus = strtolower($status);
 
-            if (empty($capturedAmountInCents) === false) {
-                $amountToCapture = $capturedAmountInCents * 0.01;
-            } else {
-                $amountInCents = null;
-            }
+		try {
+			// Get Webservice URL
+		    if ($standard->getEnvironment() == 'production') {
+    		    $url = Mage::getStoreConfig('payment/mundipagg_debit/apiDebitUrl');
+    		} else {
+                $url = Mage::getStoreConfig('payment/mundipagg_debit/apiDebitStagingUrl');
+		    }
 
             switch ($lowerStatus) {
                 case 'captured':
@@ -2449,7 +2451,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
 
         // Header
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $merchantKey . ''));
+        curl_setopt($ch, CURLOPT_HTTPHEADER,
+            array(
+                'Content-Type:application/json',
+                'Accept:application/json'
+            )
+        );
 
         // Set the url, number of POST vars, POST data
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -2475,9 +2482,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      */
     private function responseFormatter($response)
     {
-        $xml = simplexml_load_string($response);
-        $json = json_encode($xml);
-        return json_decode($json, true);
+        return json_decode($response, true);
     }
 
     /**

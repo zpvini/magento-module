@@ -1,5 +1,5 @@
 <_>
-   <form_key>RVSK6DcxuDtu7DoP</form_key>
+   <form_key>x86TQBJxP74B1xVD</form_key>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -27,9 +27,11 @@ IMPORTANTE
 Em qualquer procedimento de instalação ou update existem riscos, aconselhamos sempre criar backups de sua loja e efetuar qualquer procedimento em ambiente de desenvolvimento antes, nunca diretamente em produção. Não nos responsabilizamos por eventuais incidentes causados por negligenciar este alerta ou por uso de produtos ou serviços de terceiros.</description>
    <license>MIT</license>
    <license_uri/>
-   <version>2.13.03</version>
+   <version>2.13.04</version>
    <stability>stable</stability>
-   <notes>- fix: errors of magento techinical report</notes>
+   <notes>- Open bank page in new page and fix bug in get url of debig API
+- Fix and refact debit code.
+- Set first order status as pending, fixing empty status issue.</notes>
    <authors>
       <name>
          <name>mundipagg</name>
@@ -41,7 +43,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
          <email>mundi@mundipagg.com</email>
       </email>
    </authors>
-   <depends_php_min>5.4.0</depends_php_min>
+   <depends_php_min>5.6.1</depends_php_min>
    <depends_php_max>7.1.8</depends_php_max>
    <depends>
       <package>
@@ -58,7 +60,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>          </files>
+            <files>           </files>
          </files>
       </package>
       <extension>
