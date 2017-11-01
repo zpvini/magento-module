@@ -1567,9 +1567,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
         switch (Mage::getSingleton('checkout/session')->getApprovalRequestSuccess()) {
             case 'debit':
-                $redirectUrl = Mage::getSingleton('checkout/session')->getBankRedirectUrl();
-                break;
-
             case 'success':
                 $redirectUrl = Mage::getUrl('mundipagg/standard/success', array('_secure' => true));
                 break;
