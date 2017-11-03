@@ -1,5 +1,4 @@
 ```
-#!text
 This is a guide to use this Pull Request Template.
 
 # Title
