@@ -729,7 +729,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             ,'description'=>
                 "Você está utilizando uma versão antiga do módulo de interação Mundipagg(v" . $oldVersion . "). Atualize para a versão v" . $newVersion . "<br>
                 <a href='https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html' target='_blank'>Download Magento Connect</a><br>
-                <a href='https://github.com/mundipagg/Magento.Integracao' target='_blank'>GitHub</a>
+                <a href='https://github.com/mundipagg/magento-module' target='_blank'>GitHub</a>
                 "
             ,'url' =>"https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html"
             ,'is_read' => 0
