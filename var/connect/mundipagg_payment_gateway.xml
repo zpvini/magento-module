@@ -1,5 +1,5 @@
 <_>
-   <form_key>xGeUXnUROGMhxhej</form_key>
+   <form_key>OyJASbkPbM25ojEq</form_key>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -29,7 +29,8 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
    <license_uri/>
    <version>2.13.05</version>
    <stability>stable</stability>
-   <notes>- Fix empty boleto collection.</notes>
+   <notes>- Fix empty boleto collection.
+- Change repository url.</notes>
    <authors>
       <name>
          <name>mundipagg</name>
@@ -58,7 +59,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>               </files>
+            <files>                  </files>
          </files>
       </package>
       <extension>
