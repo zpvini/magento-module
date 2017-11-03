@@ -753,7 +753,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 
     private function getRepoVersion()
     {
-        $url = "https://api.github.com/repos/mundipagg/Magento.Integracao/releases";
+        $url = "https://api.github.com/repos/mundipagg/magento-module/releases";
         $ch = curl_init();
 
         // Header
@@ -766,6 +766,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         $_response = curl_exec($ch);
 
         if (curl_errno($ch)) {
+            $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
             $helperLog->info(curl_error($ch));
         }
         $response = (json_decode($_response));
