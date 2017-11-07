@@ -1,23 +1,27 @@
-# Magento/Mundipagg Integration module
+# Magento/MundiPagg Integration module
+This is the official Magento module for MundiPagg integration
 
-This is the official Magento module for Mundipagg integration
+## Documentation in other languages
+* [Brazilian portuguese](README.pt-br.md)
 
 ## Magento Connect 
-https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html
+~~https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html~~
+
+## Magento Marketplace
+Soon
 
 ## System requirements
-PHP 5.4
+PHP 5.5
 Magento 1.9.3.x
 
-## Installation with modgit 
-modgit: https://github.com/jreinke/modgit
+## Installation with modman
+modman: https://github.com/jreinke/modgit
 
     $ cd /path/to/magento
-    $ modgit init
-    $ modgit add mundipagg_integracao git@github.com:mundipagg/Magento.Integracao.git
+    $ modman init
+    $ modman clone git@github.com:mundipagg/magento-module.git
 
 ## API Reference
-
 http://docs-legacy.mundipagg.com
 
 # How can I contribute?
