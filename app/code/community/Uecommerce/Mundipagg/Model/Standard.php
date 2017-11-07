@@ -2602,7 +2602,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $order->setBaseTotalPaid($order->getBaseGrandTotal());
         $order->setTotalPaid($order->getBaseGrandTotal());
         $order->addStatusHistoryComment(
-            'Captured online amount of R$' . $order->getBaseGrandTotal(), 'Pending'
+            'Captured online amount of R$' . $order->getBaseGrandTotal(),
+            'Pending'
         );
 
         $payment->setLastTransId($this->_transactionId);
@@ -2658,5 +2659,4 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $invoice->sendEmail();
         }
     }
-
 }
