@@ -1,14 +1,14 @@
 
 <?php
     $_coreHelper = $this->helper('core');
-    $frequencyType = [
+    $frequencyType = array(
         'Daily' => 'Day',
         'Weekly' => 'Week',
         'Monthly' => 'Month',
         'Quarterly' => 'Quarter',
         'Biannual' => 'Semester',
         'Yearly' => 'Year'
-    ];
+    );
 
     $parcelamento = $this->getParcelamento();
     $recurrence = $this->getMundipaggRecurrence();

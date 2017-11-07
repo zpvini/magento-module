@@ -278,7 +278,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                             $mundipagg['mundipagg_creditcard_1_1_cc_type_max_installments'] =
                                 $helperInstallments->getMaxInstallments($mundipagg['mundipagg_creditcard_1_1_cc_type']);
                             $this->saveCreditCardAdditionalInformation($mundipagg, $info);
-
                         } catch (Exception $e) {
                             $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
                             $helperLog->error($e->getMessage(), true);
@@ -301,7 +300,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 $this->saveAllAdditionalInformation($mundipagg, $info, $helper);
 
                 $this->validateInstallmentsAmount($mundipagg, $info, $helper, $helperInstallments);
-
             } else {
                 if (isset($mundipagg['method'])) {
                     $info->setAdditionalInformation('PaymentMethod', $mundipagg['method']);
@@ -597,7 +595,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
     public function capture(Varien_Object $payment, $amount)
     {
         $helper = Mage::helper('mundipagg');
-        $captureCase = $helper->issetOr($_POST['invoice']['capture_case'], 'offline');
+        $post = Mage::app()->getRequest()->getPost();
+        $captureCase = $helper->issetOr($post['invoice']['capture_case'], 'offline');
 
         if ($captureCase === 'online') {
             $this->captureOnline($payment);
@@ -1094,7 +1093,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
                             if (count($interestInformation)) {
                                 foreach ($interestInformation as $key => $ii) {
-                                    if (strpos($key, 'partial') !== false) {
+                                    $pos = strpos($key, 'partial');
+                                    if ($pos !== false) {
                                         if ($ii->hasValue()) {
                                             $newInterest += (float) ($ii->getInterest());
                                         }
@@ -2211,7 +2211,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
     private function saveCreditCardAdditionalInformation($mundipagg, $info)
     {
         if (isset($mundipagg['mundipagg_creditcard_1_1_cc_type'])) {
-
             $this->blockNotAllowedInstallments($mundipagg);
 
             $info->setCcType($mundipagg['mundipagg_creditcard_1_1_cc_type'])
@@ -2236,8 +2235,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
     private function blockNotAllowedInstallments($mundipagg)
     {
         if (array_key_exists('mundipagg_creditcard_credito_parcelamento_1_1', $mundipagg)) {
-            if (
-                $mundipagg['mundipagg_creditcard_credito_parcelamento_1_1'] >
+            if ($mundipagg['mundipagg_creditcard_credito_parcelamento_1_1'] >
                 $mundipagg['mundipagg_creditcard_1_1_cc_type_max_installments']
             ) {
                 Mage::throwException(
@@ -2273,7 +2271,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 $posCid === false &&
                 $posHolderName === false
             ) {
-                if (strpos($key, 'cc_type')) {
+                $pos = strpos($key, 'cc_type');
+                if ($pos) {
                     $value = $helper->issuer($value);
                 }
 
@@ -2328,7 +2327,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
                     (float) $totalInstallmentsNew += $value;
                 }
-
             }
 
             // Total Installments from token and Credit Card
@@ -2560,8 +2558,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $quote = $session->getQuote();
         $cart = Mage::getModel('checkout/cart');
         $cartItems = $cart->getItems();
-        foreach ($cartItems as $item)
-        {
+        foreach ($cartItems as $item) {
             $quote->removeItem($item->getId())->save();
         }
         Mage::getSingleton('checkout/session')->clear();
@@ -2605,7 +2602,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $order->setBaseTotalPaid($order->getBaseGrandTotal());
         $order->setTotalPaid($order->getBaseGrandTotal());
         $order->addStatusHistoryComment(
-            'Captured online amount of R$' . $order->getBaseGrandTotal(), 'Pending'
+            'Captured online amount of R$' . $order->getBaseGrandTotal(),
+            'Pending'
         );
 
         $payment->setLastTransId($this->_transactionId);
@@ -2661,5 +2659,4 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $invoice->sendEmail();
         }
     }
-
 }

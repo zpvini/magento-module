@@ -46,7 +46,7 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
         $info = $this->resetInterest($info);
 
         $discount = Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($info->getQuote());
-        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber , $cctype, $info->getQuote()->getGrandTotal() - $discount);
+        $interest = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber, $cctype, $info->getQuote()->getGrandTotal() - $discount);
 
         if ($interest > 0) {
             $interestInformation = array();
@@ -146,9 +146,5 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
                 parent::order($payment, $order->getBaseTotalDue());
                 break;
         }
-
-
-
-
     }
 }

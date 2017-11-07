@@ -177,8 +177,9 @@ class Uecommerce_Mundipagg_Block_Standard_Success extends Mage_Sales_Block_Items
      **/
     public function getBoletoUrl()
     {
-        if (!empty($this->_getData('boleto_url'))) {
-            return $this->_getData('boleto_url');
+        $url = $this->_getData('boleto_url');
+        if ($url) {
+            return $url;
         } else {
             $customerSession = Mage::getSingleton('customer/session');
             $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);

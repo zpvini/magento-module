@@ -38,6 +38,11 @@ class Uecommerce_Mundipagg_Adminhtml_IndexController extends Mage_Adminhtml_Cont
         $this->setUsedModuleName('mundipagg');
     }
 
+    protected function _isAllowed()
+    {
+        return parent::_isAllowed();
+    }
+
     public function installmentsandinterestAction()
     {
         $post = $this->getRequest()->getPost();

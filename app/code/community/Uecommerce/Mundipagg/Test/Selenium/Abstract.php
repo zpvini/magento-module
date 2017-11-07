@@ -375,7 +375,7 @@ class Uecommerce_Mundipagg_Test_Selenium_Abstract extends PHPUnit_Extensions_Sel
     protected function tearDown()
     {
         //$this->deleteCustomerIfExists();
-        print shell_exec('cat ../var/log/Uecommerce_Mundipagg.log');
+        fwrite(STDERR, file_get_contents('../var/log/Uecommerce_Mundipagg.log'));
     }
     public static function initFrontend($code = null)
     {

@@ -125,7 +125,8 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
         parent::order($payment, $order->getBaseTotalDue());
     }
 
-    private function getMundipaggDiscounts($quote) {
+    private function getMundipaggDiscounts($quote)
+    {
         //Recurrence
         $this->getMundipaggDiscountArray(
             Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($quote),
@@ -142,7 +143,8 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
         return $this->mundipaggDiscounts;
     }
 
-    private function getMundipaggDiscountArray($discount, $description, $pct = false){
+    private function getMundipaggDiscountArray($discount, $description, $pct = false)
+    {
         if ($discount > 0 && $discount !== '') {
             $this->mundipaggDiscounts[] = array(
                 'value' => (float) $discount,

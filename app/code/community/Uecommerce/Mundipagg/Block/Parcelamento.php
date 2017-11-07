@@ -46,56 +46,56 @@ class Uecommerce_Mundipagg_Block_Parcelamento extends Mage_Core_Block_Template
         return $this->_parcelamento;
     }
 
-    function getMundipaggRecurrence()
+    public function getMundipaggRecurrence()
     {
         return $this->_mundipagg_recurrence;
     }
 
-    function setMundipaggRecurrence($_mundipagg_recurrence)
+    public function setMundipaggRecurrence($_mundipagg_recurrence)
     {
         $this->_mundipagg_recurrence = $_mundipagg_recurrence;
         return $this;
     }
 
-    function getMundipaggRecurrences()
+    public function getMundipaggRecurrences()
     {
         return $this->_mundipagg_recurrences;
     }
     
-    function getMundipaggFrequency()
+    public function getMundipaggFrequency()
     {
         return $this->_mundipagg_frequency;
     }
 
-    function getMundipaggRecurrenceMix()
+    public function getMundipaggRecurrenceMix()
     {
         return $this->_mundipagg_recurrence_mix;
     }
 
-    function getMundipaggRecurrenceDiscount()
+    public function getMundipaggRecurrenceDiscount()
     {
         return $this->_mundipagg_recurrence_discount;
     }
 
-    function setMundipaggRecurrences($_mundipagg_recurrences)
+    public function setMundipaggRecurrences($_mundipagg_recurrences)
     {
         $this->_mundipagg_recurrences = $_mundipagg_recurrences;
         return $this;
     }
     
-    function setMundipaggFrequency($_mundipagg_frequency)
+    public function setMundipaggFrequency($_mundipagg_frequency)
     {
         $this->_mundipagg_frequency = $_mundipagg_frequency;
         return $this;
     }
 
-    function setMundipaggRecurrenceMix($_mundipagg_recurrence_mix)
+    public function setMundipaggRecurrenceMix($_mundipagg_recurrence_mix)
     {
         $this->_mundipagg_recurrence_mix = $_mundipagg_recurrence_mix;
         return $this;
     }
 
-    function setMundipaggRecurrenceDiscount($_mundipagg_recurrence_discount)
+    public function setMundipaggRecurrenceDiscount($_mundipagg_recurrence_discount)
     {
         $this->_mundipagg_recurrence_discount = $_mundipagg_recurrence_discount;
         return $this;
