@@ -729,7 +729,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             ,'description'=>
                 "Você está utilizando uma versão antiga do módulo de interação Mundipagg(v" . $oldVersion . "). Atualize para a versão v" . $newVersion . "<br>
                 <a href='https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html' target='_blank'>Download Magento Connect</a><br>
-                <a href='https://github.com/mundipagg/Magento.Integracao' target='_blank'>GitHub</a>
+                <a href='https://github.com/mundipagg/magento-module' target='_blank'>GitHub</a>
                 "
             ,'url' =>"https://www.magentocommerce.com/magento-connect/mundipagg-payment-gateway.html"
             ,'is_read' => 0
@@ -753,7 +753,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
 
     private function getRepoVersion()
     {
-        $url = "https://api.github.com/repos/mundipagg/Magento.Integracao/releases";
+        $url = "https://api.github.com/repos/mundipagg/magento-module/releases";
         $ch = curl_init();
 
         // Header
@@ -766,6 +766,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         $_response = curl_exec($ch);
 
         if (curl_errno($ch)) {
+            $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
             $helperLog->info(curl_error($ch));
         }
         $response = (json_decode($_response));
