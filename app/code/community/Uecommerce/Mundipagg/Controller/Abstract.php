@@ -72,6 +72,10 @@ class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Fron
 
     protected function getSessionId()
     {
+        if (!$this->isFingerPrintEnabled()) {
+            return '';
+        }
+
         $sessionId = Uecommerce_Mundipagg_Model_Customer_Session::getSessionId();
 
         if (is_null($sessionId) || $sessionId == false || empty($sessionId)) {
@@ -80,5 +84,10 @@ class Uecommerce_Mundipagg_Controller_Abstract extends Mage_Core_Controller_Fron
         }
 
         return $sessionId;
+    }
+
+    private function isFingerPrintEnabled()
+    {
+        return Mage::getStoreConfig('payment/mundipagg_standard/fingerprint') == 1;
     }
 }
