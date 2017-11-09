@@ -106,7 +106,6 @@ $standard = Mage::getModel('mundipagg/standard');
                 break;
 
             case 'mundipagg_boleto' :
-
                     if (version_compare(Mage::getVersion(), '1.5.0', '<')) {
                         $transactionType = 'payment';
                     } else {
@@ -129,6 +128,8 @@ $standard = Mage::getModel('mundipagg/standard');
                             $barcode = $txDetail['Barcode'];
                         }
                     }
+
+                    $boletoUrl = $_order->getPayment()->getAdditionalInformation('BoletoUrl');
                     echo $helper->__('Nosso Número') . ": " . "<b>" . $nossoNumero . "</b><br>";
                     echo $helper->__('Código de Barras') . ":" . $barcode . "<br>";
                     echo "<a href='" . $boletoUrl . "' target='_blank'>" . $helper->__('Print boleto') . "</a><br>";
