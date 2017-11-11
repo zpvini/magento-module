@@ -57,6 +57,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             } else {
                 $creditCardOperationEnum = $standard->getCreditCardOperationEnum();
             }
+
             foreach ($data['payment'] as $i => $paymentData) {
                 $creditcardTransactionData = new stdclass();
                 $creditcardTransactionData->CreditCard = new stdclass();

@@ -2566,24 +2566,24 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
     private function formatPaymentRequest($data, $method, $postData, $helper, $mundipaggData, $order, $taxvat)
     {
+        $data2 = array();
+
         // 1 or more Credit Cards Payment
-        if ($method != 'mundipagg_boleto' &&
-            $method != 'mundipagg_debit'
-        ) {
-            $data = $this->doCreditCardsPayment($method, $postData, $helper, $mundipaggData, $order, $taxvat);
+        if ($method != 'mundipagg_boleto' && $method != 'mundipagg_debit') {
+            $data2 = $this->doCreditCardsPayment($method, $postData, $helper, $mundipaggData, $order, $taxvat);
         }
 
         // Boleto Payment
         if ($method == 'mundipagg_boleto') {
-            $data = $this->doBoletoPayment($data, $postData, $taxvat);
+            $data2 = $this->doBoletoPayment($data, $postData, $taxvat);
         }
 
         // Debit Payment
         if ($method == 'mundipagg_debit') {
-            $data = $this->doDebitPayment($data, $postData, $mundipaggData, $taxvat);
+            $data2 = $this->doDebitPayment($data, $postData, $mundipaggData, $taxvat);
         }
 
-        return $data;
+        return array_merge($data, $data2);
     }
 
     private function orderCreditCard($order, $creditCardTransactionResultCollection, $payment, $transactionType)
