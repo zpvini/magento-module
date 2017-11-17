@@ -919,6 +919,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $helper = Mage::helper('mundipagg');
             $session = Mage::getSingleton('checkout/session');
             $mundipaggData = $session->getMundipaggData();
+            $orderIncrementId = $order->getIncrementId();
+            $logLabel = "Order #{$orderIncrementId}";
 
             //Post data
             $postData = Mage::app()->getRequest()->getPost();
