@@ -21,6 +21,56 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         parent::_construct();
     }
 
+    public function getHolderNameByInstantBuyKey($instantBuyKey)
+    {
+        $headers = array(
+            'Content-Type: application/json',
+            'Accept: application/json',
+            "MerchantKey: {$this->modelStandard->getMerchantKey()}"
+        );
+
+        $url = $this->getInstantBuyKeyUrl($instantBuyKey);
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $responseRaw = curl_exec($ch);
+
+        curl_close($ch);
+
+        $responseData = json_decode($responseRaw, true);
+        $holderName = $responseData['CreditCardDataCollection'][0]['HolderName'];
+
+        return $holderName;
+    }
+
+    private function getInstantBuyKeyUrl($instantBuyKey)
+    {
+        switch ($this->getEnvironment()) {
+            case 'localhost':
+            case 'development':
+            case 'staging':
+            default:
+                $environment = 'Staging';
+                break;
+            case 'production':
+                $environment = 'Production';
+                break;
+        }
+
+        $storeId = Mage::app()->getStore()->getStoreId();
+
+        // all this extra code because we store the url with the endpoint hardcoded :(
+        $url = trim($this->getConfigData('apiUrl' . $environment, $storeId));
+        $url = rtrim($url, '/');
+        $pos = strrpos($url, '/');
+
+        return substr($url, 0, $pos) . "/CreditCard/{$instantBuyKey}";
+    }
+
     /**
      * Credit Card Transaction
      */
