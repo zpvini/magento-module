@@ -1743,6 +1743,16 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                     foreach ($value as $key2 => $value2) {
                         $transaction->setAdditionalInformation($key2, htmlspecialchars_decode($value2));
                         $payment->setAdditionalInformation($num . '_' . $key2, htmlspecialchars_decode($value2));
+
+                        if ($key2 === 'InstantBuyKey') {
+                            $api = Mage::getModel('mundipagg/api');
+                            $holderName = $api->getHolderNameByInstantBuyKey($value2);
+
+                            $payment->setAdditionalInformation(
+                                $num . '_HolderName',
+                                htmlspecialchars_decode($holderName)
+                            );
+                        }
                     }
                 }
             }
