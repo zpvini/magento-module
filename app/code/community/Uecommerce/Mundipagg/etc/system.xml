@@ -776,7 +776,7 @@
                                 <![CDATA[Texto sobre as instruções caixa customizado por você que irá aparecer nos seus Boletos Bancários]]></comment>
                         </instrucoes_caixa>
                         <boleto_discount_value translate="label">
-                            <label>Valor de desconto para pagamento com boleto(%)</label>
+                            <label><![CDATA[Valor de desconto para pagamento com boleto(%)<br /><span style='color:red'>Esta opção será descontinuada. Por favor, utilize a regra de desconto padrão do Magento.</span>]]></label>
                             <frontend_type>text</frontend_type>
                             <sort_order>52</sort_order>
                             <show_in_default>1</show_in_default>
@@ -785,7 +785,7 @@
                             <comment>Defina a porcentagem caso deseje dar desconto para pagamento com boleto.</comment>
                         </boleto_discount_value>
                         <boleto_discount_message translate="label">
-                            <label>Mensagem de desconto para pagamento com boleto</label>
+                            <label><![CDATA[Mensagem de desconto para pagamento com boleto.<br /><span style='color:red'>Esta opção será descontinuada. Por favor, utilize a regra de desconto padrão do Magento.</span>]]></label>
                             <frontend_type>text</frontend_type>
                             <sort_order>53</sort_order>
                             <show_in_default>1</show_in_default>
