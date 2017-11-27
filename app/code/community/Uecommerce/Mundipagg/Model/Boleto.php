@@ -54,6 +54,7 @@ class Uecommerce_Mundipagg_Model_Boleto extends Uecommerce_Mundipagg_Model_Stand
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
 
         $mundipaggDiscounts = $this->getMundipaggDiscounts($info->getQuote());
+        $mundipaggDiscounts = $mundipaggDiscounts === null ? array() : $mundipaggDiscounts;
 
         foreach ($mundipaggDiscounts as $discount) {
             foreach ($info->getQuote()->getAllAddresses() as $address) {
