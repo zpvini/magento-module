@@ -26,7 +26,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $headers = array(
             'Content-Type: application/json',
             'Accept: application/json',
-            "MerchantKey: {$this->modelStandard->getMerchantKey()}"
+            "MerchantKey: {$this->modelStandard->getMerchantKey()}.6656656"
         );
 
         try {
@@ -45,13 +45,17 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $responseData = json_decode($responseRaw, true);
             $holderName = $responseData['CreditCardDataCollection'][0]['HolderName'];
 
-            return $holderName;
+            if ($holderName) {
+                return $holderName;
+            }
+
+            Mage::throwException("Unable to get current credit card holder name by instant buy key");
 
         } catch (Exception $e) {
             $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-            $helperLog->error($e, true);
+            $helperLog->error($e->getMessage(), true);
 
-            return '';
+            return 'Failed';
         }
 
     }
