@@ -29,22 +29,35 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             "MerchantKey: {$this->modelStandard->getMerchantKey()}"
         );
 
-        $url = $this->getInstantBuyKeyUrl($instantBuyKey);
+        try {
+            $url = $this->getInstantBuyKeyUrl($instantBuyKey);
 
-        $ch = curl_init();
+            $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $responseRaw = curl_exec($ch);
+            $responseRaw = curl_exec($ch);
 
-        curl_close($ch);
+            curl_close($ch);
 
-        $responseData = json_decode($responseRaw, true);
-        $holderName = $responseData['CreditCardDataCollection'][0]['HolderName'];
+            $responseData = json_decode($responseRaw, true);
+            $holderName = $responseData['CreditCardDataCollection'][0]['HolderName'];
 
-        return $holderName;
+            if ($holderName) {
+                return $holderName;
+            }
+
+            Mage::throwException("Unable to get current credit card holder name by instant buy key");
+
+        } catch (Exception $e) {
+            $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+            $helperLog->error($e->getMessage(), true);
+
+            return 'Failed';
+        }
+
     }
 
     private function getInstantBuyKeyUrl($instantBuyKey)
