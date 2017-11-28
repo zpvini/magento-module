@@ -26,7 +26,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $headers = array(
             'Content-Type: application/json',
             'Accept: application/json',
-            "MerchantKey: {$this->modelStandard->getMerchantKey()}.6656656"
+            "MerchantKey: {$this->modelStandard->getMerchantKey()}"
         );
 
         try {
