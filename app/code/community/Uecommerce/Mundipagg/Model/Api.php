@@ -2062,11 +2062,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     private function getCreditCardOperation($approvalRequest, $standard)
     {
         if ($approvalRequest === 'partial') {
-            $creditCardOperation = 'AuthOnly';
-        } else {
-            $creditCardOperation = $standard->getCreditCardOperationEnum();
+            return 'AuthOnly';
         }
-
-        return $creditCardOperation;
+        return $standard->getCreditCardOperationEnum();
     }
 }
