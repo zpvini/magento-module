@@ -57,7 +57,7 @@ class Uecommerce_Mundipagg_Model_Debit extends Uecommerce_Mundipagg_Model_Standa
         $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
         $info = $this->resetInterest($info);
         $discount = Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($info->getQuote());
-        $interest = '';
+        $interest = 0;
         foreach ($info->getQuote()->getAllAddresses() as $address) {
             $grandTotal = $address->getGrandTotal();
             $messages = array();
