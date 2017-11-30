@@ -115,11 +115,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $num = $helper->getCreditCardsNumber($data['payment_method']);
             $installmentCount = 1;
             $approvalRequest = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
-            if ($num > 1 || $approvalRequest === 'partial') {
-                $creditCardOperationEnum = 'AuthOnly';
-            } else {
-                $creditCardOperationEnum = $standard->getCreditCardOperationEnum();
-            }
+
+            $creditCardOperationEnum = $this->getCreditCardOperation($approvalRequest, $standard);
 
             foreach ($data['payment'] as $i => $paymentData) {
                 $creditcardTransactionData = new stdclass();
@@ -2054,5 +2051,22 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             return $result;
         }
         return false;
+    }
+
+    /**
+     * Decide what credit card operation will be used
+     * @param $approvalRequest
+     * @param $standard
+     * @return string
+     */
+    private function getCreditCardOperation($approvalRequest, $standard)
+    {
+        if ($approvalRequest === 'partial') {
+            $creditCardOperation = 'AuthOnly';
+        } else {
+            $creditCardOperation = $standard->getCreditCardOperationEnum();
+        }
+
+        return $creditCardOperation;
     }
 }
