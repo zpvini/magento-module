@@ -1,6 +1,4 @@
 <?php
-
-
 use Behat\Mink\Exception\ResponseTextException;
 use Behat\MinkExtension\Context\MinkContext;
 
@@ -11,10 +9,10 @@ class FeatureContext extends MinkContext
 {
     /** @var Dotenv\Dotenv  */
     private static $dotenv = null;
-
     
     /** @BeforeScenario */
-    public function loadEnvironment() {
+    public function loadEnvironment()
+    {
         if(self::$dotenv === null){
             self::$dotenv =
                 new Dotenv\Dotenv(__DIR__);
@@ -23,9 +21,6 @@ class FeatureContext extends MinkContext
         self::$dotenv->required('BASE_URL');
         $this->setMinkParameter('base_url', getenv('BASE_URL'));    
     }
-
-       
-    //
 
     /**
      * Based on example from http://docs.behat.org/en/v2.5/cookbook/using_spin_functions.html
@@ -49,10 +44,8 @@ class FeatureContext extends MinkContext
             usleep(100000);
         }while(time() < $startTime + $wait);
 
-        $backtrace = debug_backtrace();
         throw new Exception(
-            "Timeout ($wait) thrown by " . $backtrace[1]['class'] . "::" . $backtrace[1]['function'] . "()\n" .
-            $backtrace[1]['file'] . ", line " . $backtrace[1]['line']
+            "Timeout: $wait seconds."
         );
     }
 
@@ -68,21 +61,19 @@ class FeatureContext extends MinkContext
      */
     public function iFillInWithEnvironmentValue($field, $enviromentVar)
     {
-
         $field = $this->fixStepArgument($field);
         $environment = $this->fixStepArgument($field);
+
         if(self::$dotenv === null) {
-          self::$dotenv =
-              new Dotenv\Dotenv(__DIR__);
-          self::$dotenv->overload();
+            self::$dotenv =
+                new Dotenv\Dotenv(__DIR__);
+            self::$dotenv->overload();
         }
 
         self::$dotenv->required($environment);
-
         $value = getenv($environment);
 
         $this->getSession()->getPage()->fillField($field, $value);
-
     }
 
     /**
@@ -91,17 +82,13 @@ class FeatureContext extends MinkContext
     public function clickInElement($element)
     {
         $session = $this->getSession();
-
         $locator = $this->fixStepArgument($element);
         $xpath = $session->getSelectorsHandler()->selectorToXpath('css', $locator);
-        $element = $this->getSession()->getPage()->find(
-            'xpath',
-            $xpath
-        );
+        $element = $this->getSession()->getPage()->find('xpath',$xpath);
         if (null === $element) {
             throw new \InvalidArgumentException(sprintf('Could not find element'));
         }
-        //var_dump($element->getAttribute('title'));
+
         $element->click();
     }
 
@@ -156,19 +143,14 @@ class FeatureContext extends MinkContext
 
         $locator = $this->fixStepArgument($element);
         $xpath = $session->getSelectorsHandler()->selectorToXpath('css', $locator);
-        $element = $this->getSession()->getPage()->find(
-            'xpath',
-            $xpath
-        );
+        $element = $this->getSession()->getPage()->find('xpath',$xpath);
         if (null === $element) {
             throw new \InvalidArgumentException(sprintf('Could not find element'));
         }
 
-
         $this->spin(function() use ($element) {
             try {
                 return $element->isVisible();
-                //return true;
             }
             catch(ResponseTextException $e) {
                 // NOOP
@@ -177,29 +159,22 @@ class FeatureContext extends MinkContext
         });
     }
 
-
     /**
      * @when /^(?:|I )follow the element "(?P<element>(?:[^"]|\\")*)" href$/
      */
-    public function iFollowTheElementHref($element) {
-
+    public function iFollowTheElementHref($element)
+    {
         $session = $this->getSession();
 
         $locator = $this->fixStepArgument($element);
         $xpath = $session->getSelectorsHandler()->selectorToXpath('css', $locator);
-        $element = $this->getSession()->getPage()->find(
-            'xpath',
-            $xpath
-        );
+        $element = $this->getSession()->getPage()->find('xpath',$xpath);
         if (null === $element) {
             throw new \InvalidArgumentException(sprintf('Could not find element'));
         }
-        //var_dump($element);
 
         $href = $element->getAttribute('href');
         $this->visit($href);
-
-
     }
 
     /**
@@ -222,5 +197,3 @@ class FeatureContext extends MinkContext
         });
     }
 }
-    
-
