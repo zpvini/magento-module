@@ -1,0 +1,9 @@
+# behat.yml
+# based on http://docs.behat.org/en/v2.5/cookbook/behat_and_mink.html 
+default:
+    extensions:
+        Behat\MinkExtension\Extension:
+            goutte: ~
+            selenium2:
+                browser: chrome
+

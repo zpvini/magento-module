@@ -1,1 +1,4 @@
 vendor/
+features/*.swp
+features/bootstrap/*.swp
+features/bootstrap/.env
