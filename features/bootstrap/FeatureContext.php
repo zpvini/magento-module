@@ -10,6 +10,9 @@ class FeatureContext extends MinkContext
     /** @var Dotenv\Dotenv  */
     private static $dotenv = null;
     
+    /** @var Behat\Gherkin\Node\StepNode */
+    private $currentStep = null;
+    
     /** @BeforeScenario */
     public function loadEnvironment()
     {
@@ -21,6 +24,56 @@ class FeatureContext extends MinkContext
         self::$dotenv->required('BASE_URL');
         $this->setMinkParameter('base_url', getenv('BASE_URL'));    
     }
+    /** @BeforeStep */
+    public function beforeStep($event)
+    { 
+        $this->currentStep  = $event->getStep();
+    }
+    /**
+    * Show an animation when waiting for a step
+    * @param int $remaning Amount in seconds remaing on wait.
+    * @param float $interval in seconds to update animation frame.
+    */
+    private function spinAnimation($remaining = null, $interval = 0.1) {
+        static $frameId = null;
+        $currentTime = microtime(true);
+        static $lastUpdate = null;
+        
+        if($frameId === null) {
+            $frameId = 0;
+        }
+
+        if($lastUpdate === null) {
+            $lastUpdate = $currentTime;
+        }
+       
+        if($currentTime - $lastUpdate < $interval) {
+            return;
+        }
+        $lastUpdate = $currentTime;
+
+        $frame = '|';
+        switch($frameId) {
+            default: $frameId = 0;
+            case 0: $frame = '|'; break;
+            case 1: $frame = '\\'; break;
+            case 2: $frame = '--'; break;
+            case 3: $frame = '/'; break;
+
+        } 
+        $frameId++;
+
+        if($this->currentStep !== null) {
+
+            print "'" . $this->currentStep->getText() . "' - ";
+        }
+        if($remaining !== null) {
+            print "$remaining seconds remaining...  ";
+        }
+        print "$frame             \r";  
+        flush();
+    }
+
 
     /**
      * Based on example from http://docs.behat.org/en/v2.5/cookbook/using_spin_functions.html
@@ -42,6 +95,7 @@ class FeatureContext extends MinkContext
                 //do nothing;             
             }
             usleep(100000);
+            $this->spinAnimation($wait - (time() - $startTime) );
         }while(time() < $startTime + $wait);
 
         throw new Exception(
