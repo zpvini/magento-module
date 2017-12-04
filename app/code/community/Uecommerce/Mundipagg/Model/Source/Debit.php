@@ -21,8 +21,7 @@ class Uecommerce_Mundipagg_Model_Source_Debit
           '237' => 'Bradesco',
           '341' => 'Itau',
           'VBV' => 'VBV',
-          'cielo_mastercard' => 'Mastercard',
-          'cielo_visa' => 'Visa',
+          'Cielo' => 'Cielo'
         );
     }
 }
