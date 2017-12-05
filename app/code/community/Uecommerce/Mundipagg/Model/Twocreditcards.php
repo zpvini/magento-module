@@ -160,14 +160,32 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
      */
     public function initialize($paymentAction, $stateObject)
     {
-        $this->setCreditCardOperationEnum('AuthAndCapture');
-        
+        $this->switchCreditCardOperation();
         $payment = $this->getInfoInstance();
         $order = $payment->getOrder();
 
         parent::authorize($payment, $order->getBaseTotalDue());
-        
+
         $stateObject->setState($order->getState());
         $stateObject->setStatus($order->getStatus());
     }
+
+    /**
+     * Switch credit card operation combobox string to
+     * credit card operation enum
+     * @return string
+     */
+    private function switchCreditCardOperation()
+    {
+        $operation = Mage::getStoreConfig('payment/mundipagg_standard/payment_action');
+
+        if ($operation === "authorize") {
+            $this->setCreditCardOperationEnum('AuthOnly');
+            return;
+        }
+
+        $this->setCreditCardOperationEnum('AuthAndCapture');
+        return;
+    }
+
 }
