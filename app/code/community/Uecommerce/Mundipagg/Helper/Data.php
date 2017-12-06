@@ -598,4 +598,55 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
 
         return $result;
     }
+
+    /**
+     * Returns the correct UF code of a given CEP.
+     *
+     * @param string $cep The CEP
+     * @return string the UF
+     */
+    public function getUFByCEP($cep) {
+
+        $region = substr($cep,0,5);
+        $region = intval($region);
+
+        //based on https://thiagorodrigo.com.br/artigo/cep-brasil-lista-de-cep-por-estados-capitais-e-interior/
+        $regions = [
+            'SP' => [1000,19999],
+            'RJ' => [20000,28999],
+            'ES' => [29000,29999],
+            'MG' => [30000,39999],
+            'BA' => [40000,48999],
+            'SE' => [49000,49999],
+            'PE' => [50000,56999],
+            'AL' => [57000,57999],
+            'PB' => [58000,58999],
+            'RN' => [59000,59999],
+            'CE' => [60000,63999],
+            'PI' => [64000,64999],
+            'MA' => [65000,65999],
+            'PA' => [66000,68899],
+            'AP' => [68900,68999],
+            'AM' => [69400,69899],
+            'RR' => [69300,69389],
+            'AC' => [69900,69999],
+            'DF' => [70000,73699],
+            'GO' => [72800,76799],
+            'TO' => [77000,77995],
+            'MT' => [78000,78899],
+            'RO' => [78900,78999],
+            'MS' => [79000,79999],
+            'PR' => [80000,87999],
+            'SC' => [88000,89999],
+            'RS' => [90000,99999],
+        ];
+
+        foreach($regions as $uf => $range) {
+            if(($range[0] <= $region) && ($region <= $range[1])){
+                return $uf;
+            }
+        }
+
+        return 'CEP INVÁLIDO';
+    }
 }

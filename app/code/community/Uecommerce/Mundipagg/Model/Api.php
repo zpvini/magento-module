@@ -699,10 +699,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
         $billingAddress = $order->getBillingAddress();
         $street = $billingAddress->getStreet();
+        $zipCode = preg_replace('[\D]', '', $billingAddress->getPostcode());
         $regionCode = $billingAddress->getRegionCode();
         if ($billingAddress->getRegionCode() == '') {
             $regionCode = 'RJ';
         }
+
+        if($billingAddress->getCountry() == 'BR') {
+            $regionCode = Mage::helper('mundipagg')->getUfByCep($zipCode);
+        }
+
         $telephone = Mage::helper('mundipagg')->applyTelephoneMask($billingAddress->getTelephone());
         if ($billingAddress->getTelephone() == '') {
             $telephone = '55(21)88888888';
@@ -759,7 +765,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $address['Number'] = isset($street[1]) ? $street[1] : '0';
         $address['State'] = $regionCode;
         $address['Street'] = isset($street[0]) ? $street[0] : 'xxx';
-        $address['ZipCode'] = preg_replace('[\D]', '', $billingAddress->getPostcode());
+        $address['ZipCode'] = $zipCode;
         $_request["Buyer"]["BuyerAddressCollection"] = array();
         $_request["Buyer"]["BuyerAddressCollection"] = array($address);
         return $_request["Buyer"];
