@@ -610,7 +610,6 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
         $region = substr($cep,0,5);
         $region = intval($region);
 
-        //based on https://thiagorodrigo.com.br/artigo/cep-brasil-lista-de-cep-por-estados-capitais-e-interior/
         $regions = [
             'SP' => [1000,19999],
             'RJ' => [20000,28999],
@@ -641,8 +640,8 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
             'RS' => [90000,99999]
         ];
 
-        foreach($regions as $uf => $range) {
-            if(($range[0] <= $region) && ($region <= $range[1])) {
+        foreach ($regions as $uf => $range) {
+            if (($range[0] <= $region) && ($region <= $range[1])) {
                 return $uf;
             }
         }

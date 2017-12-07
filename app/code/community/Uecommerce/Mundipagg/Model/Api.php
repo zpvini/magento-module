@@ -705,7 +705,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $regionCode = 'RJ';
         }
 
-        if($billingAddress->getCountry() == 'BR') {
+        if ($billingAddress->getCountry() == 'BR') {
             $regionCode = Mage::helper('mundipagg')->getUfByCep($zipCode);
         }
 
@@ -765,7 +765,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $address['Number'] = isset($street[1]) ? $street[1] : '0';
         $address['State'] = $regionCode;
         $address['Street'] = isset($street[0]) ? $street[0] : 'xxx';
-        if(strlen($address['Number']) > 8) {
+        if (strlen($address['Number']) > 8) {
             $address['Street'] .= ", " . $address['Number'];
             $address['Number'] = '0';
         }
