@@ -765,6 +765,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $address['Number'] = isset($street[1]) ? $street[1] : '0';
         $address['State'] = $regionCode;
         $address['Street'] = isset($street[0]) ? $street[0] : 'xxx';
+        if(strlen($address['Number']) > 8) {
+            $address['Street'] .= ", " . $address['Number'];
+            $address['Number'] = '0';
+        }
         $address['ZipCode'] = $zipCode;
         $_request["Buyer"]["BuyerAddressCollection"] = array();
         $_request["Buyer"]["BuyerAddressCollection"] = array($address);
