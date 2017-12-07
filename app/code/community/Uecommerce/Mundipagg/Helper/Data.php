@@ -605,8 +605,8 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
      * @param string $cep The CEP
      * @return string the UF
      */
-    public function getUFByCEP($cep) {
-
+    public function getUFByCEP($cep)
+    {
         $region = substr($cep,0,5);
         $region = intval($region);
 
@@ -638,11 +638,11 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
             'MS' => [79000,79999],
             'PR' => [80000,87999],
             'SC' => [88000,89999],
-            'RS' => [90000,99999],
+            'RS' => [90000,99999]
         ];
 
         foreach($regions as $uf => $range) {
-            if(($range[0] <= $region) && ($region <= $range[1])){
+            if(($range[0] <= $region) && ($region <= $range[1])) {
                 return $uf;
             }
         }
