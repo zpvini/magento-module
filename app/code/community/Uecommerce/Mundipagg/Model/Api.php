@@ -779,13 +779,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      */
     public function cartData($order, $data, $_request, $standard) {
         $baseGrandTotal = round($order->getBaseGrandTotal(), 2);
-        $baseDiscountAmount = round($order->getBaseDiscountAmount(), 2);
-        if (abs($order->getBaseDiscountAmount()) > 0) {
-            $totalWithoutDiscount = $baseGrandTotal + abs($baseDiscountAmount);
-            $discount = round(($baseGrandTotal / $totalWithoutDiscount), 4);
-        } else {
-            $discount = 1;
-        }
+        $baseDiscountAmount = round($order->getBaseDiscountAmount(), 2);       
+        $discount = 1;
         $shippingDiscountAmount = round($order->getShippingDiscountAmount(), 2);
         if (abs($shippingDiscountAmount) > 0) {
             $totalShippingWithoutDiscount = round($order->getBaseShippingInclTax(), 2);
@@ -1948,7 +1943,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $deliveryAddress = $request['ShoppingCart']['DeliveryAddress'];
         unset($request['ShoppingCart']['DeliveryAddress']);
         $request['DeliveryAddress'] = $deliveryAddress;
-        $request['ShoppingCart']['ShoppingCartItemCollection'][0]['DiscountAmountInCents'] = 0;
+        $request['ShoppingCart']['ShoppingCartItemCollection'][0]['DiscountAmountInCents'] =
+            abs(round($order->getBaseDiscountAmount(), 2) * 100) -
+                abs(round($order->getShippingDiscountAmount(), 2) * 100);
         return $request;
     }
     /**
