@@ -379,17 +379,22 @@ function verify_cc_expiration_date(v, elm) {
 }
 
 function show_cvv_card_on_file(num, c) {
-    document.getElementById('cvv_card_on_file_field_' + num + '_' + c).hidden = false;
+    console.log('habilita');
     document.getElementById('card_on_file_cvv_' + num + '_' + c).removeAttribute("disabled");
+    document.getElementById('cvv_card_on_file_field_' + num + '_' + c).hidden = false;
+    document.getElementById('card_on_file_cvv_' + num + '_' + c).classList.add('required-entry');
 }
 
 function hide_cvv_card_on_file(num, c) {
+    console.log('desabilita');
     document.getElementById('cvv_card_on_file_field_' + num + '_' + c).hidden = true;
-    document.getElementById('card_on_file_cvv_' + num + '_' + c).setAttribute("disabled", "true");
+    document.getElementById('card_on_file_cvv_' + num + '_' + c).removeAttribute("disabled");
+    document.getElementById('card_on_file_cvv_' + num + '_' + c).classList.remove('required-entry');
 }
 
 function token_or_not(num, c, field) {
     var type = $$('input[name="payment\\[method\\]"]:checked').first().value;
+    console.log('token_or_not');
 
     if (document.getElementById(type + '_token_' + num + '_' + c).value == 'new') {
         hide_cvv_card_on_file(num, c);

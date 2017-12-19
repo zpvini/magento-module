@@ -255,7 +255,7 @@ if ($recurrent) {
 
                                         <input type="text"
                                                id="card_on_file_cvv_<?php echo $num; ?>_<?php echo $c?>"
-                                               name="payment[card_on_file_cvv]"
+                                               name="payment[<?php echo $_code; ?>_card_on_file_cvv_<?php echo $num . '_' . $c; ?>]"
                                                title="Informe o CVV"
                                                class="required-entry"
                                                value=""/>
