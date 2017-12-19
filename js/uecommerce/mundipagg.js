@@ -378,10 +378,22 @@ function verify_cc_expiration_date(v, elm) {
     return true;
 }
 
+function show_cvv_card_on_file(num, c) {
+    document.getElementById('cvv_card_on_file_field_' + num + '_' + c).hidden = false;
+    document.getElementById('card_on_file_cvv_' + num + '_' + c).removeAttribute("disabled");
+}
+
+function hide_cvv_card_on_file(num, c) {
+    document.getElementById('cvv_card_on_file_field_' + num + '_' + c).hidden = true;
+    document.getElementById('card_on_file_cvv_' + num + '_' + c).setAttribute("disabled", "true");
+}
+
 function token_or_not(num, c, field) {
     var type = $$('input[name="payment\\[method\\]"]:checked').first().value;
 
     if (document.getElementById(type + '_token_' + num + '_' + c).value == 'new') {
+        hide_cvv_card_on_file(num, c);
+
         /* Remove disable fields */
         $(type + '_' + num + '_' + c + '_cc_type').enable();
         $(type + '_' + num + '_' + c + '_cc_number').enable();
@@ -408,6 +420,8 @@ function token_or_not(num, c, field) {
             $('value_' + num + '_' + c).hide();
         }
     } else {
+        show_cvv_card_on_file(num, c);
+
         /* Disable fields */
         $(type + '_' + num + '_' + c + '_cc_type').disable();
         $(type + '_' + num + '_' + c + '_cc_number').disable();
