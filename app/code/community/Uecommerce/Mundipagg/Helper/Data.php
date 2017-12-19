@@ -648,4 +648,21 @@ class Uecommerce_Mundipagg_Helper_Data extends Mage_Core_Helper_Abstract
 
         return 'CEP INVÁLIDO';
     }
+
+    /**
+     * Send New Invoice Email, if it is enabled.
+     *
+     * @param Mage_Sales_Model_Order_Invoice $invoice
+     * @param Mage_Sales_Model_Order $order
+     * @throws Exception
+     */
+    public function sendNewInvoiceEmail(
+        Mage_Sales_Model_Order_Invoice &$invoice,
+        Mage_Sales_Model_Order $order
+    ) {
+        if (Mage::helper('sales')->canSendNewInvoiceEmail($order->getStoreId())) {
+            $invoice->setEmailSent(true);
+            $invoice->sendEmail();
+        }
+    } 
 }
