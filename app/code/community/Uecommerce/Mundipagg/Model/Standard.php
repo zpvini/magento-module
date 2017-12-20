@@ -2368,9 +2368,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         for ($i = 1; $i <= $num; $i++) {
             // New Credit Card
             if (!isset($postData['payment'][$method . '_token_' . $num . '_' . $i]) ||
-                (isset($postData['payment'][$method . '_token_' . $num . '_' . $i]) &&
-                    $postData['payment'][$method . '_token_' . $num . '_' . $i] == 'new'
-                )
+                (isset($postData['payment'][$method . '_token_' . $num . '_' . $i]) && $postData['payment'][$method . '_token_' . $num . '_' . $i] == 'new')
             ) {
                 if (isset($postData['payment'][$method . '_cc_holder_name_' . $num . '_' . $i])) {
                     $data['payment'][$i]['HolderName'] = $postData['payment'][$method . '_cc_holder_name_' . $num . '_' . $i];
@@ -2459,6 +2457,12 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                     $data['payment'][$i]['TaxDocumentNumber'] = $taxvat;
                 }
             } else { // Token
+                if (isset($postData['payment'][$method . '_card_on_file_cvv_' . $num . '_' . $i])) {
+                    $data['payment'][$i]['cvv'] = $postData['payment'][$method . '_card_on_file_cvv_' . $num . '_' . $i];
+                } else {
+                    $data['payment'][$i]['HolderName'] = '';
+                }
+
                 if (isset($postData['payment'][$method . '_token_' . $num . '_' . $i])) {
                     $data['payment'][$i]['card_on_file_id'] = $postData['payment'][$method . '_token_' . $num . '_' . $i];
                 } else {

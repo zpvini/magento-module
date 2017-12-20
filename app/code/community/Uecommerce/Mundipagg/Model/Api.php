@@ -129,6 +129,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         $creditcardTransactionData->CreditCard->InstantBuyKey = $token->getToken();
                         $creditcardTransactionData->CreditCard->CreditCardBrand = $token->getCcType();
                         /** Tipo de operação: AuthOnly | AuthAndCapture | AuthAndCaptureWithDelay  */
+                        $creditcardTransactionData->CreditCard->SecurityCode = $paymentData['cvv']; // Código de segurança
                         $creditcardTransactionData->CreditCardOperation = $creditCardOperationEnum;
                         $creditcardTransactionData->AmountInCents = intval(strval(($paymentData['AmountInCents']))); // Valor da transação
                         $creditcardTransactionData->InstallmentCount = $paymentData['InstallmentCount']; // Nº de parcelas
