@@ -246,20 +246,25 @@ if ($recurrent) {
                                             <option value="new"><?php echo $this->__('New Credit Card') ?></option>
                                         </select>
                                     </div>
-                                    <br>
-                                    <div id="cvv_card_on_file_field_<?php echo $num; ?>_<?php echo $c?>">
-                                        <label class="required">
-                                            Informe o CVV para o cartão selecionado
-                                            <span class="required">*</span>
-                                        </label><br>
 
-                                        <input type="text"
-                                               id="card_on_file_cvv_<?php echo $num; ?>_<?php echo $c?>"
-                                               name="payment[<?php echo $_code; ?>_card_on_file_cvv_<?php echo $num . '_' . $c; ?>]"
-                                               title="Informe o CVV"
-                                               class="required-entry"
-                                               value=""/>
-                                    </div>
+                                    <!-- Ask for CVV when option is enabled in the admin panel -->
+                                    <?php if (Mage::getStoreConfig('payment/mundipagg_standard/ask_cvv_cardonfile')): ?>
+                                        <div id="cvv_card_on_file_field_<?php echo $num; ?>_<?php echo $c?>">
+                                            <label class="required">
+                                                Informe o CVV para o cartão selecionado
+                                                <span class="required">*</span>
+                                            </label><br>
+
+
+                                            <input type="text"
+                                                   id="card_on_file_cvv_<?php echo $num; ?>_<?php echo $c?>"
+                                                   name="payment[<?php echo $_code; ?>_card_on_file_cvv_<?php echo $num . '_' . $c; ?>]"
+                                                   title="Informe o CVV"
+                                                   class="required-entry"
+                                                   value=""/>
+                                        </div>
+                                    <?php endif ?>
+                                    <br>
                                 </div>
                             </li>
                             <?php if ($num != 1): ?>

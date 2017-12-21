@@ -237,6 +237,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
      */
     public function assignData($data)
     {
+        //Mage::throwException('O que aparece no front?');
+
         if (!($data instanceof Varien_Object)) {
             $data = new Varien_Object($data);
         }
@@ -1493,6 +1495,69 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         }
     }
 
+
+    private function isValidCVVOnInstantBuy($info)
+    {
+        $paymentMethod = $info->getAdditionalInformation('PaymentMethod');
+        $paymentType = $info->getAdditionalInformation('mundipagg_type');
+        if ($paymentMethod !== 'mundipagg_creditcard' && $paymentMethod !== 'mundipagg_twocreditcards') {
+            return true;
+        }
+
+        if (Mage::getStoreConfig('payment/mundipagg_standard/ask_cvv_cardonfile')) {
+            switch ($paymentType) {
+                case '1CreditCards':
+                    $cvv = $info->getAdditionalInformation('mundipagg_creditcard_card_on_file_cvv_1_1');
+                    $token = $info->getAdditionalInformation('mundipagg_creditcard_token_1_1');
+                    $newCard = $token === 'new';
+                    $savedCard = $token === '1';
+
+                    // if card is new OR card is saved and has cvv
+                    if ($newCard || ($savedCard && $cvv)) {
+                        return true;
+                    }
+
+                    return false;
+
+                case '2CreditCards':
+                    $totalSavedCardsUsed = 0;
+
+                    $cvv1 = $info->getAdditionalInformation('mundipagg_twocreditcards_card_on_file_cvv_2_1');
+                    $cvv2 = $info->getAdditionalInformation('mundipagg_twocreditcards_card_on_file_cvv_2_2');
+
+                    $token1 = $info->getAdditionalInformation('mundipagg_twocreditcards_token_2_1');
+                    $token2 = $info->getAdditionalInformation('mundipagg_twocreditcards_token_2_2');
+
+                    $savedCard1 = $token1 === '1';
+                    $savedCard2 = $token2 === '1';
+
+                    // how much save
+                    if ($savedCard1) {
+                        $totalSavedCardsUsed++;
+                    }
+
+                    if ($savedCard2) {
+                        $totalSavedCardsUsed++;
+                    }
+
+                    if ($totalSavedCardsUsed === 0) {
+                        return true;
+                    } elseif ($totalSavedCardsUsed === 1) {
+                        if ($savedCard1) {
+                            return isset($cvv1);
+                        } elseif ($savedCard2) {
+                            return isset($cvv2);
+                        }
+                    } elseif ($totalSavedCardsUsed === 2) {
+                        return $cvv1 && $cvv2;
+                    }
+            }
+        }
+
+        return true;
+    }
+
+
     /**
      * Validate
      */
@@ -1503,12 +1568,19 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $currencyCode = Mage::app()->getStore()->getCurrentCurrencyCode();
 
         if (!in_array($currencyCode, $this->_allowCurrencyCode)) {
-            Mage::throwException(Mage::helper('payment')->__('Selected currency code (' . $currencyCode . ') is not compatabile with Mundipagg'));
+            Mage::throwException(
+                Mage::helper('payment')
+                    ->__('Selected currency code (' . $currencyCode . ') is not compatabile with Mundipagg')
+            );
         }
 
         $info = $this->getInfoInstance();
 
         $errorMsg = array();
+
+        if (!$this->isValidCVVOnInstantBuy($info)) {
+            $errorMsg[] = Mage::helper('payment')->__('Informe o CVV');
+        }
 
         // Check if we are dealing with a new Credit Card
         $isToken = $info->getAdditionalInformation('mundipagg_creditcard_token_1_1');
