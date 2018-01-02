@@ -804,7 +804,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $invoice->save();
 
         $order->setBaseTotalPaid($order->getBaseGrandTotal());
-        $order->setTotalPaid($order->getBaseGrandTotal());
+        $order->setTotalPaid($order->getGrandTotal());
         $order->addStatusHistoryComment('Captured online amount of R$' . $order->getBaseGrandTotal(), false);
         $order->save();
 
@@ -2617,7 +2617,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $this->createInvoice($order, $payment);
 
         $order->setBaseTotalPaid($order->getBaseGrandTotal());
-        $order->setTotalPaid($order->getBaseGrandTotal());
+//        $order->setTotalPaid($order->getBaseGrandTotal());
+        $order->setTotalPaid($order->getGrandTotal());
         $order->addStatusHistoryComment(
             'Captured online amount of R$' . $order->getBaseGrandTotal(),
             'Pending'
