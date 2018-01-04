@@ -255,13 +255,26 @@ if ($recurrent) {
                                                 <span class="required">*</span>
                                             </label><br>
 
+                                            <div class="input-box">
+                                                <div class="v-fix">
+                                                    <input type="text"
+                                                           id="card_on_file_cvv_<?php echo $num; ?>_<?php echo $c?>"
+                                                           name="payment[<?php echo $_code; ?>_card_on_file_cvv_<?php echo $num . '_' . $c; ?>]"
+                                                           title="Informe o CVV"
+                                                           class="required-entry input-text validate-cc-cvn validate-length"
+                                                           style="width: 55px"
+                                                           maxlength="4"
+                                                           onkeydown="remove_characters(event);"
+                                                           autocomplete="off"
+                                                           value=""/>
+                                                </div>
+                                                <div class="v-fix" style="padding-left:6px;">
+                                                    <a href="#" class="cvv-what-is-this">O que é?</a>
+                                                </div>
+                                            </div>
 
-                                            <input type="text"
-                                                   id="card_on_file_cvv_<?php echo $num; ?>_<?php echo $c?>"
-                                                   name="payment[<?php echo $_code; ?>_card_on_file_cvv_<?php echo $num . '_' . $c; ?>]"
-                                                   title="Informe o CVV"
-                                                   class="required-entry"
-                                                   value=""/>
+
+
                                         </div>
                                     <?php endif ?>
                                     <br>
@@ -384,7 +397,8 @@ if ($recurrent) {
                                             name="payment[<?php echo $_code . '_' . $num . '_' . $c; ?>_cc_number]"
                                             title="<?php echo $this->__('Credit Card Number') ?>"
                                             class="input-text required-entry validate-cc-number"
-                                            onkeydown="remove_characters(event);" 
+                                            onkeydown="remove_characters(event);"
+                                            maxlength="19"
                                             value=""
                                         />
                                     </div>
