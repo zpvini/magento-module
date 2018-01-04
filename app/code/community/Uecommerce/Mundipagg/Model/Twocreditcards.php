@@ -71,6 +71,7 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
             $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($data[$this->_code.'_token_2_1']);
             $cctype1 = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cardonFile->getCcType());
             $value1 = $data[$this->_code.'_value_2_1'];
+            $cvv1 = $data[$this->_code . '_card_on_file_cvv_2_1'];
         } else {
             $parcelsNumber1 = $data[$this->_code.'_new_credito_parcelamento_2_1'];
             $value1 = $data[$this->_code.'_new_value_2_1'];
@@ -83,6 +84,7 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
             $cardonFile = Mage::getModel('mundipagg/cardonfile')->load($data[$this->_code.'_token_2_2']);
             $cctype2 = Mage::getSingleton('mundipagg/source_cctypes')->getCcTypeForLabel($cardonFile->getCcType());
             $value2 = $data[$this->_code.'_value_2_2'];
+            $cvv2 = $data[$this->_code . '_card_on_file_cvv_2_2'];
         } else {
             $parcelsNumber2 = $data[$this->_code.'_new_credito_parcelamento_2_2'];
             $value2 = $data[$this->_code.'_new_value_2_2'];
