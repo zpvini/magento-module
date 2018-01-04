@@ -1085,6 +1085,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         return $returnMessage;
                     }
                     if ($return instanceof Mage_Sales_Model_Order_Invoice) {
+                        Mage::helper('mundipagg')->sendNewInvoiceEmail($return,$order);
+
                         $returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
                         $helperLog->info($returnMessage);
                         $helperLog->info("Current order status: " . $order->getStatusLabel());
