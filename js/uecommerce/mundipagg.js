@@ -349,7 +349,7 @@ if (Validation) {
      */
     Validation.creditCartTypes = $H({
         'VI': [new RegExp('^4[0-9]{12}([0-9]{3})?$'), new RegExp('^[0-9]{3}$'), true],
-        'MC': [new RegExp('^5[1-5][0-9]{14}$'), new RegExp('^[0-9]{3}$'), true],
+        'MC': [new RegExp('^5[1-5][0-9]{14}$|^2(?:2(?:2[1-9]|[3-9]\\d)|[3-6]\\d\\d|7(?:[01]\\d|20))-?\\d{4}-?\\d{4}-?\\d{4}$'), new RegExp('^[0-9]{3}$'), true],
         'AE': [new RegExp('^3[47][0-9]{13}$'), new RegExp('^[0-9]{4}$'), true],
         'DI': [false, new RegExp('^[0-9]{3}$'), true],
         'OT': [false, new RegExp('^([0-9]{3}|[0-9]{4})?$'), false],
@@ -378,10 +378,33 @@ function verify_cc_expiration_date(v, elm) {
     return true;
 }
 
+function show_cvv_card_on_file(num, c) {
+    var cvvDiv = document.getElementById('cvv_card_on_file_field_' + num + '_' + c);
+
+    if (cvvDiv) {
+        document.getElementById('card_on_file_cvv_' + num + '_' + c).removeAttribute("disabled");
+        cvvDiv.hidden = false;
+        document.getElementById('card_on_file_cvv_' + num + '_' + c).classList.add('required-entry');
+    }
+}
+
+function hide_cvv_card_on_file(num, c) {
+    var cvvDiv = document.getElementById('cvv_card_on_file_field_' + num + '_' + c);
+
+    if (cvvDiv) {
+        cvvDiv.hidden = true;
+        document.getElementById('card_on_file_cvv_' + num + '_' + c).removeAttribute("disabled");
+        document.getElementById('card_on_file_cvv_' + num + '_' + c).classList.remove('required-entry');
+    }
+}
+
 function token_or_not(num, c, field) {
     var type = $$('input[name="payment\\[method\\]"]:checked').first().value;
+    console.log('token_or_not');
 
     if (document.getElementById(type + '_token_' + num + '_' + c).value == 'new') {
+        hide_cvv_card_on_file(num, c);
+
         /* Remove disable fields */
         $(type + '_' + num + '_' + c + '_cc_type').enable();
         $(type + '_' + num + '_' + c + '_cc_number').enable();
@@ -408,6 +431,8 @@ function token_or_not(num, c, field) {
             $('value_' + num + '_' + c).hide();
         }
     } else {
+        show_cvv_card_on_file(num, c);
+
         /* Disable fields */
         $(type + '_' + num + '_' + c + '_cc_type').disable();
         $(type + '_' + num + '_' + c + '_cc_number').disable();
