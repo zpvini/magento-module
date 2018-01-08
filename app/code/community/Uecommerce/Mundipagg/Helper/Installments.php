@@ -339,13 +339,7 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
                         $grandTotal = $quote->getGrandTotal();
                     }
 
-                    $grandTotalInterest = $grandTotal + ($grandTotal * ($installment[2] / 100));
-
-                    $fee = (round(($grandTotalInterest / $installments), 2) * $installments) - $grandTotal;
-
-                    $balance = round($fee, 2);
-
-                    return $balance;
+                    return round($grandTotal * ($installment[2] / 100), 2);
                 }
             }
         }
