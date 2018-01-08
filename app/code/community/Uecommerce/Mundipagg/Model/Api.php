@@ -1056,7 +1056,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $helperLog->info($errMsg);
                 return $errMsg;
             }
-            $order->addStatusHistoryComment("Transaction update received: {$status}", false);
+            $order->addStatusHistoryComment("MP - Transaction update received: {$status}", false);
             $order->save();
             // transactionKey has been found so we can proceed
             /**
@@ -1165,7 +1165,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         $helperLog->info("{$returnMessageLabel} | unholded.");
                         $order->unhold();
                     }
-                    $order->addStatusHistoryComment('Captured offline amount of R$' . $capturedAmountInCents * 0.01, false);
+                    $order->addStatusHistoryComment('MP - Captured offline amount of R$' . $capturedAmountInCents * 0.01, false);
                     $order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, 'underpaid');
                     $order->setBaseTotalPaid($capturedAmountInCents * 0.01);
                     $order->setTotalPaid($capturedAmountInCents * 0.01);
@@ -1295,7 +1295,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             try {
                 $order->cancel();
                 if (!is_null($comment) && is_string($comment)) {
-                    $order->addStatusHistoryComment($comment);
+                    $order->addStatusHistoryComment("MP - " . $comment);
                 }
                 $order->save();
                 return true;
@@ -1399,7 +1399,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $returnMessageLabel = "Order #{$order->getIncrementId()}";
         if (!$invoice->getTotalQty()) {
             $returnMessage = 'Cannot create an invoice without products.';
-            $order->addStatusHistoryComment($returnMessage, false);
+            $order->addStatusHistoryComment("MP - " . $returnMessage, false);
             $order->save();
             $helperLog->info("{$returnMessageLabel} | {$returnMessage}");
             return $returnMessage;
@@ -1420,7 +1420,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
         $order->setBaseTotalPaid($totalPaid);
         $order->setTotalPaid($totalPaid);
-        $order->addStatusHistoryComment('Captured offline', false);
+        $order->addStatusHistoryComment('MP - Captured offline', false);
         $payment = $order->getPayment();
         $payment->setAdditionalInformation('OrderStatusEnum', $data['OrderStatus']);
         if ($payment->getAdditionalInformation('PaymentMethod') == 'mundipagg_creditcard') {
