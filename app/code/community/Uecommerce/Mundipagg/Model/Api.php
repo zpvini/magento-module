@@ -1059,11 +1059,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $order->addStatusHistoryComment("MP - Transaction update received: {$status}", false);
             $order->save();
             // transactionKey has been found so we can proceed
-            /**
-             * @var $recurrence Uecommerce_Mundiapgg_Model_Recurrency
-             */
-            $recurrence = Mage::getModel('mundipagg/recurrency');
-            $recurrence->checkRecurrencesByOrder($order);
+            
             $statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
             $statusWithError = strtolower($statusWithError);
             $lowerStatus = strtolower($status);
