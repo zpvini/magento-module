@@ -1481,7 +1481,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         $util = new Uecommerce_Mundipagg_Helper_Util();
 
-        $helperLog->debug($util->xmlToJson($_response));
+        $helperLog->info($util->xmlToJson($_response));
         // Return
         return array('result' => simplexml_load_string($_response));
     }
