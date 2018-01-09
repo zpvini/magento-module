@@ -301,8 +301,9 @@ class Uecommerce_Mundipagg_Model_Recurrency extends Varien_Object
         
         // @var $api Uecommerce_Mundipagg_Model_Api
         $api = Mage::getModel('mundipagg/api');
-        
-        $apiTransactions = $api->getTransactionHistory($payment->getAdditionalInformation('OrderKey'));
+
+        $orderKey = $payment->getAdditionalInformation('OrderKey');
+        $apiTransactions = $api->getTransactionHistory($orderKey[0]);
         
         $transactionType = Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH;
         
