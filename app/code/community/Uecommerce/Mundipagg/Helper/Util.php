@@ -24,4 +24,10 @@ class Uecommerce_Mundipagg_Helper_Util extends Mage_Core_Helper_Abstract
 
         return $result;
     }
+
+    public function xmlToJson($xml, $pretty = JSON_PRETTY_PRINT)
+    {
+        $xmlString = simplexml_load_string($xml);
+        return json_encode($xmlString, $pretty);
+    }
 }
