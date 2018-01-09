@@ -807,7 +807,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
         $order->setBaseTotalPaid($order->getBaseGrandTotal());
         $order->setTotalPaid($order->getGrandTotal());
-        $order->addStatusHistoryComment('Captured online amount of R$' . $order->getBaseGrandTotal(), false);
+        $order->addStatusHistoryComment('MP - Captured online amount of R$' . $order->getBaseGrandTotal(), false);
         $order->save();
 
         $this->closeAuthorizationTxns($order);
@@ -1948,7 +1948,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $payment->setSkipOrderProcessing(true);
         $payment->setAdditionalInformation('IntegrationError', Uecommerce_Mundipagg_Model_Api::INTEGRATION_TIMEOUT);
 
-        $comment = Uecommerce_Mundipagg_Model_Api::INTEGRATION_TIMEOUT;
+        $comment = "MP - " . Uecommerce_Mundipagg_Model_Api::INTEGRATION_TIMEOUT;
         $order->addStatusHistoryComment($comment);
         $order->save();
 
@@ -2695,7 +2695,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $order->setBaseTotalPaid($order->getBaseGrandTotal());
         $order->setTotalPaid($order->getGrandTotal());
         $order->addStatusHistoryComment(
-            'Captured online amount of R$' . $order->getBaseGrandTotal(),
+            'MP - Captured online amount of R$' . $order->getBaseGrandTotal(),
             'Pending'
         );
 
