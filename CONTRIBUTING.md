@@ -12,7 +12,7 @@ First off, thanks for taking the time to contribute!
 
 ### Pull Requests
 
-Template [PULLREQUEST-TEMPLATE](PULLREQUEST-TEMPLATE.md)
+Template [PULLREQUEST-TEMPLATE](https://github.com/mundipagg/magento-module/blob/master/.github/PULL_REQUEST_TEMPLATE.md)
 
 ### Git Commit Messages
 
