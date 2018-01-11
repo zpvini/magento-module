@@ -2068,8 +2068,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
         return $standard->getCreditCardOperationEnum();
     }
-
-
+    
     private function getTransaction($entityId, $transactionKeyString)
     {
         /** @var Mage_Sales_Model_Resource_Order_Payment_Transaction_Collection $transactions */
