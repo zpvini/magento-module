@@ -8,6 +8,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     const ORDER_OVERPAID               = "Order overpaid";
     const INTEGRATION_TIMEOUT          = "MundiPagg API timeout, waiting Mundi notification";
     const UNEXPECTED_ERROR             = "Unexpected error";
+
     private $helperUtil;
     private $modelStandard;
     private $debugEnabled;
@@ -1302,11 +1303,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             throw new RuntimeException("Order cannot be canceled.");
         }
     }
+
     /**
      * @param Mage_Sales_Model_Order $order
-     * @param                        $amountToCapture
-     * @param                        $transactionKey
+     * @param $amountToCapture
+     * @param $transactionKey
      * @throws Mage_Core_Exception
+     * @throws Exception
      * @return string
      */
     private function captureTransaction(Mage_Sales_Model_Order $order, $amountToCapture, $transactionKey) {
@@ -1320,21 +1323,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $totalPaid = 0;
         }
         $totalPaid += $amountToCapture;
-        /** @var Mage_Sales_Model_Resource_Order_Payment_Transaction_Collection $transactions */
-        $transactions = Mage::getModel('sales/order_payment_transaction')
-            ->getCollection()
-            ->addAttributeToFilter('order_id', ['eq' => $order->getEntityId()])
-            ->addAttributeToFilter('txn_id', ['eq' => "{$transactionKey}-authorization"]);
-        $transaction = $transactions->getFirstItem();
-        $txnsFound = count($transactions);
-        if (is_null($transactions) || $txnsFound <= 0) {
-            Mage::throwException(self::TRANSACTION_NOT_FOUND);
-        } else if ($txnsFound > 1) {
-            Mage::throwException("More than one transaction for the TransactionKey in the database");
-        }
-        if ($transaction->getIsClosed() == true) {
-            Mage::throwException(self::TRANSACTION_ALREADY_CAPTURED);
-        }
+
+        $entityId = $order->getEntityId();
+
+        $this->validateTransactions($entityId, $transactionKey);
+
         $order->setBaseTotalPaid($totalPaid)
             ->setTotalPaid($totalPaid)
             ->save();
@@ -2074,5 +2067,39 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             return 'AuthOnly';
         }
         return $standard->getCreditCardOperationEnum();
+    }
+
+
+    private function getTransaction($entityId, $transactionKeyString)
+    {
+        /** @var Mage_Sales_Model_Resource_Order_Payment_Transaction_Collection $transactions */
+        $transactions = Mage::getModel('sales/order_payment_transaction')
+            ->getCollection()
+            ->addAttributeToFilter('order_id', ['eq' => $entityId])
+            ->addAttributeToFilter('txn_id', ['eq' => $transactionKeyString]);
+
+        return $transactions->getFirstItem();
+    }
+
+    /**
+     * Throw an exception if the transaction not found.
+     * @param $entityId
+     * @param $transactionKey
+     * @throws Mage_Core_Exception
+     */
+    private function validateTransactions($entityId, $transactionKey)
+    {
+        $transactionAuthorization = $this->getTransaction($entityId, $transactionKey . "-authorization");
+        $transactionOrder = $this->getTransaction($entityId, $transactionKey . "-order");
+
+        if (is_null($transactionAuthorization) && is_null($transactionOrder)) {
+            Mage::throwException(self::TRANSACTION_NOT_FOUND);
+        } else if (count($transactionAuthorization) > 1 || count($transactionOrder) > 1) {
+            Mage::throwException("More than one transaction for the TransactionKey in the database");
+        }
+
+        if ($transactionAuthorization->getIsClosed() || $transactionOrder->getIsClosed()) {
+            Mage::throwException(self::TRANSACTION_ALREADY_CAPTURED);
+        }
     }
 }
