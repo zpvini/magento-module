@@ -1649,15 +1649,24 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         // Close connection
         curl_close($ch);
         $responseData = json_decode($response, true);
+
         $requestObfuscated = $this->hideCustomerData($data);
+
         $requestPretty = $this->helperUtil->jsonEncodePretty($requestObfuscated);
         $responsePretty = $this->helperUtil->jsonEncodePretty($responseData);
+
         $this->clearAntifraudDataFromSession();
+
         // log Request JSON
         $log->info("Request:\n{$requestPretty}\n");
+
         if ($response == 'false') {
             $log->warning("Response: Integration timeout!");
             return false;
+        }
+
+        if(!$responsePretty) {
+            $responsePretty = $response;
         }
         $log->info("Response:\n{$responsePretty}\n");
         return $responseData;
