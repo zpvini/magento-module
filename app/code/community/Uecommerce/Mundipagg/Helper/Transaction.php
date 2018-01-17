@@ -2,6 +2,8 @@
 
 class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
 {
+    const TRANSACTION_ALREADY_CAPTURED = "Transaction already captured";
+
     /**
      * @param Mage_Sales_Model_Order $order
      * @param $amountToCapture
@@ -94,6 +96,7 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
         if ($transactionAuthorization->getIsClosed() || $transactionOrder->getIsClosed()) {
             Mage::throwException(self::TRANSACTION_ALREADY_CAPTURED);
         }
+        return;
     }
 
     public function getTransaction($entityId, $transactionKeyString)

@@ -2,7 +2,6 @@
 
 class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard {
     const TRANSACTION_NOT_FOUND        = "Transaction not found";
-    const TRANSACTION_ALREADY_CAPTURED = "Transaction already captured";
 
     const ORDER_UNDERPAID              = "Order underpaid";
     const ORDER_OVERPAID               = "Order overpaid";
