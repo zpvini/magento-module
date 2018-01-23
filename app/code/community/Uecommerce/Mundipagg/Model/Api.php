@@ -2,8 +2,7 @@
 
 class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard {
     const TRANSACTION_NOT_FOUND        = "Transaction not found";
-    const TRANSACTION_ALREADY_CAPTURED = "Transaction already captured";
-    const TRANSACTION_CAPTURED         = "Transaction captured";
+
     const ORDER_UNDERPAID              = "Order underpaid";
     const ORDER_OVERPAID               = "Order overpaid";
     const INTEGRATION_TIMEOUT          = "MundiPagg API timeout, waiting Mundi notification";
@@ -1063,215 +1062,26 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             
             $statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
             $statusWithError = strtolower($statusWithError);
-            $lowerStatus = strtolower($status);
+
             if (empty($capturedAmountInCents) === false) {
                 $amountToCapture = $capturedAmountInCents * 0.01;
             } else {
                 $amountInCents = null;
             }
-            switch ($lowerStatus) {
-                case 'captured':
-                    try {
-                        $return = $this->captureTransaction($order, $amountToCapture, $transactionKey);
-                    } catch (Exception $e) {
-                        $errMsg = $e->getMessage();
-                        $returnMessage = "OK | #{$orderReference} | {$transactionKey} | ";
-                        $returnMessage .= "Can't capture transaction: {$errMsg}";
-                        $helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        return $returnMessage;
-                    }
-                    if ($return instanceof Mage_Sales_Model_Order_Invoice) {
-                        Mage::helper('mundipagg')->sendNewInvoiceEmail($return,$order);
 
-                        $returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
-                        $helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        return $returnMessage;
-                    }
-                    if ($return === self::TRANSACTION_CAPTURED) {
-                        $returnMessage = "OK | #{$orderReference} | {$transactionKey} | Transaction captured.";
-                        $helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        return $returnMessage;
-                    }
-                    // cannot capture transaction
-                    $returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
-                    $returnMessage .= $return;
-                    $helperLog->info($returnMessage);
-                    $helperLog->info("Current order status: " . $order->getStatusLabel());
-                    return $returnMessage;
-                    break;
-                case 'paid':
-                case 'overpaid':
-                    if ($order->canUnhold()) {
-                        $order->unhold();
-                        $helperLog->info("{$returnMessageLabel} | unholded.");
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                    }
-                    if (!$order->canInvoice()) {
-                        $returnMessage = "OK | {$returnMessageLabel} | Can't create invoice. Transaction status '{$status}' processed.";
-                        $helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        return $returnMessage;
-                    }
-                    // Partial invoice
-                    $epsilon = 0.00001;
-                    if ($order->canInvoice() && abs($order->getGrandTotal() - $capturedAmountInCents * 0.01) > $epsilon) {
-                        $baseTotalPaid = $order->getTotalPaid();
-                        // If there is already a positive baseTotalPaid value it's not the first transaction
-                        if ($baseTotalPaid > 0) {
-                            $baseTotalPaid += $capturedAmountInCents * 0.01;
-                            $order->setTotalPaid(0);
-                        } else {
-                            $baseTotalPaid = $capturedAmountInCents * 0.01;
-                            $order->setTotalPaid($baseTotalPaid);
-                        }
-                        $accOrderGrandTotal = sprintf($order->getGrandTotal());
-                        $accBaseTotalPaid = sprintf($baseTotalPaid);
-                        // Can invoice only if total captured amount is equal to GrandTotal
-                        if ($accBaseTotalPaid == $accOrderGrandTotal) {
-                            $result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
-                            return $result;
-                        } elseif ($accBaseTotalPaid > $accOrderGrandTotal) {
-                            $order->setTotalPaid(0);
-                            $result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
-                            return $result;
-                        } else {
-                            $order->save();
-                            $returnMessage = "OK | {$returnMessageLabel} | ";
-                            $returnMessage .= "Captured amount isn't equal to grand total, invoice not created.";
-                            $returnMessage .= "Transaction status '{$status}' received.";
-                            $helperLog->info($returnMessage);
-                            $helperLog->info("Current order status: " . $order->getStatusLabel());
-                            return $returnMessage;
-                        }
-                    }
-                    // Create invoice
-                    if ($order->canInvoice() && abs($capturedAmountInCents * 0.01 - $order->getGrandTotal()) < $epsilon) {
-                        $result = $this->createInvoice($order, $data, $order->getGrandTotal(), $status);
-                        return $result;
-                    }
-                    $returnMessage = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
-                    $helperLog->error($returnMessage);
-                    $helperLog->info("Current order status: " . $order->getStatusLabel());
-                    return "KO | {$returnMessage}";
-                    break;
-                case 'underpaid':
-                    if ($order->canUnhold()) {
-                        $helperLog->info("{$returnMessageLabel} | unholded.");
-                        $order->unhold();
-                    }
-                    $order->addStatusHistoryComment('MP - Captured offline amount of R$' . $capturedAmountInCents * 0.01, false);
-                    $order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, 'underpaid');
-                    $order->setBaseTotalPaid($capturedAmountInCents * 0.01);
-                    $order->setTotalPaid($capturedAmountInCents * 0.01);
-                    $order->save();
-                    $returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' processed. Order status updated.";
-                    $helperLog->info($returnMessage);
-                    $helperLog->info("Current order status: " . $order->getStatusLabel());
-                    return $returnMessage;
-                    break;
-                case 'notauthorized':
-                    $helper = Mage::helper('mundipagg');
-                    $grandTotal = $order->getGrandTotal();
-                    $grandTotalInCents = $helper->formatPriceToCents($grandTotal);
-                    $amountInCents = $transactionData['AmountInCents'];
-                    // if not authorized amount equal to order grand total, order must be canceled
-                    if (sprintf($amountInCents) != sprintf($grandTotalInCents)) {
-                        $returnMessage = "OK | {$returnMessageLabel} | Order grand_total not equal to transaction AmountInCents";
-                        $helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        return $returnMessage;
-                    }
-                    try {
-                        // set flag to prevent send back a cancelation to Mundi via API
-                        $this->setCanceledByNotificationFlag($order, true);
-                        $this->tryCancelOrder($order);
-                    } catch (Exception $e) {
-                        $returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
-                        $helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        return $returnMessage;
-                    }
-                    $returnMessage = "OK | {$returnMessageLabel} | Order canceled: total amount not authorized";
-                    $helperLog->info($returnMessage);
-                    $helperLog->info("Current order status: " . $order->getStatusLabel());
-                    return $returnMessage;
-                    break;
-                case 'canceled':
-                case 'refunded':
-                case 'voided':
-                    if ($order->canUnhold()) {
-                        $helperLog->info("{$returnMessageLabel} unholded.");
-                        $order->unhold();
-                    }
-                    $success = false;
-                    $invoices = array();
-                    $canceledInvoices = array();
-                    foreach ($order->getInvoiceCollection() as $invoice) {
-                        // We check if invoice can be refunded
-                        if ($invoice->canRefund()) {
-                            $invoices[] = $invoice;
-                        }
-                        // We check if invoice has already been canceled
-                        if ($invoice->isCanceled()) {
-                            $canceledInvoices[] = $invoice;
-                        }
-                    }
-                    // Refund invoices and Credit Memo
-                    if (!empty($invoices) || !empty($canceledInvoices)) {
-                        $service = Mage::getModel('sales/service_order', $order);
-                        foreach ($invoices as $invoice) {
-                            $this->closeInvoice($invoice);
-                            $this->createCreditMemo($invoice, $service);
-                        }
-                        $this->closeOrder($order);
-                        $success = true;
-                    }
-                    if (empty($invoices) && empty($canceledInvoices)) {
-                        // Cancel order
-                        $order->cancel()->save();
-                        $helperLog->info("{$returnMessageLabel} | Order canceled.");
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        // Return
-                        $success = true;
-                    }
-                    if ($success) {
-                        $returnMessage = "{$returnMessageLabel} | Order status '{$status}' processed.";
-                        $helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        return "OK | {$returnMessage}";
-                    } else {
-                        $returnMessage = "{$returnMessageLabel} | Unable to process transaction status '{$status}'.";
-                        $helperLog->info($returnMessage);
-                        $helperLog->info("Current order status: " . $order->getStatusLabel());
-                        return "KO | {$returnMessage}";
-                    }
-                    break;
-                case 'authorizedpendingcapture':
-                    $returnMessage = "OK | Order #{$order->getIncrementId()} | Transaction status '{$status}' received from post notification.";
-                    $helperLog->info($returnMessage);
-                    $helperLog->info("Current order status: " . $order->getStatusLabel());
-                    return $returnMessage;
-                    break;
-                case $statusWithError:
-                    try {
-                        Uecommerce_Mundipagg_Model_Standard::transactionWithError($order, false);
-                        $returnMessage = "OK | {$returnMessageLabel} | Order changed to WithError status";
-                    } catch (Exception $e) {
-                        $returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
-                    }
-                    $helperLog->info($returnMessage);
-                    $helperLog->info("Current order status: " . $order->getStatusLabel());
-                    return $returnMessage;
-                    break;
-                // For other status we add comment to history
-                default:
-                    $returnMessage = "Order #{$order->getIncrementId()} | unexpected transaction status: {$status}";
-                    $helperLog->info($returnMessage);
-                    return "OK | {$returnMessage}";
-            }
+            return $this->processOrderStatus(
+                $status,
+                $order,
+                $amountToCapture,
+                $transactionKey,
+                $orderReference,
+                $returnMessageLabel,
+                $capturedAmountInCents,
+                $data,
+                $transactionData,
+                $statusWithError);
+
+
         } catch (Exception $e) {
             $returnMessage = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
             //Log error
@@ -1304,75 +1114,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
     }
 
-    /**
-     * @param Mage_Sales_Model_Order $order
-     * @param $amountToCapture
-     * @param $transactionKey
-     * @throws Mage_Core_Exception
-     * @throws Exception
-     * @return string
-     */
-    private function captureTransaction(Mage_Sales_Model_Order $order, $amountToCapture, $transactionKey) {
-        $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-        $log->setLogLabel("#{$order->getIncrementId()} | {$transactionKey}");
-        $totalPaid = $order->getTotalPaid();
-        $grandTotal = $order->getGrandTotal();
-        $transaction = null;
-        $orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
-        if (is_null($totalPaid)) {
-            $totalPaid = 0;
-        }
-        $totalPaid += $amountToCapture;
 
-        $entityId = $order->getEntityId();
-
-        $this->validateTransactions($entityId, $transactionKey);
-
-        $order->setBaseTotalPaid($totalPaid)
-            ->setTotalPaid($totalPaid)
-            ->save();
-        $accTotalPaid = sprintf($totalPaid);
-        $accGrandTotal = sprintf($grandTotal);
-        switch (true) {
-            // total paid equal grand_total, create invoice
-            case $accTotalPaid == $accGrandTotal:
-                try {
-                    $invoice = $orderPayment->orderPaid($order, $this);
-                    return $invoice;
-                } catch (Exception $e) {
-                    Mage::throwException($e->getMessage());
-                }
-                break;
-            // order overpaid
-            case $accTotalPaid > $accGrandTotal:
-                try {
-                    $orderPayment->orderOverpaid($order);
-                } catch (Exception $e) {
-                    Mage::throwException("Cannot set order to overpaid: {$e->getMessage()}");
-                }
-                return self::ORDER_OVERPAID;
-                break;
-            // order underpaid
-            case $accTotalPaid < $accGrandTotal:
-                try {
-                    $orderPayment->orderUnderPaid($order, $amountToCapture);
-                } catch (Exception $e) {
-                    Mage::throwException("Cannot set order to underpaid: {$e->getMessage()}");
-                }
-                $transaction->setOrderPaymentObject($order->getPayment());
-                $transaction->setIsClosed(true)->save();
-                if ($order->getPayment()->getMethod() === 'mundipagg_twocreditcards') {
-                    return self::TRANSACTION_CAPTURED;
-                } else {
-                    return self::ORDER_UNDERPAID;
-                }
-                break;
-            // unexpected situation
-            default:
-                Mage::throwException(self::UNEXPECTED_ERROR);
-                break;
-        }
-    }
     /**
      * Create invoice
      * @todo must be deprecated use Uecommerce_Mundipagg_Model_Order_Payment createInvoice
@@ -2077,37 +1819,203 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
         return $standard->getCreditCardOperationEnum();
     }
-    
-    private function getTransaction($entityId, $transactionKeyString)
+
+    private function processOrderStatus(
+        $status,
+        $order,
+        $amountToCapture,
+        $transactionKey,
+        $orderReference,
+        $returnMessageLabel,
+        $capturedAmountInCents,
+        $data,
+        $transactionData,
+        $statusWithError
+    )
     {
-        /** @var Mage_Sales_Model_Resource_Order_Payment_Transaction_Collection $transactions */
-        $transactions = Mage::getModel('sales/order_payment_transaction')
-            ->getCollection()
-            ->addAttributeToFilter('order_id', ['eq' => $entityId])
-            ->addAttributeToFilter('txn_id', ['eq' => $transactionKeyString]);
+        $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+        $helperOrderStatus = Mage::helper('mundipagg/processOrderStatus');
 
-        return $transactions->getFirstItem();
-    }
-
-    /**
-     * Throw an exception if the transaction not found.
-     * @param $entityId
-     * @param $transactionKey
-     * @throws Mage_Core_Exception
-     */
-    private function validateTransactions($entityId, $transactionKey)
-    {
-        $transactionAuthorization = $this->getTransaction($entityId, $transactionKey . "-authorization");
-        $transactionOrder = $this->getTransaction($entityId, $transactionKey . "-order");
-
-        if (is_null($transactionAuthorization) && is_null($transactionOrder)) {
-            Mage::throwException(self::TRANSACTION_NOT_FOUND);
-        } else if (count($transactionAuthorization) > 1 || count($transactionOrder) > 1) {
-            Mage::throwException("More than one transaction for the TransactionKey in the database");
-        }
-
-        if ($transactionAuthorization->getIsClosed() || $transactionOrder->getIsClosed()) {
-            Mage::throwException(self::TRANSACTION_ALREADY_CAPTURED);
+        switch (strtolower($status)) {
+            case 'captured':
+                return
+                    $helperOrderStatus->
+                    captured(
+                        $order,
+                        $amountToCapture,
+                        $transactionKey,
+                        $orderReference
+                    );
+                break;
+            case 'paid':
+            case 'overpaid':
+                if ($order->canUnhold()) {
+                    $order->unhold();
+                    $helperLog->info("{$returnMessageLabel} | unholded.");
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
+                }
+                if (!$order->canInvoice()) {
+                    $returnMessage = "OK | {$returnMessageLabel} | Can't create invoice. Transaction status '{$status}' processed.";
+                    $helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
+                    return $returnMessage;
+                }
+                // Partial invoice
+                $epsilon = 0.00001;
+                if ($order->canInvoice() && abs($order->getGrandTotal() - $capturedAmountInCents * 0.01) > $epsilon) {
+                    $baseTotalPaid = $order->getTotalPaid();
+                    // If there is already a positive baseTotalPaid value it's not the first transaction
+                    if ($baseTotalPaid > 0) {
+                        $baseTotalPaid += $capturedAmountInCents * 0.01;
+                        $order->setTotalPaid(0);
+                    } else {
+                        $baseTotalPaid = $capturedAmountInCents * 0.01;
+                        $order->setTotalPaid($baseTotalPaid);
+                    }
+                    $accOrderGrandTotal = sprintf($order->getGrandTotal());
+                    $accBaseTotalPaid = sprintf($baseTotalPaid);
+                    // Can invoice only if total captured amount is equal to GrandTotal
+                    if ($accBaseTotalPaid == $accOrderGrandTotal) {
+                        $result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
+                        return $result;
+                    } elseif ($accBaseTotalPaid > $accOrderGrandTotal) {
+                        $order->setTotalPaid(0);
+                        $result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
+                        return $result;
+                    } else {
+                        $order->save();
+                        $returnMessage = "OK | {$returnMessageLabel} | ";
+                        $returnMessage .= "Captured amount isn't equal to grand total, invoice not created.";
+                        $returnMessage .= "Transaction status '{$status}' received.";
+                        $helperLog->info($returnMessage);
+                        $helperLog->info("Current order status: " . $order->getStatusLabel());
+                        return $returnMessage;
+                    }
+                }
+                // Create invoice
+                if ($order->canInvoice() && abs($capturedAmountInCents * 0.01 - $order->getGrandTotal()) < $epsilon) {
+                    $result = $this->createInvoice($order, $data, $order->getGrandTotal(), $status);
+                    return $result;
+                }
+                $returnMessage = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
+                $helperLog->error($returnMessage);
+                $helperLog->info("Current order status: " . $order->getStatusLabel());
+                return "KO | {$returnMessage}";
+                break;
+            case 'underpaid':
+                if ($order->canUnhold()) {
+                    $helperLog->info("{$returnMessageLabel} | unholded.");
+                    $order->unhold();
+                }
+                $order->addStatusHistoryComment('MP - Captured offline amount of R$' . $capturedAmountInCents * 0.01, false);
+                $order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, 'underpaid');
+                $order->setBaseTotalPaid($capturedAmountInCents * 0.01);
+                $order->setTotalPaid($capturedAmountInCents * 0.01);
+                $order->save();
+                $returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' processed. Order status updated.";
+                $helperLog->info($returnMessage);
+                $helperLog->info("Current order status: " . $order->getStatusLabel());
+                return $returnMessage;
+                break;
+            case 'notauthorized':
+                $helper = Mage::helper('mundipagg');
+                $grandTotal = $order->getGrandTotal();
+                $grandTotalInCents = $helper->formatPriceToCents($grandTotal);
+                $amountInCents = $transactionData['AmountInCents'];
+                // if not authorized amount equal to order grand total, order must be canceled
+                if (sprintf($amountInCents) != sprintf($grandTotalInCents)) {
+                    $returnMessage = "OK | {$returnMessageLabel} | Order grand_total not equal to transaction AmountInCents";
+                    $helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
+                    return $returnMessage;
+                }
+                try {
+                    // set flag to prevent send back a cancelation to Mundi via API
+                    $this->setCanceledByNotificationFlag($order, true);
+                    $this->tryCancelOrder($order);
+                } catch (Exception $e) {
+                    $returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
+                    $helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
+                    return $returnMessage;
+                }
+                $returnMessage = "OK | {$returnMessageLabel} | Order canceled: total amount not authorized";
+                $helperLog->info($returnMessage);
+                $helperLog->info("Current order status: " . $order->getStatusLabel());
+                return $returnMessage;
+                break;
+            case 'canceled':
+            case 'refunded':
+            case 'voided':
+                if ($order->canUnhold()) {
+                    $helperLog->info("{$returnMessageLabel} unholded.");
+                    $order->unhold();
+                }
+                $success = false;
+                $invoices = array();
+                $canceledInvoices = array();
+                foreach ($order->getInvoiceCollection() as $invoice) {
+                    // We check if invoice can be refunded
+                    if ($invoice->canRefund()) {
+                        $invoices[] = $invoice;
+                    }
+                    // We check if invoice has already been canceled
+                    if ($invoice->isCanceled()) {
+                        $canceledInvoices[] = $invoice;
+                    }
+                }
+                // Refund invoices and Credit Memo
+                if (!empty($invoices) || !empty($canceledInvoices)) {
+                    $service = Mage::getModel('sales/service_order', $order);
+                    foreach ($invoices as $invoice) {
+                        $this->closeInvoice($invoice);
+                        $this->createCreditMemo($invoice, $service);
+                    }
+                    $this->closeOrder($order);
+                    $success = true;
+                }
+                if (empty($invoices) && empty($canceledInvoices)) {
+                    // Cancel order
+                    $order->cancel()->save();
+                    $helperLog->info("{$returnMessageLabel} | Order canceled.");
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
+                    // Return
+                    $success = true;
+                }
+                if ($success) {
+                    $returnMessage = "{$returnMessageLabel} | Order status '{$status}' processed.";
+                    $helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
+                    return "OK | {$returnMessage}";
+                } else {
+                    $returnMessage = "{$returnMessageLabel} | Unable to process transaction status '{$status}'.";
+                    $helperLog->info($returnMessage);
+                    $helperLog->info("Current order status: " . $order->getStatusLabel());
+                    return "KO | {$returnMessage}";
+                }
+                break;
+            case 'authorizedpendingcapture':
+                $returnMessage = "OK | Order #{$order->getIncrementId()} | Transaction status '{$status}' received from post notification.";
+                $helperLog->info($returnMessage);
+                $helperLog->info("Current order status: " . $order->getStatusLabel());
+                return $returnMessage;
+                break;
+            case $statusWithError:
+                try {
+                    Uecommerce_Mundipagg_Model_Standard::transactionWithError($order, false);
+                    $returnMessage = "OK | {$returnMessageLabel} | Order changed to WithError status";
+                } catch (Exception $e) {
+                    $returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
+                }
+                $helperLog->info($returnMessage);
+                $helperLog->info("Current order status: " . $order->getStatusLabel());
+                return $returnMessage;
+                break;
+            // For other status we add comment to history
+            default:
+                $returnMessage = "Order #{$order->getIncrementId()} | unexpected transaction status: {$status}";
+                $helperLog->info($returnMessage);
+                return "OK | {$returnMessage}";
         }
     }
 }
