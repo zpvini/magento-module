@@ -262,6 +262,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             }
         }
 
+        $info->setAdditionalInformation('CountCcs', $mundipagg['countccs']);
+
         if (!empty($mundipagg)) {
             $helperInstallments = Mage::helper('mundipagg/Installments');
 
@@ -1514,11 +1516,13 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 case '1CreditCards':
                     $cvv = $info->getAdditionalInformation('mundipagg_creditcard_card_on_file_cvv_1_1');
                     $token = $info->getAdditionalInformation('mundipagg_creditcard_token_1_1');
+                    $countCcs = $info->getAdditionalInformation('CountCcs');
+
                     $newCard = $token === 'new';
                     $savedCard = $token === '1';
 
                     // if card is new OR card is saved and has cvv
-                    if ($newCard || ($savedCard && $cvv)) {
+                    if ($newCard || ($savedCard && $cvv) || $countCcs >= 0) {
                         return true;
                     }
 

@@ -124,6 +124,11 @@ if ($recurrent) {
 
 <ul id="payment_form_<?php echo $_code ?>" style="display:none;">
     <div>
+        <input type="hidden"
+               name="<?php echo 'payment[countccs]'; ?>"
+               id="<?php echo 'countccs'; ?>"
+               value="<?php echo $countCcs; ?>"/>
+
         <input type="hidden" id="baseGrandTotal" name="baseGrandTotal"
                value="<?php echo number_format($baseGrandTotal, "2", ",", ""); ?>"/>
 		<?php if ($isPartial == 'partial'): ?>
@@ -272,9 +277,6 @@ if ($recurrent) {
                                                     <a href="#" class="cvv-what-is-this">O que é?</a>
                                                 </div>
                                             </div>
-
-
-
                                         </div>
                                     <?php endif ?>
                                     <br>
@@ -305,7 +307,7 @@ if ($recurrent) {
                                         </div>
                                     </li>
                                 </div>
-				<?php endif; ?>
+                            <?php endif; ?>
 				<?php 
                 if (
                         $installmentsHelper->isInstallmentsEnabled() &&
