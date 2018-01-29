@@ -1125,65 +1125,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @return string OK|KO
      */
     private function createInvoice($order, $data, $totalPaid, $status) {
-        $invoice = Mage::getModel('sales/service_order', $order)->prepareInvoice();
-        $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-        $returnMessageLabel = "Order #{$order->getIncrementId()}";
-        if (!$invoice->getTotalQty()) {
-            $returnMessage = 'Cannot create an invoice without products.';
-            $order->addStatusHistoryComment("MP - " . $returnMessage, false);
-            $order->save();
-            $helperLog->info("{$returnMessageLabel} | {$returnMessage}");
-            return $returnMessage;
-        }
-        $invoice->setRequestedCaptureCase(Mage_Sales_Model_Order_Invoice::CAPTURE_OFFLINE);
-        $invoice->register();
-        $invoice->getOrder()->setCustomerNoteNotify(true);
-        $invoice->getOrder()->setIsInProcess(true);
-        $invoice->setCanVoidFlag(true);
-        $transactionSave = Mage::getModel('core/resource_transaction')
-            ->addObject($invoice)
-            ->addObject($invoice->getOrder());
-        $transactionSave->save();
-        // Send invoice email if enabled
-        if (Mage::helper('sales')->canSendNewInvoiceEmail($order->getStoreId())) {
-            $invoice->sendEmail(true);
-            $invoice->setEmailSent(true);
-        }
-        $order->setBaseTotalPaid($totalPaid);
-        $order->setTotalPaid($totalPaid);
-        $order->addStatusHistoryComment('MP - Captured offline', false);
-        $payment = $order->getPayment();
-        $payment->setAdditionalInformation('OrderStatusEnum', $data['OrderStatus']);
-        if ($payment->getAdditionalInformation('PaymentMethod') == 'mundipagg_creditcard') {
-            $payment->setAdditionalInformation('CreditCardTransactionStatusEnum', $data['CreditCardTransaction']['CreditCardTransactionStatus']);
-        }
-        if ($payment->getAdditionalInformation('PaymentMethod') == 'mundipagg_boleto') {
-            $payment->setAdditionalInformation('BoletoTransactionStatusEnum', $data['BoletoTransaction']['BoletoTransactionStatus']);
-        }
-        if (isset($data['OnlineDebitTransaction']['BankPaymentDate'])) {
-            $payment->setAdditionalInformation('BankPaymentDate', $data['OnlineDebitTransaction']['BankPaymentDate']);
-        }
-        if (isset($data['OnlineDebitTransaction']['BankName'])) {
-            $payment->setAdditionalInformation('BankName', $data['OnlineDebitTransaction']['BankName']);
-        }
-        if (isset($data['OnlineDebitTransaction']['Signature'])) {
-            $payment->setAdditionalInformation('Signature', $data['OnlineDebitTransaction']['Signature']);
-        }
-        if (isset($data['OnlineDebitTransaction']['TransactionIdentifier'])) {
-            $payment->setAdditionalInformation('TransactionIdentifier', $data['OnlineDebitTransaction']['TransactionIdentifier']);
-        }
-        $payment->save();
-        $newStatus = 'processing';
-        if (strtolower($status) == 'overpaid') {
-            $newStatus = 'overpaid';
-            $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, 'overpaid');
-        } else {
-            $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true, 'Boleto pago', true);
-        }
-        $order->save();
-        $returnMessage = "OK | {$returnMessageLabel} | invoice created and order state changed to {$newStatus}.";
-        $helperLog->info($returnMessage);
-        return $returnMessage;
+        $helperOrderStatus = Mage::helper('mundipagg/processOrderStatus');
+        return $helperOrderStatus->createInvoice($order, $data, $totalPaid, $status);
     }
     /**
      * Search by orderkey
@@ -1852,7 +1795,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 return
                     $helperOrderStatus->
                     paidOverpaid(
-                        $this,
                         $order,
                         $returnMessageLabel,
                         $capturedAmountInCents,
