@@ -1774,34 +1774,19 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $data,
         $transactionData,
         $statusWithError
-    )
-    {
+    ) {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $helperOrderStatus = Mage::helper('mundipagg/processOrderStatus');
 
         switch (strtolower($status)) {
             case 'captured':
-                return
-                    $helperOrderStatus->
-                    captured(
-                        $order,
-                        $amountToCapture,
-                        $transactionKey,
-                        $orderReference
-                    );
-                break;
+                return $helperOrderStatus->captured($order, $amountToCapture, $transactionKey, $orderReference);
             case 'paid':
             case 'overpaid':
-                return
-                    $helperOrderStatus->
-                    paidOverpaid(
-                        $order,
-                        $returnMessageLabel,
-                        $capturedAmountInCents,
-                        $data,
-                        $status
-                    );
+                return $helperOrderStatus->paidOverpaid($order, $returnMessageLabel, $capturedAmountInCents, $data, $status);
             case 'underpaid':
+                return $helperOrderStatus->underPaid($order, $helperLog, $returnMessageLabel, $capturedAmountInCents, $status);
+
                 if ($order->canUnhold()) {
                     $helperLog->info("{$returnMessageLabel} | unholded.");
                     $order->unhold();

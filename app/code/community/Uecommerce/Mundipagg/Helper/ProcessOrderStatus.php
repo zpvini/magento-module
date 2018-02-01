@@ -45,8 +45,8 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
         return $returnMessage;
     }
 
-    public function paidOverpaid($order,$returnMessageLabel,$capturedAmountInCents,$data,$status) {
-
+    public function paidOverpaid($order,$returnMessageLabel,$capturedAmountInCents,$data,$status)
+    {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
         if ($order->canUnhold()) {
@@ -101,6 +101,38 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
         $helperLog->error($returnMessage);
         $helperLog->info("Current order status: " . $order->getStatusLabel());
         return "KO | {$returnMessage}";
+    }
+
+    /**
+     * @param $order
+     * @param $helperLog
+     * @param $messageLabel
+     * @param $capturedAmountInCents
+     * @param $status
+     * @return string
+     */
+    public function underPaid($order, $helperLog, $messageLabel, $capturedAmountInCents, $status)
+    {
+        if ($order->canUnhold()) {
+            $helperLog->info("{$messageLabel} | unholded.");
+            $order->unhold();
+        }
+
+        $returnMessage = "OK | {$messageLabel} | Transaction status '{$status}'";
+        $returnMessage .= "processed. Order status updated.";
+
+        $amountInDecimal = $capturedAmountInCents * 0.01;
+
+        $order->addStatusHistoryComment('MP - Captured offline amount of R$' . $amountInDecimal, false);
+        $order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, 'underpaid');
+        $order->setBaseTotalPaid($amountInDecimal);
+        $order->setTotalPaid($amountInDecimal);
+        $order->save();
+
+        $helperLog->info($returnMessage);
+        $helperLog->info("Current order status: " . $order->getStatusLabel());
+
+        return $returnMessage;
     }
 
     /**
