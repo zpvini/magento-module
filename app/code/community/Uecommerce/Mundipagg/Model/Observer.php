@@ -65,8 +65,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         $allowedPaymentMethods = array(
             'mundipagg_creditcardoneinstallment',
             'mundipagg_creditcard',
-            'mundipagg_twocreditcards',
-            'mundipagg_fivecreditcards'
+            'mundipagg_twocreditcards'
         );
 
         if (!in_array($paymentMethod, $allowedPaymentMethods)) {
