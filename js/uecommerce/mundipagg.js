@@ -96,7 +96,6 @@ function selectCredcard(ele) {
     var realId = id
         .replace('mundipagg_creditcard', '')
         .replace('mundipagg_twocreditcards_', '')
-        .replace('mundipagg_threecreditcards_', '')
         .replace('mundipagg_fourcreditcards_', '')
         .replace('mundipagg_fivecreditcards_', '')
         .replace('_cc_number', '');
@@ -593,7 +592,6 @@ function calculateInstallmentValue(field, num, c, url) {
         var realId = id
             .replace('mundipagg_creditcard', '')
             .replace('mundipagg_twocreditcards_', '')
-            .replace('mundipagg_threecreditcards_', '')
             .replace('mundipagg_fourcreditcards_', '')
             .replace('mundipagg_fivecreditcards_', '')
             .replace('_cc_number', '')

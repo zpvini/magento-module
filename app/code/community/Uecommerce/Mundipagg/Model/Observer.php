@@ -66,7 +66,6 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             'mundipagg_creditcardoneinstallment',
             'mundipagg_creditcard',
             'mundipagg_twocreditcards',
-            'mundipagg_threecreditcards',
             'mundipagg_fourcreditcards',
             'mundipagg_fivecreditcards'
         );
