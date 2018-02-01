@@ -1786,21 +1786,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 return $helperOrderStatus->paidOverpaid($order, $returnMessageLabel, $capturedAmountInCents, $data, $status);
             case 'underpaid':
                 return $helperOrderStatus->underPaid($order, $helperLog, $returnMessageLabel, $capturedAmountInCents, $status);
-
-                if ($order->canUnhold()) {
-                    $helperLog->info("{$returnMessageLabel} | unholded.");
-                    $order->unhold();
-                }
-                $order->addStatusHistoryComment('MP - Captured offline amount of R$' . $capturedAmountInCents * 0.01, false);
-                $order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, 'underpaid');
-                $order->setBaseTotalPaid($capturedAmountInCents * 0.01);
-                $order->setTotalPaid($capturedAmountInCents * 0.01);
-                $order->save();
-                $returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' processed. Order status updated.";
-                $helperLog->info($returnMessage);
-                $helperLog->info("Current order status: " . $order->getStatusLabel());
-                return $returnMessage;
-                break;
             case 'notauthorized':
                 $helper = Mage::helper('mundipagg');
                 $grandTotal = $order->getGrandTotal();
