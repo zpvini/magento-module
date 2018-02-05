@@ -45,18 +45,6 @@ class Uecommerce_Mundipagg_Model_Source_PaymentMethods
                 'value' => '2CreditCards',
                 'label' => Mage::helper('mundipagg')->__('2 Credit Cards')
             ),
-            array(
-                'value' => '3CreditCards',
-                'label' => Mage::helper('mundipagg')->__('3 Credit Cards')
-            ),
-            array(
-                'value' => '4CreditCards',
-                'label' => Mage::helper('mundipagg')->__('4 Credit Cards')
-            ),
-            array(
-                'value' => '5CreditCards',
-                'label' => Mage::helper('mundipagg')->__('5 Credit Cards')
-            ),
         );
     }
 }

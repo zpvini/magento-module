@@ -6,6 +6,5 @@
  *
  */
 Mage::getConfig()->saveConfig('payment/mundipagg_twocreditcards/active', '0');
-Mage::getConfig()->saveConfig('payment/mundipagg_threecreditcards/active', '0');
 Mage::getConfig()->saveConfig('payment/mundipagg_fourcreditcards/active', '0');
 Mage::getConfig()->saveConfig('payment/mundipagg_fivecreditcards/active', '0');

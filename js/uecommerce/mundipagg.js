@@ -96,9 +96,6 @@ function selectCredcard(ele) {
     var realId = id
         .replace('mundipagg_creditcard', '')
         .replace('mundipagg_twocreditcards_', '')
-        .replace('mundipagg_threecreditcards_', '')
-        .replace('mundipagg_fourcreditcards_', '')
-        .replace('mundipagg_fivecreditcards_', '')
         .replace('_cc_number', '');
 
     var cardType = id.replace('mundipagg_', '').replace('_cc_number', '').replace('_' + realId, '');
@@ -509,18 +506,6 @@ function hide_methods(dont_hide) {
         document.getElementById('2CreditCards').style.display = 'none';
     }
 
-    if (document.getElementById('3CreditCards') != null && dont_hide != '3CreditCards') {
-        document.getElementById('3CreditCards').style.display = 'none';
-    }
-
-    if (document.getElementById('4CreditCards') != null && dont_hide != '4CreditCards') {
-        document.getElementById('4CreditCards').style.display = 'none';
-    }
-
-    if (document.getElementById('5CreditCards') != null && dont_hide != '5CreditCards') {
-        document.getElementById('5CreditCards').style.display = 'none';
-    }
-
     if (document.getElementById('BoletoBancario') != null && dont_hide != 'BoletoBancario') {
         document.getElementById('BoletoBancario').style.display = 'none';
     }
@@ -539,18 +524,6 @@ function hide_methods_admin(dont_hide) {
 
     if (document.getElementById('2CreditCards') != null && dont_hide != '2CreditCards') {
         document.getElementById('2CreditCards').style.display = 'none';
-    }
-
-    if (document.getElementById('3CreditCards') != null && dont_hide != '3CreditCards') {
-        document.getElementById('3CreditCards').style.display = 'none';
-    }
-
-    if (document.getElementById('4CreditCards') != null && dont_hide != '4CreditCards') {
-        document.getElementById('4CreditCards').style.display = 'none';
-    }
-
-    if (document.getElementById('5CreditCards') != null && dont_hide != '5CreditCards') {
-        document.getElementById('5CreditCards').style.display = 'none';
     }
 
     if (document.getElementById('BoletoBancario') != null && dont_hide != 'BoletoBancario') {
@@ -593,9 +566,6 @@ function calculateInstallmentValue(field, num, c, url) {
         var realId = id
             .replace('mundipagg_creditcard', '')
             .replace('mundipagg_twocreditcards_', '')
-            .replace('mundipagg_threecreditcards_', '')
-            .replace('mundipagg_fourcreditcards_', '')
-            .replace('mundipagg_fivecreditcards_', '')
             .replace('_cc_number', '')
             .replace('value_', '');
         window['brand_' + realId] = undefined;
