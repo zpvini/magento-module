@@ -1774,48 +1774,18 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $data,
         $transactionData,
         $statusWithError
-    )
-    {
+    ) {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $helperOrderStatus = Mage::helper('mundipagg/processOrderStatus');
 
         switch (strtolower($status)) {
             case 'captured':
-                return
-                    $helperOrderStatus->
-                    captured(
-                        $order,
-                        $amountToCapture,
-                        $transactionKey,
-                        $orderReference
-                    );
-                break;
+                return $helperOrderStatus->captured($order, $amountToCapture, $transactionKey, $orderReference);
             case 'paid':
             case 'overpaid':
-                return
-                    $helperOrderStatus->
-                    paidOverpaid(
-                        $order,
-                        $returnMessageLabel,
-                        $capturedAmountInCents,
-                        $data,
-                        $status
-                    );
+                return $helperOrderStatus->paidOverpaid($order, $returnMessageLabel, $capturedAmountInCents, $data, $status);
             case 'underpaid':
-                if ($order->canUnhold()) {
-                    $helperLog->info("{$returnMessageLabel} | unholded.");
-                    $order->unhold();
-                }
-                $order->addStatusHistoryComment('MP - Captured offline amount of R$' . $capturedAmountInCents * 0.01, false);
-                $order->setState(Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, 'underpaid');
-                $order->setBaseTotalPaid($capturedAmountInCents * 0.01);
-                $order->setTotalPaid($capturedAmountInCents * 0.01);
-                $order->save();
-                $returnMessage = "OK | {$returnMessageLabel} | Transaction status '{$status}' processed. Order status updated.";
-                $helperLog->info($returnMessage);
-                $helperLog->info("Current order status: " . $order->getStatusLabel());
-                return $returnMessage;
-                break;
+                return $helperOrderStatus->underPaid($order, $helperLog, $returnMessageLabel, $capturedAmountInCents, $status);
             case 'notauthorized':
                 $helper = Mage::helper('mundipagg');
                 $grandTotal = $order->getGrandTotal();
