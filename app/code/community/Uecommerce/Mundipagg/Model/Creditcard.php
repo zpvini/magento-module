@@ -101,12 +101,30 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
      *
      * @param string $paymentAction
      * @param Varien_Object
+     * @throws Varien_Exception
      */
     public function initialize($paymentAction, $stateObject)
     {
         $standard = Mage::getModel('mundipagg/standard');
+        $paymentAction = $standard->getConfigData('payment_action');
 
-        switch ($standard->getConfigData('payment_action')) {
+        $antifraudHelper = Mage::helper('mundipagg/antifraud');
+        $minValue = $antifraudHelper->getMinimumValue();
+
+        $payment = $this->getInfoInstance();
+        $order = $payment->getOrder();
+        $baseAmountOrder = $payment->getBaseAmountOrdered();
+        $antiFraudEnabled = $this->getAntiFraud();
+
+        if (
+            $antiFraudEnabled &&
+            $standard->getConfigData('payment_action') == 'order' &&
+            ($baseAmountOrder > $minValue)
+        ) {
+            $paymentAction = 'authorize';
+        }
+
+        switch ($paymentAction) {
             case 'order':
                 $this->setCreditCardOperationEnum('AuthAndCapture');
 
@@ -126,8 +144,6 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
                 break;
         }
 
-        $payment = $this->getInfoInstance();
-        $order = $payment->getOrder();
 
         switch ($paymentAction) {
             case Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE:
