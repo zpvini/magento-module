@@ -2,7 +2,6 @@
 
 class Uecommerce_Mundipagg_Helper_Antifraud extends Mage_Core_Helper_Abstract
 {
-
     public function getMinimumValue()
     {
         $standard = Mage::getModel('mundipagg/standard');
@@ -29,6 +28,4 @@ class Uecommerce_Mundipagg_Helper_Antifraud extends Mage_Core_Helper_Abstract
             return Mage::getStoreConfig($configString);
         }
     }
-
-
 }
