@@ -5,9 +5,8 @@ class Uecommerce_Mundipagg_Helper_Antifraud extends Mage_Core_Helper_Abstract
 
     public function getMinimumValue()
     {
-        $c = 1;
-        $a = Mage::getModel('mundipagg/standard');
-        if ($a->getAntiFraud()) {
+        $standard = Mage::getModel('mundipagg/standard');
+        if ($standard->getAntiFraud()) {
 
             $configString = 'payment/mundipagg_standard/antifraud_provider';
 
