@@ -238,7 +238,7 @@
                 </totals>
                 <states>
                     <pending_payment translate="label">
-                        <label>Underpaid!!</label>
+                        <label>Underpaid</label>
                         <statuses>
                             <pending_payment default="1"/>
                         </statuses>
