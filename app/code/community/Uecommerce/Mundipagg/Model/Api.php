@@ -1302,6 +1302,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      */
     public function sendJSON($data) {
         $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+        $merchantKey = $this->modelStandard->getMerchantKey();
+        $url = $this->modelStandard->getUrl();
+        $environment = $this->modelStandard->getEnvironment();
+
         if (empty($data)) {
             $errMsg = __METHOD__ . "Exception: one or more arguments not informed to request";
             $log->error($errMsg, true);
@@ -1313,13 +1317,20 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $log->setLogLabel("Order #{$orderReference}");
         }
         $requestRaw = json_encode($data);
-        $headers = array(
+
+        $headers = [
             'Content-Type: application/json',
-            "MerchantKey: {$this->modelStandard->getMerchantKey()}",
+            "MerchantKey: {$merchantKey}",
             'Accept: JSON'
+        ];
+
+        $log->info(
+            "\n Request url: " . $url .
+            "\n Environment: ". $environment .
+            "\n Headers: \n" .
+            json_encode($headers, JSON_PRETTY_PRINT)
         );
-        $url = $this->modelStandard->getUrl();
-        $log->info("Request url:\n{$url}");
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_URL, $url);
