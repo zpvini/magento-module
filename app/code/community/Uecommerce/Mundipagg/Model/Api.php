@@ -885,7 +885,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $xml = simplexml_load_string($_response);
 
             // Check for invalid xml response
-            if($xml === false) {
+            if ($xml === false) {
                 $helperLog->error("INVALID XML RESPONSE!\n" . $_response . "\n\n");
             }
 
@@ -938,7 +938,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // Execute post
-        $response = curl_exec($ch);
+        $rawResponse = curl_exec($ch);
 
         //check for curl errors
         $curlErrorNumber = curl_errno($ch);
@@ -948,11 +948,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         // Close connection
         curl_close($ch);
-        $response = json_decode($response, true);
+        $response = json_decode($rawResponse, true);
 
         // Check for invalid json response
-        if($response === null) {
-            $log->error("INVALID JSON RESPONSE!\n" . $response . "\n\n");
+        if ($response === null) {
+            $log->error("INVALID JSON RESPONSE!\n" . $rawResponse . "\n\n");
         }
 
         $jsonPretty = $helper->jsonEncodePretty($response);
@@ -1326,7 +1326,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $xml = simplexml_load_string($_response);
 
         // Check for invalid xml response
-        if($xml === false) {
+        if ($xml === false) {
             $helperLog->error("INVALID XML RESPONSE!\n" . $_response . "\n\n");
         }
 
@@ -1403,7 +1403,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $responseData = json_decode($response, true);
 
         // Check for invalid json response
-        if($responseData === null) {
+        if ($responseData === null) {
             $log->error("INVALID JSON RESPONSE!\n" . $response . "\n\n");
         }
 
@@ -1422,7 +1422,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             return false;
         }
 
-        if(!$responsePretty) {
+        if (!$responsePretty) {
             $responsePretty = $response;
         }
         $log->info("Response:\n{$responsePretty}\n");
@@ -1527,7 +1527,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         $responseData = json_decode($responseRaw, true);
         // Check for invalid json response
-        if($responseData === null) {
+        if ($responseData === null) {
             $log->error("INVALID JSON RESPONSE!\n" . $responseRaw . "\n\n");
         }
 
