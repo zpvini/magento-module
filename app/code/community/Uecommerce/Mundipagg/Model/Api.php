@@ -1342,9 +1342,21 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
         // Execute post
         $response = curl_exec($ch);
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+        if ($curlErrorNumber !== 0) {
+            $log->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
+        }
+
         // Close connection
         curl_close($ch);
         $responseData = json_decode($response, true);
+
+        // Check for invalid json response
+        if($responseData === null) {
+            $log->error("INVALID JSON RESPONSE!\n" . $response . "\n\n");
+        }
 
         $requestObfuscated = $this->hideCustomerData($data);
 
