@@ -40,6 +40,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
             $responseRaw = curl_exec($ch);
 
+            // Close connection
             curl_close($ch);
 
             $responseData = json_decode($responseRaw, true);
@@ -874,7 +875,20 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             // Execute post
             $_response = curl_exec($ch);
+
+            //check for curl errors
+            $curlErrorNumber = curl_errno($ch);
+            if ($curlErrorNumber !== 0) {
+                $helperLog->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
+            }
+
             $xml = simplexml_load_string($_response);
+
+            // Check for invalid xml response
+            if($xml === false) {
+                $helperLog->error("INVALID XML RESPONSE!\n" . $_response . "\n\n");
+            }
+
             $json = $helperUtil->jsonEncodePretty($xml);
             // Close connection
             curl_close($ch);
@@ -925,10 +939,24 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // Execute post
         $response = curl_exec($ch);
-        $response = json_decode($response, true);
-        $jsonPretty = $helper->jsonEncodePretty($response);
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+        if ($curlErrorNumber !== 0) {
+            $log->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
+        }
+
         // Close connection
         curl_close($ch);
+        $response = json_decode($response, true);
+
+        // Check for invalid json response
+        if($response === null) {
+            $log->error("INVALID JSON RESPONSE!\n" . $response . "\n\n");
+        }
+
+        $jsonPretty = $helper->jsonEncodePretty($response);
+
         $log->info("Response:\n{$jsonPretty}\n");
         // Return
         return $response;
@@ -1150,6 +1178,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // Execute get
         $_response = curl_exec($ch);
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+        if ($curlErrorNumber !== 0) {
+            $helperLog->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
+        }
+
         // Close connection
         curl_close($ch);
 
@@ -1278,10 +1313,23 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
         // Execute post
         $_response = curl_exec($ch);
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+        if ($curlErrorNumber !== 0) {
+            $helperLog->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
+        }
+
         // Close connection
         curl_close($ch);
         // Is there an error?
         $xml = simplexml_load_string($_response);
+
+        // Check for invalid xml response
+        if($xml === false) {
+            $helperLog->error("INVALID XML RESPONSE!\n" . $_response . "\n\n");
+        }
+
         $responseJSON = $this->helperUtil->jsonEncodePretty($xml);
         $responseArray = json_decode($responseJSON, true);
         if ($_response != 'false') {
@@ -1351,6 +1399,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         // Close connection
         curl_close($ch);
+
         $responseData = json_decode($response, true);
 
         // Check for invalid json response
@@ -1466,9 +1515,22 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $responseRaw = curl_exec($ch);
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+        if ($curlErrorNumber !== 0) {
+            $log->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
+        }
+
         curl_close($ch);
         $util = new Uecommerce_Mundipagg_Helper_Util();
+
         $responseData = json_decode($responseRaw, true);
+        // Check for invalid json response
+        if($responseData === null) {
+            $log->error("INVALID JSON RESPONSE!\n" . $responseRaw . "\n\n");
+        }
+
         $responseJSON = $util->jsonEncodePretty($responseData);
         $log->info("Request: {$url}");
         $log->info("Response:\n{$responseJSON}");
@@ -1710,9 +1772,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // Execute post
         $response = curl_exec($ch);
-        if (curl_errno($ch)) {
-            $helperLog->info(curl_error($ch));
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+        if ($curlErrorNumber !== 0) {
+            $helperLog->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
         }
+
         // Close connection
         curl_close($ch);
         return $response;
