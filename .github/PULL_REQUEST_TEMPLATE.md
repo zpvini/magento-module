@@ -1,10 +1,6 @@
-<!-- Thank you for contributing to the PrestaShop project! 
-
-Please take the time to edit the "Answers" rows with the necessary information: -->
-
 | Questions     | Answers
 | ------------- | -------------------------------------------------------
-| What?         | escribe in an objective way what has been done.
+| What?         | Describe in an objective way what has been done.
 | Why?          | Why do you need this implementation/fix?
 | How?          | How did you solve the problem? What are the main flows? Any technical information regarding infrastructure or architecture?
 
@@ -14,7 +10,7 @@ Please take the time to edit the "Answers" rows with the necessary information: 
 READY / IN DEVELOPMENT
 
 #### Attachments (if appropriate)
-Add additional informations like screenshots, issue link, zendesk ticket link, jira task link, etc
+Add additional informations like screenshots, issue link, jira task link, etc
 
 ### Definition of Done:
  - Increases API documentation
