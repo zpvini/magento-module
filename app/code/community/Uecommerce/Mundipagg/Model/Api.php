@@ -1014,6 +1014,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             }
             $returnMessageLabel = "Order #{$order->getIncrementId()}";
 
+            if (!isset($transactionData['IsRecurrency'])) {
+                $transactionData['IsRecurrency'] = 'false';
+            }
+
             //If is recurrency order and it status is processing or canceled stop the execution
             if(($order->getState() == Mage_Sales_Model_Order::STATE_PROCESSING ||
                     $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) &&
