@@ -129,7 +129,7 @@ if ($recurrent) {
                id="<?php echo 'countccs'; ?>"
                value="<?php echo $countCcs; ?>"/>
 
-        <input type="hidden" id="baseGrandTotal" name="baseGrandTotal"
+        <input type="hidden" id="baseGrandTotal" name="baseGrandTotal" class="mundiBaseGrandTotal"
                value="<?php echo number_format($baseGrandTotal, "2", ",", ""); ?>"/>
 		<?php if ($isPartial == 'partial'): ?>
                     <input type="hidden" name="partial" id="partial" value="1"/>
@@ -175,6 +175,21 @@ if ($recurrent) {
                 <div>
                     <b><?php echo $this->__('Grand Total') ?>:</b>
                     <?php echo $currencySymbol . number_format($baseGrandTotal, "2", ",", "."); ?>
+                    <script>
+                        (function(){
+                                //reset base grand total
+                                    let baseGrandTotalInputList = jQuery('.mundiBaseGrandTotal');
+                                baseGrandTotalInputList.each(function(index,element,array){
+                                        jQuery(baseGrandTotalInputList[index]).val(
+                                                "<?php echo number_format($baseGrandTotal, "2", ",", ""); ?>"
+                                            );
+                                    });
+                                //reset value inputs
+                                    jQuery('.mundipagg-card-value-input').each(function(index,element){
+                                            jQuery(element).val('');
+                                        });
+                            })();
+                    </script>
                 </div>
                 <p></p>
             <?php } ?>
@@ -293,7 +308,7 @@ if ($recurrent) {
                                                        id="<?php echo $_code; ?>_value_<?php echo $num . '_' . $c; ?>"
                                                        name="payment[<?php echo $_code; ?>_value_<?php echo $num . '_' . $c; ?>]"
                                                        title="<?php echo $this->__('Value (Ex: 100,50)') ?>"
-                                                       class="required-entry validate-greater-than-zero input-text check_values <?php echo 'group_' . $num . '_' . $c; ?>"
+                                                       class="required-entry validate-greater-than-zero input-text check_values mundipagg-card-value-input <?php echo 'group_' . $num . '_' . $c; ?>"
                                                        onchange="calculateInstallmentValue(
                                                                    this,
                                                                    <?php echo $num; ?>,
@@ -492,7 +507,7 @@ if ($recurrent) {
                                                 id="<?php echo $_code . '_new_value_' . $num . '_' . $c; ?>"
                                                 name="<?php echo 'payment[' . $_code . '_new_value_' . $num . '_' . $c . ']'; ?>"
                                                 title="<?php echo $this->__('Value (Ex: 100,50)') ?>"
-                                                class="required-entry input-text validate-greater-than-zero check_values"
+                                                class="required-entry input-text validate-greater-than-zero check_values mundipagg-card-value-input"
                                                 onchange="calculateInstallmentValue(
                                                             this,
                                                             <?php echo $num; ?>,
