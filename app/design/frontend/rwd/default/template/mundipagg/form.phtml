@@ -178,7 +178,7 @@ if ($recurrent) {
                     <script>
                         (function(){
                                 //reset base grand total
-                                    let baseGrandTotalInputList = jQuery('.mundiBaseGrandTotal');
+                                    var baseGrandTotalInputList = jQuery('.mundiBaseGrandTotal');
                                 baseGrandTotalInputList.each(function(index,element,array){
                                         jQuery(baseGrandTotalInputList[index]).val(
                                                 "<?php echo number_format($baseGrandTotal, "2", ",", ""); ?>"
