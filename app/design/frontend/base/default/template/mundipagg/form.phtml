@@ -85,6 +85,7 @@ $_code = $this->getMethodCode();
                     type="hidden"
                     id="baseGrandTotal"
                     name="baseGrandTotal"
+                    class="mundiBaseGrandTotal"
                     value="<?php echo number_format($baseGrandTotal, "2", ",", ""); ?>"/>
     		<?php if ($isPartial == 'partial'): ?>
     			<input type="hidden" name="partial" id="partial" value="1"/>
@@ -120,8 +121,23 @@ $_code = $this->getMethodCode();
         		<?php if($num != 1 && $isPartial != 'partial'): ?>
     				<p></p>
     				<div>
-    					<b><?php echo $this->__('Grand Total') ?>:</b>
+    					<b><?php echo $this->__('Grand Total') ?>: base</b>
                         <?php echo $currencySymbol.number_format($baseGrandTotal, "2", ",", "."); ?>
+                        <script>
+                            (function(){
+                                //reset base grand total
+                                var baseGrandTotalInputList = jQuery('.mundiBaseGrandTotal');
+                                baseGrandTotalInputList.each(function(index,element,array){
+                                    jQuery(baseGrandTotalInputList[index]).val(
+                                        "<?php echo number_format($baseGrandTotal, "2", ",", ""); ?>"
+                                    );
+                                });
+                                //reset value inputs
+                                jQuery('.mundipagg-card-value-input').each(function(index,element){
+                                    jQuery(element).val('');
+                                });
+                            })();
+                        </script>
     				</div>
     				<p></p>
     			<?php endif ?>
@@ -201,7 +217,7 @@ $_code = $this->getMethodCode();
                                                         id="<?php echo $_code; ?>_value_<?php echo $num; ?>_<?php echo $c;?>"
                                                         name="payment[<?php echo $_code; ?>_value_<?php echo $num; ?>_<?php echo $c;?>]"
                                                         title="<?php echo $this->__('Value (Ex: 100,50)') ?>"
-                                                        class="required-entry input-text validate-greater-than-zero check_values group_<?php echo $num; ?>_<?php echo $c;?>"
+                                                        class="required-entry input-text validate-greater-than-zero check_values mundipagg-card-value-input group_<?php echo $num; ?>_<?php echo $c;?>"
                                                         onchange="calculateInstallmentValue(
                                                             this,
                                                             <?php echo $num;?>,
@@ -424,7 +440,7 @@ $_code = $this->getMethodCode();
                                                     id="<?php echo $_code; ?>_new_value_<?php echo $num; ?>_<?php echo $c;?>"
                                                     name="payment[<?php echo $_code; ?>_new_value_<?php echo $num; ?>_<?php echo $c;?>]"
                                                     title="<?php echo $this->__('Value (Ex: 100,50)') ?>"
-                                                    class="required-entry validate-greater-than-zero check_values input-text"
+                                                    class="required-entry validate-greater-than-zero check_values input-text mundipagg-card-value-input"
                                                     onchange="calculateInstallmentValue(
                                                         this,
                                                         <?php echo $num;?>,
