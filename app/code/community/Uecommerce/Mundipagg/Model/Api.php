@@ -1,6 +1,7 @@
 <?php
 
-class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard {
+class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
+{
     const TRANSACTION_NOT_FOUND        = "Transaction not found";
 
     const ORDER_UNDERPAID              = "Order underpaid";
@@ -13,7 +14,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     private $debugEnabled;
     private $moduleVersion;
 
-    public function __construct($Store = null) {
+    public function __construct($Store = null)
+    {
         $this->helperUtil = new Uecommerce_Mundipagg_Helper_Util();
         $this->modelStandard = new Uecommerce_Mundipagg_Model_Standard($Store);
         $this->moduleVersion = Mage::helper('mundipagg')->getExtensionVersion();
@@ -23,11 +25,11 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
     public function getHolderNameByInstantBuyKey($instantBuyKey)
     {
-        $headers = array(
+        $headers = [
             'Content-Type: application/json',
             'Accept: application/json',
             "MerchantKey: {$this->modelStandard->getMerchantKey()}"
-        );
+        ];
 
         try {
             $url = $this->getInstantBuyKeyUrl($instantBuyKey);
@@ -51,14 +53,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             }
 
             Mage::throwException("Unable to get current credit card holder name by instant buy key");
-
         } catch (Exception $e) {
             $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
             $helperLog->error($e->getMessage(), true);
 
             return 'Failed';
         }
-
     }
 
     private function getInstantBuyKeyUrl($instantBuyKey)
@@ -88,35 +88,48 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     /**
      * Credit Card Transaction
      */
-    public function creditCardTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard) {
+    public function creditCardTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard)
+    {
         $helper = Mage::helper('mundipagg');
+        //Log error
+        $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+        $helperLog->setLogLabel('|' . $order->getIncrementId() . '|');
+
         try {
+            $helperLog->info('creditCardTransaction()');
+
             // Set Data
-            $_request = array();
-            $_request["Order"] = array();
+            $_request = [];
+            $_request["Order"] = [];
             $_request["Order"]["OrderReference"] = $order->getIncrementId();
+
             /*
             * Append transaction (multi credit card payments)
             * When one of Credit Cards has not been authorized and we try with a new one)
             */
-            if ($orderReference = $order->getPayment()->getAdditionalInformation('OrderReference')) {
+            $orderReference = $order->getPayment()->getAdditionalInformation('OrderReference');
+            if ($orderReference) {
                 $_request["Order"]["OrderReference"] = $orderReference;
             }
+
             // Collection
-            $_request["CreditCardTransactionCollection"] = array();
+            $_request["CreditCardTransactionCollection"] = [];
+
             /* @var $recurrencyModel Uecommerce_Mundipagg_Model_Recurrency */
             $recurrencyModel = Mage::getModel('mundipagg/recurrency');
-            $creditcardTransactionCollection = array();
+            $creditcardTransactionCollection = [];
+
             // Partial Payment (we use this reference in order to authorize the rest of the amount)
             if ($order->getPayment()->getAdditionalInformation('OrderReference')) {
                 $_request["CreditCardTransactionCollection"]["OrderReference"] = $order->getPayment()->getAdditionalInformation('OrderReference');
             }
+
             $baseGrandTotal = str_replace(',', '.', $order->getBaseGrandTotal());
             $amountInCentsVar = intval(strval(($baseGrandTotal * 100)));
             $num = $helper->getCreditCardsNumber($data['payment_method']);
             $installmentCount = 1;
-            $approvalRequest = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
 
+            $approvalRequest = Mage::getSingleton('checkout/session')->getApprovalRequestSuccess();
             $creditCardOperationEnum = $this->getCreditCardOperation($approvalRequest, $standard);
 
             foreach ($data['payment'] as $i => $paymentData) {
@@ -126,6 +139,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 // InstantBuyKey payment
                 if (isset($paymentData['card_on_file_id'])) {
                     $token = Mage::getModel('mundipagg/cardonfile')->load($paymentData['card_on_file_id']);
+                    $helperLog->info('With InstantBuyKey');
+
                     if ($token->getId() && $token->getEntityId() == $order->getCustomerId()) {
                         $creditcardTransactionData->CreditCard->InstantBuyKey = $token->getToken();
                         $creditcardTransactionData->CreditCard->CreditCardBrand = $token->getCcType();
@@ -137,6 +152,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         $creditcardTransactionData->Options->CurrencyIso = "BRL"; //Moeda do pedido
                     }
                 } else { // Credit Card
+                    $helperLog->info('Without InstantBuyKey');
+
                     $creditcardTransactionData->CreditCard->CreditCardNumber = $paymentData['CreditCardNumber']; // Número do cartão
                     $creditcardTransactionData->CreditCard->HolderName = $paymentData['HolderName']; // Nome do cartão
                     $creditcardTransactionData->CreditCard->SecurityCode = $paymentData['SecurityCode']; // Código de segurança
@@ -149,15 +166,21 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                     $creditcardTransactionData->InstallmentCount = $paymentData['InstallmentCount']; // Nº de parcelas
                     $creditcardTransactionData->Options->CurrencyIso = "BRL"; //Moeda do pedido
                 }
+
                 $installmentCount = $paymentData['InstallmentCount'];
+
                 // BillingAddress
                 if ($standard->getAntiFraud() == 1) {
                     $addy = $this->buyerBillingData($order, $data, $_request, $standard);
                     $creditcardTransactionData->CreditCard->BillingAddress = $addy['AddressCollection'][0];
                 }
+
                 if ($standard->getEnvironment() != 'production') {
+                    $helperLog->info('With Sandbox');
+
                     $creditcardTransactionData->Options->PaymentMethodCode = $standard->getPaymentMethodCode(); // Código do meio de pagamento
                 }
+
                 // Verificamos se tem o produto de teste da Cielo no carrinho
                 foreach ($order->getItemsCollection() as $item) {
                     if ($item->getSku() == $standard->getCieloSku() && $standard->getEnvironment() == 'production') {
@@ -169,27 +192,35 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         $recurrencyModel->setItem($item);
                     }
                 }
+
                 $creditcardTransactionCollection[] = $creditcardTransactionData;
             }
+
             $_request["CreditCardTransactionCollection"] = $this->ConvertCreditcardTransactionCollectionFromRequest($creditcardTransactionCollection, $standard);
             if($data['payment_method'] === 'mundipagg_recurrencepayment') {
+                $helperLog->info('With Recurrence payment');
                 $_request = $recurrencyModel->generateRecurrences($_request, $installmentCount);
             }
+
             // Buyer data
-            $_request["Buyer"] = array();
+            $_request["Buyer"] = [];
             $_request["Buyer"] = $this->buyerBillingData($order, $data, $_request, $standard);
+
             // Cart data
-            $_request["ShoppingCartCollection"] = array();
+            $_request["ShoppingCartCollection"] = [];
             $_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
+
             //verify anti-fraud config and mount the node 'RequestData'
             $nodeRequestData = $this->getRequestDataNode();
             if (is_array($nodeRequestData)) {
                 $_request['RequestData'] = $nodeRequestData;
             }
+
             // check anti fraud minimum value
             if ($helper->isAntiFraudEnabled()) {
                 $antifraudProviderConfig = intval(Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider'));
                 $antifraudProvider = null;
+
                 switch ($antifraudProviderConfig) {
                     case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_CLEARSALE:
                         $antifraudProvider = 'clearsale';
@@ -201,24 +232,35 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         $antifraudProvider = 'stone';
                         break;
                 }
+
                 $minValueConfig = Mage::getStoreConfig("payment/mundipagg_standard/antifraud_minimum_{$antifraudProvider}");
                 $minValueConfig = $helper->formatPriceToCents($minValueConfig);
+
                 if ($amountInCentsVar >= $minValueConfig) {
+                    $helperLog->info('With Antifraud enabled');
+                    $helperLog->info('With Antifraud provider: ' . $antifraudProvider);
+
                     $_request['Options']['IsAntiFraudEnabled'] = true;
                 } else {
                     $_request['Options']['IsAntiFraudEnabled'] = false;
                 }
             }
+
             $response = $this->sendJSON($_request);
+
             $errorReport = $helper->issetOr($response['ErrorReport']);
             $orderKey = $helper->issetOr($response['OrderResult']['OrderKey']);
             $orderReference = $helper->issetOr($response['OrderResult']['OrderReference']);
             $createDate = $helper->issetOr($response['OrderResult']['CreateDate']);
+
             // if some error ocurred ex.: http 500 internal server error
             if (!is_null($errorReport)) {
+                $helperLog->info('With Not null Error report');
+
                 $errorItemCollection = $errorReport['ErrorItemCollection'];
+
                 // Return errors
-                return array(
+                return [
                     'error'               => 1,
                     'ErrorCode'           => $helper->issetOr($errorItemCollection[0]['ErrorCode']),
                     'ErrorDescription'    => $helper->issetOr($errorItemCollection[0]['Description']),
@@ -226,31 +268,52 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                     'OrderReference'      => $orderReference,
                     'ErrorItemCollection' => $errorItemCollection,
                     'result'              => $response,
-                );
+                ];
             }
+
             // Transactions colllection
             $creditCardTransactionResultCollection = $helper->issetOr($response['CreditCardTransactionResultCollection']);
             $transactionsQty = count($creditCardTransactionResultCollection);
+
             // Only 1 transaction
             if (count($creditCardTransactionResultCollection) == 1) {
                 $creditCardTransaction = $creditCardTransactionResultCollection[0];
                 $success = $helper->issetOr($creditCardTransaction['Success'], false);
+
+                $helperLog->info('With Only 1 transaction');
+
                 //and transaction success is true
                 if ($success === true) {
+                    $helperLog->info('With Success true');
+
 //					$trans = $creditCardTransactionResultCollection['CreditCardTransactionResult'];
                     // We save Card On File
                     if ($data['customer_id'] != 0 && isset($data['payment'][1]['token']) && $data['payment'][1]['token'] == 'new') {
+                        $expiresAt = date(
+                            "Y-m-t",
+                            mktime(
+                                0,
+                                0,
+                                0,
+                                $data['payment'][1]['ExpMonth'],
+                                1,
+                                $data['payment'][1]['ExpYear']
+                            )
+                        );
+
                         $cardonfile = Mage::getModel('mundipagg/cardonfile');
+
                         $cardonfile->setEntityId($data['customer_id']);
                         $cardonfile->setAddressId($data['address_id']);
                         $cardonfile->setCcType($data['payment'][1]['CreditCardBrandEnum']);
                         $cardonfile->setCreditCardMask($creditCardTransaction['CreditCard']['MaskedCreditCardNumber']);
-                        $cardonfile->setExpiresAt(date("Y-m-t", mktime(0, 0, 0, $data['payment'][1]['ExpMonth'], 1, $data['payment'][1]['ExpYear'])));
+                        $cardonfile->setExpiresAt($expiresAt);
                         $cardonfile->setToken($creditCardTransaction['CreditCard']['InstantBuyKey']);
                         $cardonfile->setActive(1);
                         $cardonfile->save();
                     }
-                    $result = array(
+
+                    $result = [
                         'success'        => true,
                         'message'        => 1,
                         'returnMessage'  => urldecode($creditCardTransaction['AcquirerMessage']),
@@ -258,44 +321,59 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         'OrderReference' => $orderReference,
                         'isRecurrency'   => $recurrencyModel->recurrencyExists(),
                         'result'         => $response
-                    );
+                    ];
+
                     if (is_null($createDate === false)) {
                         $result['CreateDate'] = $createDate;
                     }
+
                     return $result;
                 } else {
                     // CreditCardTransactionResult success == false, not authorized
-                    $result = array(
+                    $helperLog->info('With Success false');
+
+                    $result = [
                         'error'            => 1,
                         'ErrorCode'        => $creditCardTransaction['AcquirerReturnCode'],
                         'ErrorDescription' => urldecode($creditCardTransaction['AcquirerMessage']),
                         'OrderKey'         => $orderKey,
                         'OrderReference'   => $orderReference,
                         'result'           => $response
-                    );
+                    ];
+
                     return $result;
                 }
             } elseif ($transactionsQty > 1) { // More than 1 transaction
+                $helperLog->info('With more than 1 transactions');
 
                 $transactionFailed = $this->ifOneOrMoreTransactionFailed($creditCardTransactionResultCollection);
-                if($transactionFailed){
+
+                if ($transactionFailed) {
+                    $helperLog->info('With Transaction failed');
+
                     $transactionFailed['OrderKey'] = $orderKey;
                     $transactionFailed['OrderReference'] = $orderReference;
                     $transactionFailed['result'] = $response;
+
                     return $transactionFailed;
                 }
+
                 $allTransactions = $creditCardTransactionResultCollection;
+
                 // We remove other transactions made before
                 $actualTransactions = count($data['payment']);
                 $totalTransactions = count($allTransactions);
                 $transactionsToDelete = $totalTransactions - $actualTransactions;
+
                 if ($totalTransactions > $actualTransactions) {
                     for ($i = 0; $i <= ($transactionsToDelete - 1); $i++) {
                         unset($allTransactions[$i]);
                     }
+
                     // Reorganize array indexes from 0
                     $allTransactions = array_values($allTransactions);
                 }
+
                 foreach ($allTransactions as $key => $trans) {
                     // We save Cards On File for current transaction(s)
                     if ($data['customer_id'] != 0 && isset($data['payment'][$key + 1]['token']) && $data['payment'][$key + 1]['token'] == 'new') {
@@ -310,97 +388,127 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                         $cardonfile->save();
                     }
                 }
+
                 // Result
-                $result = array(
+                $result = [
                     'success'        => true,
                     'message'        => 1,
                     'OrderKey'       => $orderKey,
                     'OrderReference' => $orderReference,
                     'isRecurrency'   => $recurrencyModel->recurrencyExists(),
                     'result'         => $response,
-                );
+                ];
+
                 $createDate = $helper->issetOr($response['OrderResult']['CreateDate']);
+
                 if (is_null($createDate) === false) {
                     $result['CreateDate'] = $createDate;
                 }
+
                 return $result;
             }
         } catch (Exception $e) {
             //Redirect to Cancel page
             Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
-            //Log error
-            $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
             $helperLog->error($e, true);
+
             //Mail error
             $this->mailError(print_r($e->getMessage(), 1));
+
             // Return error
             $approvalRequest['error'] = 'Error WS';
             $approvalRequest['ErrorCode'] = 'ErrorCode WS';
             $approvalRequest['ErrorDescription'] = 'ErrorDescription WS';
             $approvalRequest['OrderKey'] = '';
             $approvalRequest['OrderReference'] = '';
+
             return $approvalRequest;
         }
+
+        $helperLog->info('With MundiPagg Timeout');
         // time out or no Mundipagg API response
         return false;
     }
     /**
      * Convert CreditcardTransaction Collection From Request
      */
-    public function ConvertCreditcardTransactionCollectionFromRequest($creditcardTransactionCollectionRequest, $standard) {
+    public function ConvertCreditcardTransactionCollectionFromRequest($creditcardTransactionCollectionRequest, $standard)
+    {
         $newCreditcardTransCollection = array();
         $counter = 0;
+
         foreach ($creditcardTransactionCollectionRequest as $creditcardTransItem) {
             $creditcardTrans = array();
             $creditcardTrans["AmountInCents"] = $creditcardTransItem->AmountInCents;
+
             if (isset($creditcardTransItem->CreditCard->CreditCardNumber)) {
                 $creditcardTrans['CreditCard']["CreditCardNumber"] = $creditcardTransItem->CreditCard->CreditCardNumber;
             }
+
             if (isset($creditcardTransItem->CreditCard->HolderName)) {
                 $creditcardTrans['CreditCard']["HolderName"] = $creditcardTransItem->CreditCard->HolderName;
             }
+
             if (isset($creditcardTransItem->CreditCard->SecurityCode)) {
                 $creditcardTrans['CreditCard']["SecurityCode"] = $creditcardTransItem->CreditCard->SecurityCode;
             }
+
             if (isset($creditcardTransItem->CreditCard->ExpMonth)) {
                 $creditcardTrans['CreditCard']["ExpMonth"] = $creditcardTransItem->CreditCard->ExpMonth;
             }
+
             if (isset($creditcardTransItem->CreditCard->ExpYear)) {
                 $creditcardTrans['CreditCard']["ExpYear"] = $creditcardTransItem->CreditCard->ExpYear;
             }
+
             if (isset($creditcardTransItem->CreditCard->InstantBuyKey)) {
                 $creditcardTrans['CreditCard']["InstantBuyKey"] = $creditcardTransItem->CreditCard->InstantBuyKey;
             }
+
             $creditcardTrans['CreditCard']["CreditCardBrand"] = $creditcardTransItem->CreditCard->CreditCardBrand;
             $creditcardTrans["CreditCardOperation"] = $creditcardTransItem->CreditCardOperation;
             $creditcardTrans["InstallmentCount"] = $creditcardTransItem->InstallmentCount;
             $creditcardTrans['Options']["CurrencyIso"] = $creditcardTransItem->Options->CurrencyIso;
+
             if ($standard->getEnvironment() != 'production') {
                 $creditcardTrans['Options']["PaymentMethodCode"] = $creditcardTransItem->Options->PaymentMethodCode;
             }
+
             if ($standard->getAntiFraud() == 1) {
                 $creditcardTrans['CreditCard']['BillingAddress'] = $creditcardTransItem->CreditCard->BillingAddress;
                 unset($creditcardTrans['CreditCard']['BillingAddress']['AddressType']);
             }
+
             $newCreditcardTransCollection[$counter] = $creditcardTrans;
             $counter += 1;
         }
+
         return $newCreditcardTransCollection;
     }
     /**
      * Boleto transaction
      **/
-    public function boletoTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard) {
+    public function boletoTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard)
+    {
+        $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+        $helperLog->setLogLabel('|' . $order->getIncrementId() . '|');
+
         try {
             $helper = Mage::helper('mundipagg');
+            $helperLog->info('boletoTransaction()');
+
             // Set Data
             $_request = [];
             $_request["Order"] = [];
             $_request["Order"]["OrderReference"] = $order->getIncrementId();
             $_request["BoletoTransactionCollection"] = [];
+
             $boletoTransactionCollection = new stdclass();
+
             for ($i = 1; $i <= $data['boleto_parcelamento']; $i++) {
                 $boletoTransactionData = new stdclass();
+
                 if (!empty($data['boleto_dates'])) {
                     $datePagamentoBoleto = $data['boleto_dates'][$i - 1];
                     $now = strtotime(date('Y-m-d'));
@@ -410,13 +518,18 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 } else {
                     $daysToAddInBoletoExpirationDate = $standard->getDiasValidadeBoleto();
                 }
+
                 $baseGrandTotal = str_replace(',', '.', $order->getBaseGrandTotal());
                 $amountInCentsVar = intval(strval((($baseGrandTotal / $data['boleto_parcelamento']) * 100)));
                 $boletoTransactionData->AmountInCents = $amountInCentsVar;
                 $boletoTransactionData->Instructions = $standard->getInstrucoesCaixa();
+
                 if ($standard->getEnvironment() != 'production') {
+                    $helperLog->info('With Sandbox');
+
                     $boletoTransactionData->BankNumber = $standard->getBankNumber();
                 }
+
                 $boletoTransactionData->DocumentNumber = '';
                 $boletoTransactionData->Options = new stdclass();
                 $boletoTransactionData->Options->CurrencyIso = 'BRL';
@@ -425,93 +538,124 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $boletoTransactionData->BillingAddress = $addy['AddressCollection'][0];
                 $boletoTransactionCollection = array($boletoTransactionData);
             }
+
             $_request["BoletoTransactionCollection"] = $this->ConvertBoletoTransactionCollectionFromRequest($boletoTransactionCollection);
+
             // Buyer data
             $_request["Buyer"] = array();
             $_request["Buyer"] = $this->buyerBillingData($order, $data, $_request, $standard);
+
             // Cart data
             $_request["ShoppingCartCollection"] = array();
             $_request["ShoppingCartCollection"] = $this->cartData($order, $data, $_request, $standard);
+
             //verify anti-fraud config and mount the node 'RequestData'
             $nodeRequestData = $this->getRequestDataNode();
             if (is_array($nodeRequestData)) {
                 $_request['RequestData'] = $nodeRequestData;
             }
+
             $response = $this->sendJSON($_request);
+
             // time out or no Mundipagg API response
             if ($response === false) {
+                $helperLog->info('With MundiPagg Timeout');
+
                 return false;
             }
+
             $errorReport = $helper->issetOr($response['ErrorReport'], false);
+
             // Error
             if ($errorReport) {
                 $_errorItemCollection = $errorReport['ErrorItemCollection'];
                 $errorCode = null;
                 $errorDescription = null;
+
                 foreach ($_errorItemCollection as $errorItem) {
                     $errorCode = $errorItem['ErrorCode'];
                     $errorDescription = $errorItem['Description'];
                 }
-                return array(
+
+                $helperLog->info('With Error description: ' . $errorDescription);
+
+                return [
                     'error'            => 1,
                     'ErrorCode'        => $errorCode,
                     'ErrorDescription' => Mage::helper('mundipagg')->__($errorDescription),
                     'result'           => $response
-                );
+                ];
             }
+
             $success = $helper->issetOr($response['Success']);
+
             // False
             if ($success === false) {
-                return array(
+                $helperLog->info('With Success false');
+
+                return [
                     'error'            => 1,
                     'ErrorCode'        => 'WithError',
                     'ErrorDescription' => 'WithError',
                     'result'           => $response
-                );
+                ];
             } else {
+                $helperLog->info('With Success true');
+
                 $orderKey = $helper->issetOr($response['OrderResult']['OrderKey']);
                 $orderReference = $helper->issetOr($response['OrderResult']['OrderReference']);
                 $createDate = $helper->issetOr($response['OrderResult']['CreateDate']);
+
                 // Success
-                $result = array(
+                $result = [
                     'success'        => true,
                     'message'        => 0,
                     'OrderKey'       => $orderKey,
                     'OrderReference' => $orderReference,
                     'result'         => $response
-                );
+                ];
+
                 if (is_null($createDate) === false) {
                     $result['CreateDate'] = $createDate;
                 }
+
                 // remove boleto promo discount from session
                 $this->removeBoletoPromoDiscount();
+
                 return $result;
             }
         } catch (Exception $e) {
             //Redirect to Cancel page
             Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
+
             //Log error
-            $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
-            $log->error($e, true);
+            $helperLog->error($e, true);
+
             //Mail error
             $this->mailError(print_r($e->getMessage(), 1));
+
             // Return error
             $approvalRequest['error'] = 'Error WS';
             $approvalRequest['ErrorCode'] = 'ErrorCode WS';
             $approvalRequest['ErrorDescription'] = 'ErrorDescription WS';
             $approvalRequest['OrderKey'] = '';
             $approvalRequest['OrderReference'] = '';
+
             return $approvalRequest;
         }
     }
+
     /**
      * Convert BoletoTransaction Collection From Request
      */
-    public function ConvertBoletoTransactionCollectionFromRequest($boletoTransactionCollectionRequest) {
-        $newBoletoTransCollection = array();
+    public function ConvertBoletoTransactionCollectionFromRequest($boletoTransactionCollectionRequest)
+    {
+        $newBoletoTransCollection = [];
         $counter = 0;
+
         foreach ($boletoTransactionCollectionRequest as $boletoTransItem) {
-            $boletoTrans = array();
+            $boletoTrans = [];
+
             $boletoTrans["AmountInCents"] = $boletoTransItem->AmountInCents - $this->getBoletoPromoDiscount();
             $boletoTrans["BankNumber"] = isset($boletoTransItem->BankNumber) ? $boletoTransItem->BankNumber : '';
             $boletoTrans["Instructions"] = $boletoTransItem->Instructions;
@@ -524,6 +668,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
         return $newBoletoTransCollection;
     }
+
     /**
      * Get boleto promo discount
      */
@@ -533,6 +678,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $boletoDiscount = $session->getData('boleto_promo_discount');
         return $boletoDiscount ?  $boletoDiscount * 100 : 0;
     }
+
     /**
      * Invalidate boleto promo discount
      */
@@ -541,11 +687,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $session = Mage::getSingleton('checkout/session');
         $session->setData('boleto_promo_discount', 0);
     }
+
     /**
      * Debit transaction
      **/
-    public function debitTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard) {
+    public function debitTransaction($order, $data, Uecommerce_Mundipagg_Model_Standard $standard)
+    {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
         try {
             // Get Webservice URL
             if ($standard->getEnvironment() == 'production') {
@@ -553,58 +702,75 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             } else {
                 $url = Mage::getStoreConfig('payment/mundipagg_debit/apiDebitStagingUrl');
             }
+
             $requestData = $this->prepareDebitRequestData($order, $data, $standard);
+
             $jsonRequest = json_encode($requestData, JSON_PRETTY_PRINT);
+
             $response = $this->sendDataToApi($url, $jsonRequest, $standard->getMerchantKey(), $helperLog);
             $response = $this->responseFormatter($response);
+
             $helperLog->debug(
                 "Order #" . $order->getIncrementId() .
                 " | Response \n" .
                 json_encode($response, JSON_PRETTY_PRINT)
             );
+
             return $this->debitResponseProcess($response);
         } catch (Exception $e) {
             //Redirect to Cancel page
             Mage::getSingleton('checkout/session')->setApprovalRequestSuccess('cancel');
+
             //Log error
             $helperLog->error($e, true);
+
             //Mail error
             $this->mailError(print_r($e->getMessage(), 1));
+
             // Return error
             $approvalRequest['error'] = 'Error WS';
             $approvalRequest['ErrorCode'] = 'ErrorCode WS';
             $approvalRequest['ErrorDescription'] = 'ErrorDescription WS';
             $approvalRequest['OrderKey'] = '';
             $approvalRequest['OrderReference'] = '';
+
             return $approvalRequest;
         }
     }
+
     /**
      * Set buyer data
      */
-    public function buyerBillingData($order, $data, $_request, $standard) {
+    public function buyerBillingData($order, $data, $_request, $standard)
+    {
         if ($order->getData()) {
             $gender = null;
+
             if ($order->getCustomerGender()) {
                 $gender = $order->getCustomerGender();
             }
+
             if ($order->getCustomerIsGuest() == 0) {
                 $customer = Mage::getModel('customer/customer')->load($order->getCustomerId());
                 $gender = $customer->getGender();
                 $createdAt = explode(' ', $customer->getCreatedAt());
                 $updatedAt = explode(' ', $customer->getUpdatedAt());
                 $currentDateTime = Mage::getModel('core/date')->date('Y-m-d H:i:s');
+
                 if (!array_key_exists(1, $createdAt)) {
                     $createdAt = explode(' ', $currentDateTime);
                 }
+
                 if (!array_key_exists(1, $updatedAt)) {
                     $updatedAt = explode(' ', $currentDateTime);
                 }
+
                 $createDateInMerchant = substr($createdAt[0] . 'T' . $createdAt[1], 0, 19);
                 $lastBuyerUpdateInMerchant = substr($updatedAt[0] . 'T' . $updatedAt[1], 0, 19);
             } else {
                 $createDateInMerchant = $lastBuyerUpdateInMerchant = date('Y-m-d') . 'T' . date('H:i:s');
             }
+
             switch ($gender) {
                 case '1':
                     $gender = 'M';
@@ -614,18 +780,25 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                     break;
             }
         }
+
         $billingAddress = $order->getBillingAddress();
         $street = $billingAddress->getStreet();
         $regionCode = $billingAddress->getRegionCode();
+
         if ($billingAddress->getRegionCode() == '') {
             $regionCode = 'RJ';
         }
+
         $telephone = Mage::helper('mundipagg')->applyTelephoneMask($billingAddress->getTelephone());
+
         if ($billingAddress->getTelephone() == '') {
             $telephone = '55(21)88888888';
         }
+
         $data['DocumentNumber'] = $this->getCustomerDocumentNumber($data, $order);
+
         $invalid = 0;
+
         if (Mage::helper('mundipagg')->validateCPF($data['DocumentNumber'])) {
             $data['PersonType'] = 'Person';
             $data['DocumentType'] = 'CPF';
@@ -633,6 +806,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         } else {
             $invalid++;
         }
+
         // We verify if a CNPJ is informed
         if (Mage::helper('mundipagg')->validateCNPJ($data['DocumentNumber'])) {
             $data['PersonType'] = 'Company';
@@ -641,15 +815,18 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         } else {
             $invalid++;
         }
+
         if ($invalid == 2) {
             $data['DocumentNumber'] = '00000000000';
             $data['DocumentType'] = 'CPF';
             $data['PersonType'] = 'Person';
         }
+
         // Request
         if ($gender == 'M' || $gender == 'F') {
             $_request["Buyer"]["Gender"] = $gender;
         }
+
         $_request["Buyer"]["DocumentNumber"] = preg_replace('[\D]', '', $data['DocumentNumber']);
         $_request["Buyer"]["DocumentType"] = $data['DocumentType'];
         $_request["Buyer"]["Email"] = $order->getCustomerEmail();
@@ -663,8 +840,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $_request["Buyer"]['BuyerReference'] = '';
         $_request["Buyer"]['CreateDateInMerchant'] = $createDateInMerchant;
         $_request["Buyer"]['LastBuyerUpdateInMerchant'] = $lastBuyerUpdateInMerchant;
+
         // Address
-        $address = array();
+        $address = [];
         $address['AddressType'] = 'Residential';
         $address['City'] = $billingAddress->getCity();
         $address['District'] = isset($street[3]) ? $street[3] : 'xxx';
@@ -674,14 +852,18 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $address['Street'] = isset($street[0]) ? $street[0] : 'xxx';
         $address['ZipCode'] = preg_replace('[\D]', '', $billingAddress->getPostcode());
         $address['Country'] = 'Brazil';
-        $_request["Buyer"]["AddressCollection"] = array();
-        $_request["Buyer"]["AddressCollection"] = array($address);
+
+        $_request["Buyer"]["AddressCollection"] = [];
+        $_request["Buyer"]["AddressCollection"] = [$address];
+
         return $_request["Buyer"];
     }
+
     /**
      * Set buyer data
      */
-    public function buyerDebitBillingData($order, $data, $_request, $standard) {
+    public function buyerDebitBillingData($order, $data, $_request, $standard)
+    {
         if ($order->getData()) {
             if ($order->getCustomerGender()) {
                 $gender = $order->getCustomerGender();
@@ -690,6 +872,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $customer = Mage::getModel('customer/customer')->load($customerId);
                 $gender = $customer->getGender();
             }
+
             switch ($gender) {
                 case '1':
                     $gender = 'M';
@@ -699,10 +882,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                     break;
             }
         }
+
         $billingAddress = $order->getBillingAddress();
         $street = $billingAddress->getStreet();
         $zipCode = preg_replace('[\D]', '', $billingAddress->getPostcode());
         $regionCode = $billingAddress->getRegionCode();
+
         if ($billingAddress->getRegionCode() == '') {
             $regionCode = 'RJ';
         }
@@ -712,15 +897,21 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
 
         $telephone = Mage::helper('mundipagg')->applyTelephoneMask($billingAddress->getTelephone());
+
         if ($billingAddress->getTelephone() == '') {
             $telephone = '55(21)88888888';
         }
+
         $testCpfCnpj = Mage::getStoreConfig('mundipagg_tests_cpf_cnpj');
+
         if ($testCpfCnpj != '') {
             $data['TaxDocumentNumber'] = $testCpfCnpj;
         }
+
         $data['DocumentNumber'] = $this->getCustomerDocumentNumber($data, $order);
+
         $invalid = 0;
+
         if (Mage::helper('mundipagg')->validateCPF($data['DocumentNumber'])) {
             $data['PersonType'] = 'Person';
             $data['DocumentType'] = 'CPF';
@@ -741,11 +932,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $data['DocumentType'] = 'CPF';
             $data['PersonType'] = 'Person';
         }
+
         // Request
         if ($gender == 'M' || $gender == 'F') {
             $_request["Buyer"]["Gender"] = $gender;
             $_request["Buyer"]["GenderEnum"] = $gender;
         }
+
         $_request["Buyer"]["TaxDocumentNumber"] = preg_replace('[\D]', '', $data['DocumentNumber']);
         $_request["Buyer"]["TaxDocumentTypeEnum"] = $data['DocumentType'];
         $_request["Buyer"]["Email"] = $order->getCustomerEmail();
@@ -758,8 +951,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $_request["Buyer"]['FacebookId'] = '';
         $_request["Buyer"]['TwitterId'] = '';
         $_request["Buyer"]['BuyerReference'] = '';
+
         // Address
-        $address = array();
+        $address = [];
         $address['AddressTypeEnum'] = 'Residential';
         $address['City'] = $billingAddress->getCity();
         $address['District'] = isset($street[3]) ? $street[3] : 'xxx';
@@ -767,23 +961,32 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $address['Number'] = isset($street[1]) ? $street[1] : '0';
         $address['State'] = $regionCode;
         $address['Street'] = isset($street[0]) ? $street[0] : 'xxx';
+
         if (strlen($address['Number']) > 8) {
             $address['Street'] .= ", " . $address['Number'];
             $address['Number'] = '0';
         }
+
         $address['ZipCode'] = $zipCode;
-        $_request["Buyer"]["BuyerAddressCollection"] = array();
-        $_request["Buyer"]["BuyerAddressCollection"] = array($address);
+
+        $_request["Buyer"]["BuyerAddressCollection"] = [];
+        $_request["Buyer"]["BuyerAddressCollection"] = [$address];
+
         return $_request["Buyer"];
     }
+
     /**
      * Set cart data
      */
-    public function cartData($order, $data, $_request, $standard) {
+    public function cartData($order, $data, $_request, $standard)
+    {
         $baseGrandTotal = round($order->getBaseGrandTotal(), 2);
-        $baseDiscountAmount = round($order->getBaseDiscountAmount(), 2);       
+        $baseDiscountAmount = round($order->getBaseDiscountAmount(), 2);
+
         $discount = 1;
+
         $shippingDiscountAmount = round($order->getShippingDiscountAmount(), 2);
+
         if (abs($shippingDiscountAmount) > 0) {
             $totalShippingWithoutDiscount = round($order->getBaseShippingInclTax(), 2);
             $totalShippingWithDiscount = $totalShippingWithoutDiscount - abs($shippingDiscountAmount);
@@ -791,7 +994,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         } else {
             $shippingDiscount = 1;
         }
-        $items = array();
+
+        $items = [];
+
         foreach ($order->getItemsCollection() as $item) {
             if ($item->getParentItemId() == '') {
                 $items[$item->getItemId()]['sku'] = $item->getProductId();
@@ -801,9 +1006,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $items[$item->getItemId()]['price'] = $item->getBasePrice();
             }
         }
+
         $i = 0;
+
         $shipping = intval(strval(($order->getBaseShippingInclTax() * $shippingDiscount * 100)));
         $deadlineConfig = Mage::getStoreConfig('payment/mundipagg_standard/delivery_deadline');
+
         if ($deadlineConfig != '') {
             $date = new Zend_Date($order->getCreatedAtStoreDate()->toString(Varien_Date::DATETIME_INTERNAL_FORMAT), Zend_Date::DATETIME);
             $date->addDay((int)$deadlineConfig);
@@ -811,8 +1019,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $_request["ShoppingCartCollection"]['DeliveryDeadline'] = $deliveryDeadline;
             $_request["ShoppingCartCollection"]['EstimatedDeliveryDate'] = $deliveryDeadline;
         }
+
         $_request["ShoppingCartCollection"]["FreightCostInCents"] = $shipping;
         $_request['ShoppingCartCollection']['ShippingCompany'] = Mage::getStoreConfig('payment/mundipagg_standard/shipping_company');
+
         foreach ($items as $itemId) {
             $unitCostInCents = intval(strval(($itemId['price'] * $discount * 100)));
             $_request["ShoppingCartCollection"]["ShoppingCartItemCollection"][$i]["Description"] = empty($itemId['description']) || ($itemId['description'] == '') ? $itemId['name'] : $itemId['description'];
@@ -822,21 +1032,27 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $_request["ShoppingCartCollection"]["ShoppingCartItemCollection"][$i]["UnitCostInCents"] = $unitCostInCents;
             //}
             $totalInCents = intval(strval(($itemId['qty'] * $itemId['price'] * $discount * 100)));
+
             $_request["ShoppingCartCollection"]["ShoppingCartItemCollection"][$i]["TotalCostInCents"] = $totalInCents;
+
             $i++;
         }
+
         // Delivery address
         if ($order->getIsVirtual()) {
             $addy = $order->getBillingAddress();
         } else {
             $addy = $order->getShippingAddress();
         }
+
         $street = $addy->getStreet();
         $regionCode = $addy->getRegionCode();
+
         if ($addy->getRegionCode() == '') {
             $regionCode = 'RJ';
         }
-        $address = array();
+
+        $address = [];
         $address['City'] = $addy->getCity();
         $address['District'] = isset($street[3]) ? $street[3] : 'xxx';
         $address['Complement'] = isset($street[2]) ? $street[2] : '';
@@ -846,38 +1062,51 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $address['ZipCode'] = preg_replace('[\D]', '', $addy->getPostcode());
         $address['Country'] = 'Brazil';
         $address['AddressType'] = "Shipping";
-        $_request["ShoppingCartCollection"]["DeliveryAddress"] = array();
+
+        $_request["ShoppingCartCollection"]["DeliveryAddress"] = [];
         $_request["ShoppingCartCollection"]["DeliveryAddress"] = $address;
-        return array($_request["ShoppingCartCollection"]);
+
+        return [$_request["ShoppingCartCollection"]];
     }
+
     /**
      * Manage Order Request: capture / void / refund
      **/
-    public function manageOrderRequest($data, Uecommerce_Mundipagg_Model_Standard $standard) {
+    public function manageOrderRequest($data, Uecommerce_Mundipagg_Model_Standard $standard)
+    {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
         try {
             // Get Webservice URL
             $url = "{$standard->getURL()}{$data['ManageOrderOperationEnum']}";
+
             unset($data['ManageOrderOperationEnum']);
+
             // Get store key
             $key = $standard->getMerchantKey();
             $dataToPost = json_encode($data);
+
             $helperUtil = new Uecommerce_Mundipagg_Helper_Util();
             $helperLog->debug("Url: {$url}");
             $helperLog->info("Request:\n{$helperUtil->jsonEncodePretty($data)}\n");
+
             // Send payment data to MundiPagg
             $ch = curl_init();
+
             // Header
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $key . ''));
+
             // Set the url, number of POST vars, POST data
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
             // Execute post
             $_response = curl_exec($ch);
 
             //check for curl errors
             $curlErrorNumber = curl_errno($ch);
+
             if ($curlErrorNumber !== 0) {
                 $helperLog->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
             }
@@ -890,22 +1119,28 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             }
 
             $json = $helperUtil->jsonEncodePretty($xml);
+
             // Close connection
             curl_close($ch);
+
             $helperLog->info("Response:\n{$json}\n");
-            // Return
-            return array('result' => simplexml_load_string($_response));
+
+            return ['result' => simplexml_load_string($_response)];
         } catch (Exception $e) {
             //Redirect to Cancel page
             Mage::getSingleton('checkout/session')->setApprovalRequestSuccess(false);
+
             //Log error
             $helperLog->error($e, true);
+
             //Mail error
             $this->mailError(print_r($e->getMessage(), true));
+
             // Throw Exception
             Mage::throwException(Mage::helper('mundipagg')->__('Payment Error'));
         }
     }
+
     /**
      * call MundiPagg endpoint '/Sale/Capture'
      *
@@ -913,30 +1148,38 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @param string $orderReference
      * @return array
      */
-    public function saleCapture($data, $orderReference) {
+    public function saleCapture($data, $orderReference)
+    {
         $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $log->setLogLabel("#{$orderReference}");
+
         // Get Webservice URL
         $url = "{$this->modelStandard->getURL()}Capture";
+
         // Get store key
         $key = $this->modelStandard->getmerchantKey();
         $dataToPost = json_encode($data);
+
         /* @var Uecommerce_Mundipagg_Helper_Data $helper */
         $helper = Mage::helper('mundipagg');
         $log->debug("Url: {$url}");
         $log->info("Request:\n{$helper->jsonEncodePretty($data)}\n");
+
         // Send payment data to MundiPagg
         $ch = curl_init();
+
         // Header
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
             "MerchantKey: {$key}",
             'Accept: application/json'
         ]);
+
         // Set the url, number of POST vars, POST data
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $dataToPost);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
         // Execute post
         $rawResponse = curl_exec($ch);
 
@@ -948,6 +1191,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         // Close connection
         curl_close($ch);
+
         $response = json_decode($rawResponse, true);
 
         // Check for invalid json response
@@ -961,57 +1205,72 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         // Return
         return $response;
     }
+
     /**
      * Process order
      * @param $order
      * @param $data
      */
-    public function processOrder($postData) {
+    public function processOrder($postData)
+    {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $returnMessage = '';
+
         try {
             if (!isset($postData['xmlStatusNotification'])) {
                 $helperLog->info("Index xmlStatusNotification not found");
                 return 'KO | Internal error.';
             }
+
             $xmlStatusNotificationString = htmlspecialchars_decode($postData['xmlStatusNotification']);
+
             $xml = simplexml_load_string($xmlStatusNotificationString);
             $json = json_encode($xml);
             $data = json_decode($json, true);
+
             $orderReference = isset($xml->OrderReference) ? $xml->OrderReference : null;
+
             if (is_null($orderReference)) {
                 $logMessage = "Notification post:\n{$xmlStatusNotificationString}\n";
             } else {
                 $logMessage = "Notification post for order #{$orderReference}:\n{$xmlStatusNotificationString}";
             }
+
             $helperLog->info($logMessage);
             $orderReference = $data['OrderReference'];
+
             $order = Mage::getModel('sales/order');
             $order->loadByIncrementId($orderReference);
+
             if (!$order->getId()) {
                 $returnMessage = "OrderReference don't correspond to a store order.";
                 $helperLog->info("OrderReference: {$orderReference} | {$returnMessage}");
                 return "OK | {$returnMessage}";
             }
+
             $transactionData = null;
+
             if (!empty($data['BoletoTransaction'])) {
                 $status = $data['BoletoTransaction']['BoletoTransactionStatus'];
                 $transactionKey = $data['BoletoTransaction']['TransactionKey'];
                 $capturedAmountInCents = $data['BoletoTransaction']['AmountPaidInCents'];
                 $transactionData = $data['BoletoTransaction'];
             }
+
             if (!empty($data['CreditCardTransaction'])) {
                 $status = $data['CreditCardTransaction']['CreditCardTransactionStatus'];
                 $transactionKey = $data['CreditCardTransaction']['TransactionKey'];
                 $capturedAmountInCents = $data['CreditCardTransaction']['CapturedAmountInCents'];
                 $transactionData = $data['CreditCardTransaction'];
             }
+
             if (!empty($data['OnlineDebitTransaction'])) {
                 $status = $data['OnlineDebitTransaction']['OnlineDebitTransactionStatus'];
                 $transactionKey = $data['OnlineDebitTransaction']['TransactionKey'];
                 $capturedAmountInCents = $data['OnlineDebitTransaction']['AmountPaidInCents'];
                 $transactionData = $data['OnlineDebitTransaction'];
             }
+
             $returnMessageLabel = "Order #{$order->getIncrementId()}";
 
             if (!isset($transactionData['IsRecurrency'])) {
@@ -1020,21 +1279,27 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
             //If is recurrency order and it status is processing or canceled stop the execution
             if(($order->getState() == Mage_Sales_Model_Order::STATE_PROCESSING ||
-                    $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) &&
+                $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED) &&
                 $transactionData['IsRecurrency'] === 'true'
             ) {
-                $returnMessage = "OK | Order #{$orderReference} | This is a recurrency order and its status is already " . $order->getState();
+                $message = 'This is a recurrency order and its status is already';
+                $returnMessage = "OK | Order #{$orderReference} | {$message} " . $order->getState();
+
                 $helperLog->info($returnMessage);
+
                 return $returnMessage;
             }
+
             if (isset($data['OrderStatus'])) {
                 $orderStatus = $data['OrderStatus'];
+
                 //if Magento order is not processing and MundiPagg order status is canceled, cancel the order on Magento
                 if ($order->getState() != Mage_Sales_Model_Order::STATE_PROCESSING && $orderStatus == Uecommerce_Mundipagg_Model_Enum_OrderStatusEnum::CANCELED) {
                     switch ($order->getState()) {
                         case Mage_Sales_Model_Order::STATE_CANCELED:
                             $returnMessage = 'OK | ' . $returnMessageLabel . ' | Order already canceled.';
                             $helperLog->info($returnMessage);
+
                             return $returnMessage;
                         case Mage_Sales_Model_Order::STATE_COMPLETE:
                             foreach ($order->getInvoiceCollection() as $invoice) {
@@ -1042,6 +1307,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                                     $invoices[] = $invoice;
                                 }
                             }
+
                             if (!empty($invoices)) {
                                 $service = Mage::getModel('sales/service_order', $order);
                                 foreach ($invoices as $invoice) {
@@ -1049,45 +1315,60 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                                     $this->createCreditMemo($invoice, $service);
                                 }
                             }
+
                             $this->closeOrder($order);
                             $returnMessage = 'OK | ' . $returnMessageLabel . ' | Order closed.';
                             $helperLog->info($returnMessage);
+
                             return $returnMessage;
                     }
+
                     try {
                         // set flag to prevent send back a cancelation to Mundi via API
                         $this->setCanceledByNotificationFlag($order, true);
                         $this->tryCancelOrder($order, "Transaction update received: {$status}");
                         $returnMessage = "OK | {$returnMessageLabel} | Canceled successfully";
+
                         $helperLog->info($returnMessage);
                     } catch (Exception $e) {
                         $returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
+
                         $helperLog->error($returnMessage);
                     }
+
                     return $returnMessage;
                 }
             }
+
             $payment = $order->getPayment();
+
             // We check if transactionKey exists in database
             $t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
+
             if ($t <= 0) {
                 $helperLog->setLogLabel("Order #{$orderReference}");
                 $helperLog->info("TransactionKey {$transactionKey} not found on database for this order.");
                 $helperLog->info("Searching order history...");
                 $helperLog->setLogLabel("");
+
                 $mundiQueryResult = $this->getOrderTransactions($orderReference);
                 $processQueryResult = $this->processQueryResults($mundiQueryResult, $payment);
+
                 if ($processQueryResult) {
                     $this->removeIntegrationErrorInfo($order);
                 }
             }
+
             // We check if transactionKey exists in database again, after query MundiPagg transactions
             $t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
+
             if ($t <= 0) {
                 $errMsg = "OK | Order #{$orderReference} | TransactionKey {$transactionKey} not found for this order";
                 $helperLog->info($errMsg);
+
                 return $errMsg;
             }
+
             $order->addStatusHistoryComment("MP - Transaction update received: {$status}", false);
             $order->save();
             // transactionKey has been found so we can proceed
@@ -1112,31 +1393,37 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $data,
                 $transactionData,
                 $statusWithError);
-
-
         } catch (Exception $e) {
             $returnMessage = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
+
             //Log error
             $helperLog->error($e, true);
+
             //Mail error
             $this->mailError(print_r($e->getMessage(), 1));
+
             return "KO | {$returnMessage}";
         }
     }
+
     /**
      * @param Mage_Sales_Model_Order $order
      * @param string                 $comment
      * @return bool
      * @throws RuntimeException
      */
-    public function tryCancelOrder(Mage_Sales_Model_Order $order, $comment = null) {
+    public function tryCancelOrder(Mage_Sales_Model_Order $order, $comment = null)
+    {
         if ($order->canCancel()) {
             try {
                 $order->cancel();
+
                 if (!is_null($comment) && is_string($comment)) {
                     $order->addStatusHistoryComment("MP - " . $comment);
                 }
+
                 $order->save();
+
                 return true;
             } catch (Exception $e) {
                 throw new RuntimeException("Order cannot be canceled. Error reason: {$e->getMessage()}");
@@ -1145,7 +1432,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             throw new RuntimeException("Order cannot be canceled.");
         }
     }
-
 
     /**
      * Create invoice
@@ -1156,30 +1442,40 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @param string $status
      * @return string OK|KO
      */
-    private function createInvoice($order, $data, $totalPaid, $status) {
+    private function createInvoice($order, $data, $totalPaid, $status)
+    {
         $helperOrderStatus = Mage::helper('mundipagg/processOrderStatus');
+
         return $helperOrderStatus->createInvoice($order, $data, $totalPaid, $status);
     }
+
     /**
      * Search by orderkey
      * @param string $orderKey
      * @return array
      */
-    public function getTransactionHistory($orderKey) {
+    public function getTransactionHistory($orderKey)
+    {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
         // @var $standard Uecommerce_Mundipagg_Model_Standard
         $standard = Mage::getModel('mundipagg/standard');
+
         // Get store key
         $key = $standard->getMerchantKey();
+
         // Get Webservice URL
         $url = $standard->getURL() . '/Query/' . http_build_query(array('OrderKey' => $orderKey));
+
         // get transactions from MundiPagg
         $ch = curl_init();
+
         // Header
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $key . ''));
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
         // Execute get
         $_response = curl_exec($ch);
 
@@ -1195,17 +1491,20 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $util = new Uecommerce_Mundipagg_Helper_Util();
 
         $helperLog->info($util->xmlToJson($_response));
-        // Return
-        return array('result' => simplexml_load_string($_response));
+
+        return ['result' => simplexml_load_string($_response)];
     }
+
     /**
      * Mail error to Mage::getStoreConfig('trans_email/ident_custom1/email')
      *
      * @since 31-05-2016
      * @param string $message
      */
-    public function mailError($message = '') {
+    public function mailError($message = '')
+    {
         $mail = new Zend_Mail();
+
         $fromName = Mage::getStoreConfig('trans_email/ident_sales/name');
         $fromEmail = Mage::getStoreConfig('trans_email/ident_sales/email');
         $toEmail = Mage::getStoreConfig('trans_email/ident_custom1/email');
@@ -1213,12 +1512,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $bcc = [];
         $subject = 'Error Report - MundiPagg Magento Integration';
         $body = "Error Report from: {$_SERVER['HTTP_HOST']}<br><br>{$message}";
+
         $mail->setFrom($fromEmail, $fromName)
             ->addTo($toEmail, $toName)
             ->addBcc($bcc)
             ->setSubject($subject)
             ->setBodyHtml($body);
+
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
         try {
             $mail->send();
             $helperLog->info("Error Report Sent: {$message}");
@@ -1226,6 +1528,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $helperLog->error($e);
         }
     }
+
     /**
      * Get 'RequestData' node for the One v2 request if antifraud is enabled
      *
@@ -1234,25 +1537,34 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @throws Mage_Core_Exception
      * @return array $requestData
      */
-    private function getRequestDataNode() {
+    private function getRequestDataNode()
+    {
         $antifraud = Mage::getStoreConfig('payment/mundipagg_standard/antifraud');
         $antifraudProvider = Mage::getStoreConfig('payment/mundipagg_standard/antifraud_provider');
+
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $helperHttpCore = new Mage_Core_Helper_Http();
+
         $customerIp = $helperHttpCore->getRemoteAddr();
-        $outputMsg = "";
+
+        $outputMsg = '';
         $sessionId = '';
+
         $error = false;
-        $requestData = array(
+
+        $requestData = [
             'IpAddress' => $customerIp,
             'SessionId' => ''
-        );
+        ];
+
         if ($antifraud == false) {
             return false;
         }
+
         if ($this->debugEnabled) {
             $helperLog->debug("Antifraud enabled...");
         }
+
         switch ($antifraudProvider) {
             case Uecommerce_Mundipagg_Model_Source_Antifraud::ANTIFRAUD_NONE:
                 $outputMsg = "Antifraud enabled and none antifraud provider selected at module configuration.";
@@ -1267,20 +1579,27 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $sessionId = Uecommerce_Mundipagg_Model_Customer_Session::getSessionId();
                 break;
         }
+
         if ($error) {
             $helperLog->error($outputMsg, true);
         }
+
         if (is_null($sessionId)) {
             $sessionId = '';
         }
+
         $requestData['SessionId'] = $sessionId;
         $helperLog->info($outputMsg);
+
         return $requestData;
     }
-    private function clearAntifraudDataFromSession() {
+
+    private function clearAntifraudDataFromSession()
+    {
         $customerSession = Mage::getSingleton('customer/session');
         $customerSession->unsetData(Uecommerce_Mundipagg_Model_Customer_Session::SESSION_ID);
     }
+
     /**
      * Method to unify the transactions requests and his logs
      * @todo must be deprecated, use Uecommerce_Mundipagg_Model_Api::sendJSON method
@@ -1291,30 +1610,41 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @param array  $_logRequest
      * @return array $_response
      */
-    public function sendRequest($dataToPost, $url, $_logRequest = array()) {
+    public function sendRequest($dataToPost, $url, $_logRequest = [])
+    {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
         if (empty($dataToPost) || empty($url)) {
             $errMsg = __METHOD__ . "Exception: one or more arguments not informed to request";
             $helperLog->error($errMsg);
+
             throw new InvalidArgumentException($errMsg);
         }
+
         if (empty($_logRequest)) {
             $_logRequest = $dataToPost;
         }
+
         $requestRawJson = json_encode($dataToPost);
         $requestJSON = $this->helperUtil->jsonEncodePretty($_logRequest);
         $helperLog->info("Request:\n{$requestJSON}\n");
+
         $ch = curl_init();
+
         // Header
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'MerchantKey: ' . $this->modelStandard->getMerchantKey() . ''));
+
         // Set the url, number of POST vars, POST data
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRawJson);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
         $timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
+
         if (is_null($timeoutLimit) === false) {
             curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
         }
+
         // Execute post
         $_response = curl_exec($ch);
 
@@ -1326,6 +1656,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         // Close connection
         curl_close($ch);
+
         // Is there an error?
         $xml = simplexml_load_string($_response);
 
@@ -1336,24 +1667,31 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         $responseJSON = $this->helperUtil->jsonEncodePretty($xml);
         $responseArray = json_decode($responseJSON, true);
+
         if ($_response != 'false') {
             $helperLog->info("Response:\n{$responseJSON} \n");
         } else {
             $helperLog->warning("Response: Integration timeout!");
         }
-        $responseData = array(
+
+        $responseData = [
             'xmlData'   => $xml,
             'arrayData' => $responseArray
-        );
+        ];
+
         $this->clearAntifraudDataFromSession();
+
         return $responseData;
     }
+
     /**
      * @param array $data
      * @return array
      */
-    public function sendJSON($data) {
+    public function sendJSON($data)
+    {
         $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+
         $merchantKey = $this->modelStandard->getMerchantKey();
         $url = $this->modelStandard->getUrl();
         $environment = $this->modelStandard->getEnvironment();
@@ -1361,19 +1699,27 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         if (empty($data)) {
             $errMsg = __METHOD__ . "Exception: one or more arguments not informed to request";
             $log->error($errMsg, true);
+
             throw new InvalidArgumentException($errMsg);
         }
+
         $helper = Mage::helper('mundipagg');
         $orderReference = $helper->issetOr($data['Order']['OrderReference']);
+
         if (is_null($orderReference) === false) {
             $log->setLogLabel("Order #{$orderReference}");
         }
+
         $requestRaw = json_encode($data);
+
+        $moduleVersion = $version = Mage::helper('mundipagg')
+            ->getExtensionVersion();
 
         $headers = [
             'Content-Type: application/json',
             "MerchantKey: {$merchantKey}",
-            'Accept: JSON'
+            'Accept: JSON',
+            'MagentoOne: ' . $moduleVersion
         ];
 
         $log->info(
@@ -1384,19 +1730,24 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         );
 
         $ch = curl_init();
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $requestRaw);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
         $timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
+
         if (is_null($timeoutLimit) === false) {
             curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
         }
+
         // Execute post
         $response = curl_exec($ch);
 
         //check for curl errors
         $curlErrorNumber = curl_errno($ch);
+
         if ($curlErrorNumber !== 0) {
             $log->error("CURL ERROR ". $curlErrorNumber . "!" . curl_error($ch));
         }
@@ -1423,15 +1774,19 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         if ($response == 'false') {
             $log->warning("Response: Integration timeout!");
+
             return false;
         }
 
         if (!$responsePretty) {
             $responsePretty = $response;
         }
+
         $log->info("Response:\n{$responsePretty}\n");
+
         return $responseData;
     }
+
     /**
      * Check if order is in offline retry time
      * @deprecated since version 2.9.20
@@ -1440,12 +1795,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @param string $orderIncrementId
      * @return boolean
      */
-    public function orderIsInOfflineRetry($orderIncrementId) {
+    public function orderIsInOfflineRetry($orderIncrementId)
+    {
         $model = Mage::getModel('mundipagg/offlineretry');
         $offlineRetry = $model->loadByIncrementId($orderIncrementId);
         $deadline = $offlineRetry->getDeadline();
+
         $now = new DateTime();
         $deadline = new DateTime($deadline);
+
         if ($now < $deadline) {
             // in offline retry yet
             return true;
@@ -1454,6 +1812,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             return false;
         }
     }
+
     /**
      * If the Offline Retry feature is enabled, save order offline retry statements
      *
@@ -1463,7 +1822,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @param string   $orderIncrementId
      * @param DateTime $createDate
      */
-    private function saveOfflineRetryStatements($orderIncrementId, DateTime $createDate) {
+    private function saveOfflineRetryStatements($orderIncrementId, DateTime $createDate)
+    {
         // is offline retry is enabled, save statements
         if (Uecommerce_Mundipagg_Model_Offlineretry::offlineRetryIsEnabled()) {
             $offlineRetryTime = Mage::getStoreConfig('payment/mundipagg_standard/delayed_retry_max_time');
@@ -1471,13 +1831,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $offlineRetryLogLabel = "Order #{$orderIncrementId} | offline retry statements";
             $model = new Uecommerce_Mundipagg_Model_Offlineretry();
             $offlineRetry = $model->loadByIncrementId($orderIncrementId);
+
             try {
                 $offlineRetry->setOrderIncrementId($orderIncrementId);
                 $offlineRetry->setCreateDate($createDate->getTimestamp());
+
                 $deadline = new DateTime();
                 $interval = new DateInterval('PT' . $offlineRetryTime . 'M');
                 $deadline->setTimestamp($createDate->getTimestamp());
                 $deadline->add($interval);
+
                 $offlineRetry->setDeadline($deadline->getTimestamp());
                 $offlineRetry->save();
                 $helperLog->info("{$offlineRetryLogLabel} saved successfully.");
@@ -1486,38 +1849,51 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             }
         }
     }
-    public function getLocalTransactionsQty($orderId, $transactionKey) {
+
+    public function getLocalTransactionsQty($orderId, $transactionKey)
+    {
         $qty = 0;
         $transactions = Mage::getModel('sales/order_payment_transaction')
             ->getCollection()
             ->addAttributeToFilter('order_id', array('eq' => $orderId));
+
         foreach ($transactions as $key => $transaction) {
             $orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
+
             // transactionKey found
             if ($orderTransactionKey == $transactionKey) {
                 $qty++;
+
                 continue;
             }
         }
+
         return $qty;
     }
+
     /**
      * @param string|int $orderReference
      * @return array
      */
-    public function getOrderTransactions($orderReference) {
+    public function getOrderTransactions($orderReference)
+    {
         $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $log->setLogLabel("Order {$orderReference}");
-        $headers = array(
+
+        $headers = [
             'Content-Type: application/json',
             "MerchantKey: {$this->modelStandard->getMerchantKey()}",
             'Accept: JSON'
-        );
+        ];
+
         $url = $this->modelStandard->getUrl() . "Query/OrderReference={$orderReference}";
+
         $ch = curl_init();
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
         $responseRaw = curl_exec($ch);
 
         //check for curl errors
@@ -1527,75 +1903,102 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         }
 
         curl_close($ch);
+
         $util = new Uecommerce_Mundipagg_Helper_Util();
 
         $responseData = json_decode($responseRaw, true);
+
         // Check for invalid json response
         if ($responseData === null) {
             $log->error("INVALID JSON RESPONSE!\n" . $responseRaw . "\n\n");
         }
 
         $responseJSON = $util->jsonEncodePretty($responseData);
+
         $log->info("Request: {$url}");
         $log->info("Response:\n{$responseJSON}");
+
         return $responseData;
     }
-    public function getOrderTxnByTransactionKey($orderId, $transactionKey) {
+
+    public function getOrderTxnByTransactionKey($orderId, $transactionKey)
+    {
         $transactionFound = null;
         $transactions = Mage::getModel('sales/order_payment_transaction')
             ->getCollection()
             ->addAttributeToFilter('order_id', array('eq' => $orderId));
+
         foreach ($transactions as $key => $transaction) {
             $orderTransactionKey = $transaction->getAdditionalInformation('TransactionKey');
+
             // transactionKey found
             if ($orderTransactionKey == $transactionKey) {
                 $transactionFound = $transaction;
+
                 continue;
             }
         }
+
         return $transactionFound;
     }
-    public function hideCustomerData($data) {
+
+    public function hideCustomerData($data)
+    {
         $helper = Mage::helper('mundipagg');
+
         $ccTxnsCollection = null;
         $transactions = [];
+
         // request json
         $ccTxnsCollection = $helper->issetOr($data['CreditCardTransactionCollection']);
+
         // if not a request json, check for an response json
         if (is_null($ccTxnsCollection)) {
             $ccTxnsCollection = $helper->issetOr($data['CreditCardTransactionResultCollection']);
         }
+
         // if none transaction collection found, nothing to do here
         if (is_null($ccTxnsCollection)) {
             return $data;
         }
+
         // for each transaction, check sensible fields and obfuscate them
         foreach ($ccTxnsCollection as $transaction) {
             $creditCard = $helper->issetOr($transaction['CreditCard']);
             $ccSensibleFields = ['CreditCardNumber', 'SecurityCode', 'ExpMonth', 'ExpYear', 'InstantBuyKey'];
+
             foreach ($ccSensibleFields as $idx) {
                 $fieldValue = $helper->issetOr($creditCard[$idx]);
+
                 if (is_null($fieldValue) === false) {
                     $transaction['CreditCard'][$idx] = $helper->obfuscate($fieldValue);
                 }
             }
+
             $transactions[] = $transaction;
         }
+
         $ccTransactionCollectionObfuscated = $transactions;
+
         $data['CreditCardTransactionCollection'] = $ccTransactionCollectionObfuscated;
+
         // Buyer node
         $buyer = $helper->issetOr($data['Buyer']);
         if (is_null($buyer)) {
             return $data;
         }
+
         // check Buyer sensible fields and obfuscate them
         $buyerSensibleFields = ['DocumentNumber', 'Email', 'HomePhone', 'MobilePhone'];
+
         foreach ($buyerSensibleFields as $idx) {
             $fieldValue = $helper->issetOr($buyer[$idx]);
+
             if (is_null($fieldValue) === false) {
                 $data['Buyer'][$idx] = $helper->obfuscate($fieldValue);
             }
         }
+
         return $data;
     }
 
@@ -1603,26 +2006,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @param object $order
      * @return boolean
      */
-    private function closeOrder($order){
+    private function closeOrder($order)
+    {
         $order->setData('state', Mage_Sales_Model_Order::STATE_CLOSED);
         $order->setStatus(Mage_Sales_Model_Order::STATE_CLOSED);
         $order->addStatusToHistory(Mage_Sales_Model_Order::STATE_CLOSED, "Transaction update received: " . Mage_Sales_Model_Order::STATE_CLOSED, true);
         $order->sendOrderUpdateEmail();
-        if($order->save()){
+
+        if ($order->save()){
             return true;
-        }else{
-            return false;
-        }
-    }
-    /**
-     * @param object $invoice
-     * @return boolean
-     */
-    private function closeInvoice($invoice){
-        $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_CANCELED);
-        if($invoice->save()){
-            return true;
-        }else{
+        } else {
             return false;
         }
     }
@@ -1631,12 +2024,29 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @param object $invoice
      * @return boolean
      */
-    private function createCreditMemo($invoice, $service){
+    private function closeInvoice($invoice)
+    {
+        $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_CANCELED);
+
+        if ($invoice->save()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param object $invoice
+     * @return boolean
+     */
+    private function createCreditMemo($invoice, $service)
+    {
         $creditmemo = $service->prepareInvoiceCreditmemo($invoice);
         $creditmemo->setOfflineRequested(true);
-        if($creditmemo->register()->save()){
+
+        if ($creditmemo->register()->save()) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
@@ -1646,26 +2056,32 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
      * @param Array $transactionCollectionArray
      * @return Array Not authorized transaction
      */
-    private function ifOneOrMoreTransactionFailed($transactionCollectionArray){
+    private function ifOneOrMoreTransactionFailed($transactionCollectionArray)
+    {
         foreach ($transactionCollectionArray as $transaction) {
             if(!isset($transaction['Success']) || $transaction['Success'] == 0){
-                $notAuthorizedTransaction = array(
+                $notAuthorizedTransaction = [
                     'error'            => 1,
                     'ErrorCode'        => $transaction['AcquirerReturnCode'],
                     'ErrorDescription' => urldecode($transaction['AcquirerMessage'])
-                );
+                ];
+
                 return $notAuthorizedTransaction;
             }
         }
     }
+
     protected function getCustomer($order)
     {
         if ($this->_customer) {
             return $this->_customer;
         }
+
         $this->_customer = Mage::getModel('customer/customer')->load($order->getCustomerId());
+
         return $this->_customer;
     }
+
     /**
      * Get customer cpf/cnpj
      * @param $data
@@ -1675,6 +2091,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     private function getCustomerDocumentNumber($data, $order)
     {
         $customerDocumentNumber = null;
+
         if (isset($data['TaxDocumentNumber'])) {
             $customerDocumentNumber = $data['TaxDocumentNumber'];
         } elseif (strlen($order->getCustomerTaxvat()) > 0) {
@@ -1682,8 +2099,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         } elseif (strlen($this->getCustomer($order)->getData('cpf')) > 0) {
             $customerDocumentNumber = $this->getCustomer($order)->getData('cpf');
         }
+
         return $customerDocumentNumber;
     }
+
     /**
      * Prepare debit data to send to API
      * @param $order
@@ -1705,27 +2124,38 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $request["OrderKey"] = '00000000-0000-0000-0000-000000000000';
         $request["OrderRequest"]['AmountInCents'] = $this->getAmountInCents($order->getBaseGrandTotal());
         $request["OrderRequest"]['OrderReference'] = $order->getIncrementId();
+
         if ($standard->getEnvironment() != 'production') {
             $request["OrderRequest"]["OrderReference"] = md5(date('Y-m-d H:i:s')); // Identificação do pedido na loja
         }
+
         if ($standard->getEnvironment() != 'production') {
             $request['Bank'] .= 'Simulator';
         }
+
         $request['PaymentType'] = null;
+
         // Cart data
         $shoppingCart = $this->cartData($order, $data, $request, $standard);
+
         if (!is_array($shoppingCart)) {
             $shoppingCart = array();
         }
+
         $request["ShoppingCart"] = $shoppingCart[0];
         $deliveryAddress = $request['ShoppingCart']['DeliveryAddress'];
+
         unset($request['ShoppingCart']['DeliveryAddress']);
+
         $request['DeliveryAddress'] = $deliveryAddress;
+
         $request['ShoppingCart']['ShoppingCartItemCollection'][0]['DiscountAmountInCents'] =
             abs(round($order->getBaseDiscountAmount(), 2) * 100) -
                 abs(round($order->getShippingDiscountAmount(), 2) * 100);
+
         return $request;
     }
+
     /**
      * Return service name (bank) based on code
      * @param string $code
@@ -1734,9 +2164,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     private function getDebitServiceName($code)
     {
         $helper = new Uecommerce_Mundipagg_Model_Source_Debit();
+
         $services = $helper->getDebitServiceNames();
+
         return $services[$code];
     }
+
     /**
      * @param float $baseGrandTotal
      * @return int
@@ -1744,8 +2177,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     private function getAmountInCents($baseGrandTotal)
     {
         $baseGrandTotal = str_replace(',', '.', $baseGrandTotal);
+
         return intval(strval(($baseGrandTotal * 100)));
     }
+
     /**
      * @param $url
      * @param $request
@@ -1757,12 +2192,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     {
         $helperLog->debug(print_r($url, true));
         $helperLog->debug(print_r($request, true));
+
         // Send payment data to MundiPagg
         $ch = curl_init();
+
         if (Mage::getStoreConfig('mundipagg_tests_cpf_cnpj') != '') {
             // If tests runinig
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
+
         // Header
         curl_setopt($ch, CURLOPT_HTTPHEADER,
             array(
@@ -1770,10 +2208,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 'Accept:application/json'
             )
         );
+
         // Set the url, number of POST vars, POST data
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
         // Execute post
         $response = curl_exec($ch);
 
@@ -1785,8 +2225,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         // Close connection
         curl_close($ch);
+
         return $response;
     }
+
     /**
      * @param $response
      * @return mixed
@@ -1795,6 +2237,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
     {
         return json_decode($response, true);
     }
+
     /**
      * @param $response
      * @return array|bool
@@ -1804,28 +2247,31 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         // Error
         if (isset($response['ErrorReport']) && !empty($response['ErrorReport'])) {
             $_errorItemCollection = $response['ErrorReport']['ErrorItemCollection'];
+
             foreach ($_errorItemCollection as $errorItem) {
                 $errorCode = $errorItem['ErrorCode'];
                 $ErrorDescription = $errorItem['Description'];
             }
-            return array(
+
+            return [
                 'error'            => 1,
                 'ErrorCode'        => $errorCode,
                 'ErrorDescription' => Mage::helper('mundipagg')->__($ErrorDescription),
                 'result'           => $response
-            );
+            ];
         }
+
         // False
         if (isset($response['Success']) && (string)$response['Success'] == 'false') {
-            return array(
+            return [
                 'error'            => 1,
                 'ErrorCode'        => 'WithError',
                 'ErrorDescription' => 'WithError',
                 'result'           => $response
-            );
+            ];
         } else {
             // Success
-            $result = array(
+            $result = [
                 'success'              => true,
                 'message'              => 4,
                 'OrderKey'             => $response['OrderKey'],
@@ -1833,12 +2279,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 'TransactionKeyToBank' => $response['TransactionKeyToBank'],
                 'TransactionReference' => $response['TransactionReference'],
                 'result'               => $response
-            );
+            ];
+
             if (isset($response['CreateDate'])) {
                 $result['CreateDate'] = $response['CreateDate'];
             }
+
             return $result;
         }
+
         return false;
     }
 
@@ -1853,6 +2302,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         if ($approvalRequest === 'partial') {
             return 'AuthOnly';
         }
+
         return $standard->getCreditCardOperationEnum();
     }
 
@@ -1884,13 +2334,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $grandTotal = $order->getGrandTotal();
                 $grandTotalInCents = $helper->formatPriceToCents($grandTotal);
                 $amountInCents = $transactionData['AmountInCents'];
+
                 // if not authorized amount equal to order grand total, order must be canceled
                 if (sprintf($amountInCents) != sprintf($grandTotalInCents)) {
                     $returnMessage = "OK | {$returnMessageLabel} | Order grand_total not equal to transaction AmountInCents";
                     $helperLog->info($returnMessage);
                     $helperLog->info("Current order status: " . $order->getStatusLabel());
+
                     return $returnMessage;
                 }
+
                 try {
                     // set flag to prevent send back a cancelation to Mundi via API
                     $this->setCanceledByNotificationFlag($order, true);
@@ -1899,11 +2352,14 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                     $returnMessage = "OK | {$returnMessageLabel} | {$e->getMessage()}";
                     $helperLog->info($returnMessage);
                     $helperLog->info("Current order status: " . $order->getStatusLabel());
+
                     return $returnMessage;
                 }
+
                 $returnMessage = "OK | {$returnMessageLabel} | Order canceled: total amount not authorized";
                 $helperLog->info($returnMessage);
                 $helperLog->info("Current order status: " . $order->getStatusLabel());
+
                 return $returnMessage;
                 break;
             case 'canceled':
@@ -1911,55 +2367,70 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             case 'voided':
                 if ($order->canUnhold()) {
                     $helperLog->info("{$returnMessageLabel} unholded.");
+
                     $order->unhold();
                 }
+
                 $success = false;
-                $invoices = array();
-                $canceledInvoices = array();
+                $invoices = [];
+                $canceledInvoices = [];
+
                 foreach ($order->getInvoiceCollection() as $invoice) {
                     // We check if invoice can be refunded
                     if ($invoice->canRefund()) {
                         $invoices[] = $invoice;
                     }
+
                     // We check if invoice has already been canceled
                     if ($invoice->isCanceled()) {
                         $canceledInvoices[] = $invoice;
                     }
                 }
+
                 // Refund invoices and Credit Memo
                 if (!empty($invoices) || !empty($canceledInvoices)) {
                     $service = Mage::getModel('sales/service_order', $order);
+
                     foreach ($invoices as $invoice) {
                         $this->closeInvoice($invoice);
                         $this->createCreditMemo($invoice, $service);
                     }
+
                     $this->closeOrder($order);
                     $success = true;
                 }
+
                 if (empty($invoices) && empty($canceledInvoices)) {
                     // Cancel order
                     $order->cancel()->save();
+
                     $helperLog->info("{$returnMessageLabel} | Order canceled.");
                     $helperLog->info("Current order status: " . $order->getStatusLabel());
+
                     // Return
                     $success = true;
                 }
+
                 if ($success) {
                     $returnMessage = "{$returnMessageLabel} | Order status '{$status}' processed.";
                     $helperLog->info($returnMessage);
                     $helperLog->info("Current order status: " . $order->getStatusLabel());
+
                     return "OK | {$returnMessage}";
                 } else {
                     $returnMessage = "{$returnMessageLabel} | Unable to process transaction status '{$status}'.";
                     $helperLog->info($returnMessage);
                     $helperLog->info("Current order status: " . $order->getStatusLabel());
+
                     return "KO | {$returnMessage}";
                 }
+
                 break;
             case 'authorizedpendingcapture':
                 $returnMessage = "OK | Order #{$order->getIncrementId()} | Transaction status '{$status}' received from post notification.";
                 $helperLog->info($returnMessage);
                 $helperLog->info("Current order status: " . $order->getStatusLabel());
+
                 return $returnMessage;
                 break;
             case $statusWithError:
@@ -1969,14 +2440,17 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 } catch (Exception $e) {
                     $returnMessage = "KO | {$returnMessageLabel} | {$e->getMessage()}";
                 }
+
                 $helperLog->info($returnMessage);
                 $helperLog->info("Current order status: " . $order->getStatusLabel());
+
                 return $returnMessage;
                 break;
             // For other status we add comment to history
             default:
                 $returnMessage = "Order #{$order->getIncrementId()} | unexpected transaction status: {$status}";
                 $helperLog->info($returnMessage);
+
                 return "OK | {$returnMessage}";
         }
     }

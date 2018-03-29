@@ -1,5 +1,5 @@
 <_>
-   <form_key>wKe6KT9E8eTbh6vC</form_key>
+   <form_key>MHKDKFefoTShP4wH</form_key>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -27,11 +27,9 @@ IMPORTANTE
 Em qualquer procedimento de instalação ou update existem riscos, aconselhamos sempre criar backups de sua loja e efetuar qualquer procedimento em ambiente de desenvolvimento antes, nunca diretamente em produção. Não nos responsabilizamos por eventuais incidentes causados por negligenciar este alerta ou por uso de produtos ou serviços de terceiros.</description>
    <license>MIT</license>
    <license_uri/>
-   <version>2.13.08</version>
+   <version>2.14.14</version>
    <stability>stable</stability>
-   <notes>- Fix boleto url in admin panel
-- Fix sessionid being sent
-- Fix wrong previous generated version</notes>
+   <notes>- Fix bug with 2 credit cards</notes>
    <authors>
       <name>
          <name>mundipagg</name>
@@ -44,7 +42,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
       </email>
    </authors>
    <depends_php_min>5.6.1</depends_php_min>
-   <depends_php_max>7.1.8</depends_php_max>
+   <depends_php_max>7.2.0</depends_php_max>
    <depends>
       <package>
          <name>
@@ -60,7 +58,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>                               </files>
+            <files>                                      </files>
          </files>
       </package>
       <extension>
