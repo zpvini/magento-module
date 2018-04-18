@@ -14,6 +14,12 @@ Soon
 PHP 5.5
 Magento 1.9.3.x
 
+## Installation via Magento Connect (extension manager)
+- Download the lastest version of **Magento-Connect-2.x.x.tgz** in [RELEASES](https://github.com/mundipagg/magento-module/releases/latest)
+- Upload the downloaded file in Admin panel > System > Magento connect > Magento connect manager
+
+
+
 ## Installation with modman
 modman: https://github.com/jreinke/modgit
 
