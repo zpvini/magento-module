@@ -14,12 +14,12 @@ Em breve
 PHP 5.5
 Magento 1.9.3.x
 
-## Instalação com Modgit
-modgit: https://github.com/jreinke/modgit
+## Instalação com Modman
+modman: https://github.com/colinmollenhour/modman
 
     $ cd /path/to/magento
-    $ modgit init
-    $ modgit add mundipagg_integracao git@github.com:mundipagg/magento-module.git
+    $ modman init
+    $ modman clone https://github.com/mundipagg/magento-module
 
 ## Documentação da API
 http://docs-legacy.mundipagg.com
