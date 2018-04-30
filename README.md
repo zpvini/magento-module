@@ -21,11 +21,11 @@ Magento 1.9.3.x
 
 
 ## Installation with modman
-modman: https://github.com/jreinke/modgit
+modman: https://github.com/colinmollenhour/modman
 
     $ cd /path/to/magento
     $ modman init
-    $ modman clone git@github.com:mundipagg/magento-module.git
+    $ modman clone https://github.com/mundipagg/magento-module
 
 ## API Reference
 http://docs-legacy.mundipagg.com
