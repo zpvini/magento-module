@@ -261,13 +261,10 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
         // result array here
         for ($i = 1; $i <= $max_installments; $i++) {
             // check if installment has extra interest
-            $key = $i - 1;
-
-            if (!array_key_exists($key, $all_installments)) {
-                $all_installments[$key] = array();
-            }
-
-            $installment = $all_installments[$key];
+            $installment = array_filter($all_installments, function($ins) use ($i) {
+                return ($ins[1] == $i);
+            });
+            $installment = end($installment) == null ? [] : end($installment);
 
             if (isset($installment[2]) && $installment[2] > 0) {
                 $total_amount_with_interest = $this->priceFormatter(($amount - $discount) + (($amount - $discount) * ($installment[2] / 100)));

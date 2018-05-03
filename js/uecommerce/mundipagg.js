@@ -841,10 +841,13 @@ function setTotalInterestHtml(field) {
 }
 
 function checkInstallments(field, url) {
-    if ($('onestepcheckout-form') == null) {
+    var form = $('onestepcheckout-form');
+    form = form == null ? $('onestepcheckout-general-form') : form;
+
+    if (form) {
         params = $('co-payment-form').serialize(true);
     } else {
-        params = $('onestepcheckout-form').serialize(true);
+        params = form.serialize(true);
     }
 
     if (window['mundipaggTotalInterest'] == undefined) {

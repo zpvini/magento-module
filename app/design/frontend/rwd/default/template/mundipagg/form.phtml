@@ -736,6 +736,27 @@ if ($recurrent) {
                 }
             }
         };
+
+        //set update price observer
+        var lastOnestepValue = document.querySelector('tfoot tr:last-child .price');
+        lastOnestepValue = lastOnestepValue ? lastOnestepValue.innerHTML : null;
+
+        setInterval(function() {
+            var currentOnestepValue = document.querySelector('tfoot tr:last-child .price').innerHTML;
+            if (lastOnestepValue != currentOnestepValue) {
+                var formatted = ((parseFloat(currentOnestepValue.replace(/\D/g,'')) / 100).toFixed(2) + '').replace('.',',');
+                jQuery('.mundiBaseGrandTotal').val(formatted);
+                jQuery('.validate-cc-number').each(function() {
+                    try {
+                        var id = "_" + this.id.replace(/\D/g,'').split("").join('_');
+                        delete window[id];
+                        selectCredcard(this);
+                        console.log('foi',id,this);
+                    }catch(e) {}
+                });
+                lastOnestepValue = currentOnestepValue;
+            }
+        }.bind(lastOnestepValue),300);
     }
 
 
