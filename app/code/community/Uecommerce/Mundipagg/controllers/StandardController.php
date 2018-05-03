@@ -405,8 +405,6 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             if (!$total) {
                 $total = null;
             }
-            $session = Mage::getSingleton('checkout/session');
-            $total = $session->getQuote()->getGrandTotal();
 
             $installments = $installmentsHelper->getInstallmentForCreditCardType($cctype, $total);
 
