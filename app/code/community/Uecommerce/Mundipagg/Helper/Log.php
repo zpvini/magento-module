@@ -9,10 +9,12 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract
     private $level;
     private $method;
     private $logLabel = '';
+    private $addHostName = false;
 
     public function __construct($method = '')
     {
         $this->method = $method;
+        $this->addHostName = Mage::getStoreConfig('payment/mundipagg_standard/logHost') == '1';
     }
 
     public function setMethod($method)
@@ -70,7 +72,13 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract
         }
 
         $version = Mage::helper('mundipagg')->getExtensionVersion();
-        $file = "Mundipagg_Integracao_" . date('Y-m-d') . ".log";
+
+        $file = "Mundipagg_Integracao_" . date('Y-m-d');
+        if ($this->addHostName) {
+            $file .= '_' . gethostname();
+        }
+        $file .= '.log';
+
         $method = $this->method;
         $newMsg = "v{$version} ";
 

@@ -4,7 +4,7 @@ class Uecommerce_Mundipagg_Model_Adminhtml_System_Config_Source_Loghostname_Comm
 {
     public function getCommentText($element,  $currentValue)
     {
-        $comment = 'Se marcado, o nome do host é adicionado ao arquivo de log. Sendo o nome do host <strong>'. gethostname();
+        $comment = 'Se sim, o nome do host é adicionado ao arquivo de log. Sendo o nome do host <strong>'. gethostname();
         $comment .= '</strong>, o arquivo será salvo com o seguinte nome:<br /><br /><span id="log-file-ex-dirname"></span>/';
 
         $filename = "Mundipagg_PaymentModule_";
