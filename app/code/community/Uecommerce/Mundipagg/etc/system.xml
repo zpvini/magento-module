@@ -161,6 +161,7 @@
                         <logPath translate="label">
                             <label>Diretório de Logs</label>
                             <frontend_type>text</frontend_type>
+                            <backend_model>Uecommerce_Mundipagg_Model_Adminhtml_System_Config_Source_Logpath_Comment</backend_model>
                             <sort_order>10</sort_order>
                             <depends>
                                 <debug>1</debug>
@@ -170,7 +171,7 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
                             <comment>
-                                Diretório onde os arquivos de log do módulo serão salvos.
+                                <model>Uecommerce_Mundipagg_Model_Adminhtml_System_Config_Source_Logpath_Comment</model>
                             </comment>
                         </logPath>
 
