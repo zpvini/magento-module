@@ -20,13 +20,13 @@ class Uecommerce_Mundipagg_Model_Adminhtml_System_Config_Source_Logpath_Comment 
                 $havePermissions = false;
             }
             unlink($checkLogFile);
-        }
 
-        if (!$havePermissions) {
-            Mage::throwException(
-                "Não foi possível configurar '$logPath' como diretório de escrita de logs: " .
-                "Não é possível escrever no diretório."
-            );
+            if (!$havePermissions) {
+                Mage::throwException(
+                    "Não foi possível configurar '$logPath' como diretório de escrita de logs: " .
+                    "Não é possível escrever no diretório."
+                );
+            }
         }
 
         return parent::save();
@@ -52,12 +52,12 @@ class Uecommerce_Mundipagg_Model_Adminhtml_System_Config_Source_Logpath_Comment 
                 $havePermissions = false;
             }
             unlink($checkLogFile);
-        }
 
-        if (!$havePermissions) {
-            $comment .= "<br /><br /><span style='color:red;'>Atenção! o diretório <strong>'".$logPath."'";
-            $comment .= "</strong> não possui permissão de escrita para o usuário do servidor! <br />";
-            $comment .= "Para que os arquivos de log sejam gravados corretamente, por favor defina estas permissões.</span>";
+            if (!$havePermissions) {
+                $comment .= "<br /><br /><span style='color:red;'>Atenção! o diretório <strong>'".$logPath."'";
+                $comment .= "</strong> não possui permissão de escrita para o usuário do servidor! <br />";
+                $comment .= "Para que os arquivos de log sejam gravados corretamente, por favor defina estas permissões.</span>";
+            }
         }
 
         return $comment;
