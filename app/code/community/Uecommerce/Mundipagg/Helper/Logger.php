@@ -3,11 +3,10 @@
 class Uecommerce_Mundipagg_Helper_Logger extends Mage_Core_Helper_Abstract
 {
     /**
-     * log facility (??)
-     *
      * @param string $message
      * @param integer $level
      * @param string $file
+     * @param string $logDir
      * @param bool $forceLog
      */
     public static function log($message, $level = null, $file = '', $logDir = null ,$forceLog = false)

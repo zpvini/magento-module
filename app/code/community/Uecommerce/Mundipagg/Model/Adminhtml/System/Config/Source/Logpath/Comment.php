@@ -2,7 +2,6 @@
 
 class Uecommerce_Mundipagg_Model_Adminhtml_System_Config_Source_Logpath_Comment extends Mage_Core_Model_Config_Data
 {
-
     public function save()
     {
         if (Mage::getStoreConfig('payment/mundipagg_standard/logNonDefaultLogPath') == '1') {
