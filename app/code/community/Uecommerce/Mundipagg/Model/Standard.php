@@ -1149,7 +1149,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                             Mage::getSingleton('checkout/session')
                                 ->setApprovalRequestSuccess($statusWithError);
                             Mage::getSingleton('checkout/session')
-                                ->setWithErrorReason($errorCode = $helper->issetOr($i['Description'],'With Error'));
+                                ->setWithErrorReason($errorCode = $helper->issetOr($i['Description'], 'With Error'));
 
                             return $approvalRequest;
                         }
@@ -2227,7 +2227,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $comment = true
     ) {
         try {
-
             $msg = Mage::getSingleton('checkout/session')
                 ->getWithErrorReason();
 
