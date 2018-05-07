@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Uecommerce_Mundipagg>
-            <version>2.14.15</version>
+            <version>2.15.0</version>
         </Uecommerce_Mundipagg>
     </modules>
 
@@ -358,6 +358,7 @@
                 <apiUrlProduction>https://transactionv2.mundipaggone.com/Sale/</apiUrlProduction>
                 <antifraud>0</antifraud>
                 <debug>1</debug>
+                <logPath>var/log</logPath>
                 <payment_action>order</payment_action>
                 <save_cardonfile>1</save_cardonfile>
                 <delivery_deadline>5</delivery_deadline>

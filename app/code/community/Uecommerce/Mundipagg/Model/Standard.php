@@ -1148,6 +1148,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                             $statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
                             Mage::getSingleton('checkout/session')
                                 ->setApprovalRequestSuccess($statusWithError);
+                            Mage::getSingleton('checkout/session')
+                                ->setWithErrorReason($errorCode = $helper->issetOr($i['Description'], 'With Error'));
 
                             return $approvalRequest;
                         }
@@ -2225,15 +2227,18 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $comment = true
     ) {
         try {
+            $msg = Mage::getSingleton('checkout/session')
+                ->getWithErrorReason();
+
             if ($comment) {
                 $order->setState(
                     'pending',
-                    'mundipagg_with_error',
-                    'With Error',
+                    'pending',
+                    'MP - ' . $msg ,
                     false
                 );
             } else {
-                $order->setStatus('mundipagg_with_error');
+                $order->setStatus('pending');
             }
 
             $order->save();

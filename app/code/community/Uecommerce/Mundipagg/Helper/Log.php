@@ -9,10 +9,20 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract
     private $level;
     private $method;
     private $logLabel = '';
+    private $addHostName = false;
+    private $logger;
+    private $logPath;
 
     public function __construct($method = '')
     {
         $this->method = $method;
+        $this->addHostName = Mage::getStoreConfig('payment/mundipagg_standard/logHost') == '1';
+        $this->logger = Mage::helper('mundipagg/logger');
+
+        $this->logPath = Mage::getStoreConfig('payment/mundipagg_standard/logPath');
+        if (Mage::getStoreConfig('payment/mundipagg_standard/logNonDefaultLogPath') != '1') {
+            $this->logPath = Mage::getBaseDir('var') . DS . 'log';
+        }
     }
 
     public function setMethod($method)
@@ -70,7 +80,13 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract
         }
 
         $version = Mage::helper('mundipagg')->getExtensionVersion();
-        $file = "Mundipagg_Integracao_" . date('Y-m-d') . ".log";
+
+        $file = "Mundipagg_Integracao_" . date('Y-m-d');
+        if ($this->addHostName) {
+            $file .= '_' . gethostname();
+        }
+        $file .= '.log';
+
         $method = $this->method;
         $newMsg = "v{$version} ";
 
@@ -86,6 +102,6 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract
             $newMsg .= $msg;
         }
 
-        Mage::log($newMsg, $this->level, $file);
+        $this->logger->log($newMsg, $this->level, $file, $this->logPath);
     }
 }
