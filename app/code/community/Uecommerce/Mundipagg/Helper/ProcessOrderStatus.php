@@ -8,13 +8,13 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
 {
     const TRANSACTION_CAPTURED = "Transaction captured";
 
-    public function captured($order, $amountToCapture, $transactionKey, $orderReference)
+    public function captured($order, $amountToCapture, $transactionKey, $orderReference, $amountInCents = null)
     {
         $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $transactionHelper = Mage::helper('mundipagg/transaction');
         
         try {
-            $return = $transactionHelper->captureTransaction($order, $amountToCapture, $transactionKey);
+            $return = $transactionHelper->captureTransaction($order, $amountToCapture, $transactionKey, $amountInCents);
         } catch (Exception $e) {
             $errMsg = $e->getMessage();
             $returnMessage = "OK | #{$orderReference} | {$transactionKey} | ";
