@@ -1378,9 +1378,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
             if (empty($capturedAmountInCents) === false) {
                 $amountToCapture = $capturedAmountInCents * 0.01;
-            } else {
-                $amountInCents = null;
             }
+
+            $amountInCents = intval($data['AmountInCents']);
 
             return $this->processOrderStatus(
                 $status,
@@ -1392,7 +1392,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $capturedAmountInCents,
                 $data,
                 $transactionData,
-                $statusWithError);
+                $statusWithError,
+                $amountInCents);
         } catch (Exception $e) {
             $returnMessage = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
 
@@ -2316,14 +2317,15 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $capturedAmountInCents,
         $data,
         $transactionData,
-        $statusWithError
+        $statusWithError,
+        $amountInCents = null
     ) {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $helperOrderStatus = Mage::helper('mundipagg/processOrderStatus');
 
         switch (strtolower($status)) {
             case 'captured':
-                return $helperOrderStatus->captured($order, $amountToCapture, $transactionKey, $orderReference);
+                return $helperOrderStatus->captured($order, $amountToCapture, $transactionKey, $orderReference, $amountInCents);
             case 'paid':
             case 'overpaid':
                 return $helperOrderStatus->paidOverpaid($order, $returnMessageLabel, $capturedAmountInCents, $data, $status);
