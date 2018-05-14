@@ -42,6 +42,7 @@
             </block>
         </reference>
     </onepagecheckout_index_index>
+
     <onestepcheckout_index_index translate="label">
         <reference name="head">
             <action method="addItem">
@@ -56,8 +57,18 @@
                     <name>uecommerce/mundipagg.js</name>
                 </action>
             </block>
+            <reference name="before_body_end">
+                <block type="core/template" name="fcontrol" template="mundipagg/antifraud/fcontrol.phtml"/>
+            </reference>
+            <reference name="before_body_end">
+                <block type="core/template" name="clearsale" template="mundipagg/antifraud/clearsale.phtml"/>
+            </reference>
+            <reference name="before_body_end">
+                <block type="core/template" name="stone" template="mundipagg/antifraud/stone.phtml"/>
+            </reference>
         </reference>
     </onestepcheckout_index_index>
+
     <opc_index_index translate="label">
         <reference name="head">
             <action method="addItem">
