@@ -12,12 +12,21 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
      * @throws Exception
      * @return string
      */
-    public function captureTransaction(Mage_Sales_Model_Order $order, $amountToCapture, $transactionKey) {
+    public function captureTransaction(Mage_Sales_Model_Order $order, $amountToCapture, $transactionKey, $amountInCents = null) {
 
         $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $log->setLogLabel("#{$order->getIncrementId()} | {$transactionKey}");
         $totalPaid = $order->getTotalPaid();
         $grandTotal = $order->getGrandTotal();
+
+        if ($amountInCents !== null) {
+            $amount = floatval($amountInCents * 0.01);
+            if (floatval($grandTotal) != floatval($amount)) {
+                $log->warning('Grand Total differs from amount in mundipagg: ' . $grandTotal . ' != ' . $amount);
+                $grandTotal = $amount;
+            }
+        }
+
         $transaction = null;
         $orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
         if (is_null($totalPaid)) {
