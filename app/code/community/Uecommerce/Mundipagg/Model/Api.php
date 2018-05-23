@@ -2,12 +2,7 @@
 
 class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 {
-    const TRANSACTION_NOT_FOUND        = "Transaction not found";
-
-    const ORDER_UNDERPAID              = "Order underpaid";
-    const ORDER_OVERPAID               = "Order overpaid";
-    const INTEGRATION_TIMEOUT          = "MundiPagg API timeout, waiting Mundi notification";
-    const UNEXPECTED_ERROR             = "Unexpected error";
+    const INTEGRATION_TIMEOUT = "MundiPagg API timeout, waiting notification";
 
     private $helperUtil;
     private $modelStandard;
