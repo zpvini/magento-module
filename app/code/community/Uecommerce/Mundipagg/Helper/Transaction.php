@@ -2,18 +2,29 @@
 
 class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
 {
+    const TRANSACTION_CAPTURED         = "Transaction captured";
     const TRANSACTION_ALREADY_CAPTURED = "Transaction already captured";
+    const TRANSACTION_NOT_FOUND        = "Transaction not found";
+    const ORDER_OVERPAID               = "Order overpaid";
+    const ORDER_UNDERPAID              = "Order underpaid";
+    const UNEXPECTED_ERROR             = "Unexpected error";
 
     /**
      * @param Mage_Sales_Model_Order $order
      * @param $amountToCapture
      * @param $transactionKey
-     * @throws Mage_Core_Exception
-     * @throws Exception
+     * @param $amountInCents
      * @return string
+     * @throws Exception
+     * @throws Mage_Core_Exception
      */
-    public function captureTransaction(Mage_Sales_Model_Order $order, $amountToCapture, $transactionKey, $amountInCents = null) {
-
+    public function captureTransaction(
+        Mage_Sales_Model_Order $order,
+        $amountToCapture,
+        $transactionKey,
+        $amountInCents = null
+    )
+    {
         $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $log->setLogLabel("#{$order->getIncrementId()} | {$transactionKey}");
         $totalPaid = $order->getTotalPaid();
@@ -22,7 +33,7 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
         if ($amountInCents !== null) {
             $amount = floatval($amountInCents * 0.01);
             if (floatval($grandTotal) != floatval($amount)) {
-                $log->warning('Grand Total differs from amount in mundipagg: ' . $grandTotal . ' != ' . $amount);
+                $log->warning('Grand Total differs from amount in Mundipagg: ' . $grandTotal . ' != ' . $amount);
                 $grandTotal = $amount;
             }
         }
