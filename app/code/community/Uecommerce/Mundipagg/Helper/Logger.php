@@ -2,6 +2,9 @@
 
 class Uecommerce_Mundipagg_Helper_Logger extends Mage_Core_Helper_Abstract
 {
+
+    const _allowedFileExtensions = array('log', 'txt', 'html', 'csv');
+
     /**
      * @param string $message
      * @param integer $level
@@ -35,7 +38,7 @@ class Uecommerce_Mundipagg_Helper_Logger extends Mage_Core_Helper_Abstract
         $file = empty($file) ? 'system.log' : basename($file);
 
         // Validate file extension before save. Allowed file extensions: log, txt, html, csv
-        if (!Mage::helper('log')->isLogFileExtensionValid($file)) {
+        if (!self::isLogFileExtensionValid($file)) {
             return;
         }
 
@@ -75,5 +78,16 @@ class Uecommerce_Mundipagg_Helper_Logger extends Mage_Core_Helper_Abstract
         }
         catch (Exception $e) {
         }
+    }
+
+    public static function isLogFileExtensionValid($file)
+    {
+        $result = false;
+        $validatedFileExtension = pathinfo($file, PATHINFO_EXTENSION);
+        if ($validatedFileExtension && in_array($validatedFileExtension, self::_allowedFileExtensions)) {
+            $result = true;
+        }
+
+        return $result;
     }
 }
