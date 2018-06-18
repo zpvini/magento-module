@@ -246,7 +246,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             if ($response === null) {
                 $helperLog->error('Null response received! Trying to get orderData from API...');
 
-                $response = $this->tryGetOrderDataFromAPI($_request,$response);
+                $response = $this->tryGetOrderDataFromAPI($_request);
                 if ($response === null) {
                     $helperLog->error('Failed to get orderData from API!');
                     return false;
@@ -436,7 +436,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         return false;
     }
 
-    protected function tryGetOrderDataFromAPI($request,$response)
+    protected function tryGetOrderDataFromAPI($request)
     {
         $ordersData = $this->getOrderDataFromAPI($request);
 
@@ -452,17 +452,20 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $APIKey = end($key);
             $requestKey = str_replace("Data","",$APIKey);
 
+            //verify if the transaction type is equals to the request transaction type.
             if (!isset($request[$requestKey])) {
                 continue;
             }
 
             $createTimestamp = strtotime($orderData['OrderData']['CreateDate']);
 
+            //verify if the transaction was created in the last five minutes
             $diffInSeconds = abs($createTimestamp - (new Datetime())->getTimestamp());
             if ($diffInSeconds > 300) {
                 continue;
             }
 
+            //verify each charge values on the transaction
             $differentValue = false;
             foreach ($orderData[$APIKey] as $index => $charge) {
                 if($request[$requestKey][$index]['AmountInCents'] != $charge['AmountInCents']) {
@@ -473,6 +476,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 continue;
             }
 
+            //all tests passed. We have the right transaction.
             $APIOrderData = $orderData;
             foreach($APIOrderData[$APIKey] as &$transaction) {
                 $transaction['Success'] = false;
@@ -497,6 +501,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             return null;
         }
 
+        //build a new response based on API data.
         $newResponse = [
             'BoletoTransactionResultCollection' =>
                 $APIOrderData['BoletoTransactionDataCollection'] !== null ?
@@ -699,7 +704,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             if ($response === null) {
                 $helperLog->error('Null response received! Trying to get orderData from API...');
 
-                $response = $this->tryGetOrderDataFromAPI($_request,$response);
+                $response = $this->tryGetOrderDataFromAPI($_request);
                 if ($response === null) {
                     $helperLog->error('Failed to get orderData from API!');
                     return false;
