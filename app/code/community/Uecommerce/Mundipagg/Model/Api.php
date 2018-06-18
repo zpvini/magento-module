@@ -243,6 +243,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
             $response = $this->sendJSON($_request);
 
+            if ($response === null) {
+                $helperLog->error('Null response received! Trying to get orderData from API...');
+
+                $response = $this->tryGetOrderDataFromAPI($_request);
+                if ($response === null) {
+                    $helperLog->error('Failed to get orderData from API!');
+                    return false;
+                }
+            }
+
             $errorReport = $helper->issetOr($response['ErrorReport']);
             $orderKey = $helper->issetOr($response['OrderResult']['OrderKey']);
             $orderReference = $helper->issetOr($response['OrderResult']['OrderReference']);
@@ -425,6 +435,171 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         // time out or no Mundipagg API response
         return false;
     }
+
+    protected function getTransactionTypeDataKeyFromOrderData($orderData)
+    {
+        $filteredOrderData = array_filter($orderData,function($value, $key){
+            return !($value === null || strpos(strtolower($key),'transactiondata') === false);
+        },ARRAY_FILTER_USE_BOTH);
+        $key = array_keys($filteredOrderData);
+        if (count($key) !== 1) {
+            return false;
+        }
+        return end($key);
+    }
+
+    protected function isOrderDataAndRequestValuesDifferent(
+        $APIKey,
+        $requestKey,
+        $orderData,
+        $request
+    ) {
+        $differentValue = false;
+        foreach ($orderData[$APIKey] as $index => $charge) {
+            if($request[$requestKey][$index]['AmountInCents'] != $charge['AmountInCents']) {
+                $differentValue = true;
+            }
+        }
+        return $differentValue;
+    }
+
+    protected function prepareAPIDataToResponse($APIKey, &$APIOrderData)
+    {
+        foreach($APIOrderData[$APIKey] as &$transaction) {
+            $transaction['Success'] = false;
+            if(
+                (isset($transaction['CreditCardTransactionStatus']) &&
+                    !in_array($transaction['CreditCardTransactionStatus'],['WithError','NotAuthorized'])
+                )
+                ||
+                (isset($transaction['BoletoTransactionStatus']) &&
+                    $transaction['BoletoTransactionStatus'] === 'Generated'
+                )
+            ) {
+                $transaction['Success'] = true;
+            }
+            $transaction['AuthorizationCode'] = $transaction['AcquirerAuthorizationCode'];
+        }
+    }
+
+    protected function buildNewReponseData($APIOrderData)
+    {
+        return [
+            'BoletoTransactionResultCollection' =>
+                $APIOrderData['BoletoTransactionDataCollection'] !== null ?
+                    $APIOrderData['BoletoTransactionDataCollection'] :
+                    [],
+            'BuyerKey' => $APIOrderData['BuyerKey'],
+            'CreditCardTransactionResultCollection' =>
+                $APIOrderData['CreditCardTransactionDataCollection'] !== null ?
+                    $APIOrderData['CreditCardTransactionDataCollection'] :
+                    [],
+            'CryptoTransactionResultCollection' =>
+                $APIOrderData['CryptoTransactionDataCollection'] !== null ?
+                    $APIOrderData['CryptoTransactionDataCollection'] :
+                    [],
+            'ErrorReport' => null,
+            'InternalTime' => 1,
+            'MerchantKey' => $this->modelStandard->getMerchantKey(),
+            'OnlineDebitTransactionResult' => $APIOrderData['OnlineDebitTransactionData'],
+            'OrderResult' =>  $APIOrderData['OrderData'],
+            'RequestKey' => 'FetchFromAPI'
+        ];
+    }
+
+    protected function tryGetOrderDataFromAPI($request)
+    {
+        $ordersData = $this->getOrderDataFromAPI($request);
+
+        $APIOrderData = null;
+        foreach ($ordersData['SaleDataCollection'] as $orderData) {
+
+            //get transaction type keys
+            $APIKey = $this->getTransactionTypeDataKeyFromOrderData($orderData);
+            if ($APIKey === false) {
+                continue;
+            }
+            $requestKey = str_replace("Data", "", $APIKey);
+
+            //verify if the transaction type is equals to the request transaction type.
+            if (!isset($request[$requestKey])) {
+                continue;
+            }
+
+            $createTimestamp = strtotime($orderData['OrderData']['CreateDate']);
+            //verify if the transaction was created in the last five minutes
+            $diffInSeconds = abs($createTimestamp - (new Datetime())->getTimestamp());
+            if ($diffInSeconds > 300) {
+                continue;
+            }
+
+            //verify each charge values on the transaction
+            if ($this->isOrderDataAndRequestValuesDifferent(
+                $APIKey,
+                $requestKey,
+                $orderData,
+                $request)
+            ) {
+                continue;
+            }
+
+            //all tests passed. We have the right transaction.
+            $APIOrderData = $orderData;
+            $this->prepareAPIDataToResponse($APIKey,$APIOrderData);
+
+            break;
+        }
+
+        if ($APIOrderData === null) {
+            return null;
+        }
+
+        //build a new response based on API data.
+        return $this->buildNewReponseData($APIOrderData);
+    }
+
+    protected function getOrderDataFromAPI($request)
+    {
+        $merchantKey = $this->modelStandard->getMerchantKey();
+        $orderReference = $request['Order']['OrderReference'];
+        $url = $this->modelStandard->getUrl();
+        $url .= 'Query/OrderReference=' . $orderReference;
+
+        $moduleVersion = $version = Mage::helper('mundipagg')
+            ->getExtensionVersion();
+
+        $headers = [
+            'Content-Type: application/json',
+            "MerchantKey: {$merchantKey}",
+            'Accept: JSON',
+            'MagentoOne: ' . $moduleVersion
+        ];
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
+
+        if (is_null($timeoutLimit) === false) {
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
+        }
+
+        // Execute get
+        $response = curl_exec($ch);
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+
+        // Close connection
+        curl_close($ch);
+
+        $responseData = json_decode($response, true);
+        return $responseData;
+    }
+
     /**
      * Convert CreditcardTransaction Collection From Request
      */
@@ -551,6 +726,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             }
 
             $response = $this->sendJSON($_request);
+
+            if ($response === null) {
+                $helperLog->error('Null response received! Trying to get orderData from API...');
+
+                $response = $this->tryGetOrderDataFromAPI($_request);
+                if ($response === null) {
+                    $helperLog->error('Failed to get orderData from API!');
+                    return false;
+                }
+            }
 
             // time out or no Mundipagg API response
             if ($response === false) {
