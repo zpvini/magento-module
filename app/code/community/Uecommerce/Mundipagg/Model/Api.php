@@ -243,6 +243,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
             $response = $this->sendJSON($_request);
 
+            if ($response === null || true) {
+                $helperLog->error('Null response received! Trying to get orderData from API...');
+
+                $response = $this->tryGetOrderDataFromAPI($_request,$response);
+                if ($response === null) {
+                    $helperLog->error('Failed to get orderData from API!');
+                    return false;
+                }
+            }
+
             $errorReport = $helper->issetOr($response['ErrorReport']);
             $orderKey = $helper->issetOr($response['OrderResult']['OrderKey']);
             $orderReference = $helper->issetOr($response['OrderResult']['OrderReference']);
@@ -425,6 +435,188 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         // time out or no Mundipagg API response
         return false;
     }
+
+    protected function tryGetOrderDataFromAPI($request,$response)
+    {
+        $ordersData = $this->getOrderDataFromAPI($request);
+
+        $APIOrderData = null;
+        foreach ($ordersData['SaleDataCollection'] as $orderData) {
+            $filteredOrderData = array_filter($orderData,function($value,$key){
+              return !($value === null || strpos(strtolower($key),'transactiondata') === false);
+            },ARRAY_FILTER_USE_BOTH);
+            $key = array_keys($filteredOrderData);
+            if (count($key) !== 1) {
+                continue;
+            }
+            $APIKey = end($key);
+            $requestKey = str_replace("Data","",$APIKey);
+
+            if (!isset($request[$requestKey])) {
+                continue;
+            }
+
+            $createTimestamp = strtotime($orderData['OrderData']['CreateDate']);
+
+            $diffInSeconds = abs($createTimestamp - (new Datetime())->getTimestamp());
+            if ($diffInSeconds > 300) {
+                continue;
+            }
+
+            $differentValue = false;
+            foreach ($orderData[$APIKey] as $index => $charge) {
+                if($request[$requestKey][$index]['AmountInCents'] != $charge['AmountInCents']) {
+                    $differentValue = true;
+                }
+            }
+            if ($differentValue) {
+                continue;
+            }
+
+            $APIOrderData = $orderData;
+            foreach($APIOrderData[$APIKey] as &$transaction) {
+                $transaction['Success'] = false;
+                if(
+                    (isset($transaction['CreditCardTransactionStatus']) &&
+                        !in_array($transaction['CreditCardTransactionStatus'],['WithError','NotAuthorized'])
+                    )
+                    ||
+                    (isset($transaction['BoletoTransactionStatus']) &&
+                        $transaction['BoletoTransactionStatus'] === 'Generated'
+                    )
+                ) {
+                    $transaction['Success'] = true;
+                }
+                $transaction['AuthorizationCode'] = $transaction['AcquirerAuthorizationCode'];
+            }
+
+            break;
+        }
+
+        if ($APIOrderData === null) {
+            return null;
+        }
+
+        $newResponse = [
+            'BoletoTransactionResultCollection' =>
+                $APIOrderData['BoletoTransactionDataCollection'] !== null ?
+                    $APIOrderData['BoletoTransactionDataCollection'] :
+                    [],
+            'BuyerKey' => $APIOrderData['BuyerKey'],
+            'CreditCardTransactionResultCollection' =>
+                $APIOrderData['CreditCardTransactionDataCollection'] !== null ?
+                    $APIOrderData['CreditCardTransactionDataCollection'] :
+                    [],
+            'CryptoTransactionResultCollection' =>
+                $APIOrderData['CryptoTransactionDataCollection'] !== null ?
+                    $APIOrderData['CryptoTransactionDataCollection'] :
+                    [],
+            'ErrorReport' => null,
+            'InternalTime' => 1,
+            'MerchantKey' => $this->modelStandard->getMerchantKey(),
+            'OnlineDebitTransactionResult' => $APIOrderData['OnlineDebitTransactionData'],
+            'OrderResult' =>  $APIOrderData['OrderData'],
+            'RequestKey' => 'FetchFromAPI'
+        ];
+
+        return $newResponse;
+    }
+
+    protected function getOrderDataFromAPI($request)
+    {
+        $merchantKey = $this->modelStandard->getMerchantKey();
+        $url = $this->modelStandard->getUrl();
+
+        $url .= 'Query/OrderReference=';
+
+        $environment = $this->modelStandard->getEnvironment();
+
+        $orderReference = $request['Order']['OrderReference'];
+        $url .= $orderReference;
+
+        $moduleVersion = $version = Mage::helper('mundipagg')
+            ->getExtensionVersion();
+
+        $headers = [
+            'Content-Type: application/json',
+            "MerchantKey: {$merchantKey}",
+            'Accept: JSON',
+            'MagentoOne: ' . $moduleVersion
+        ];
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
+
+        if (is_null($timeoutLimit) === false) {
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
+        }
+
+        // Execute get
+        $response = curl_exec($ch);
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+
+        // Close connection
+        curl_close($ch);
+
+        $responseData = json_decode($response, true);
+        return $responseData;
+    }
+
+    protected function cancelOrderOnMundipagg($order)
+    {
+
+        $merchantKey = $this->modelStandard->getMerchantKey();
+        $url = $this->modelStandard->getUrl();
+
+        $url .= 'Query/OrderReference=';
+
+        $environment = $this->modelStandard->getEnvironment();
+
+        $orderReference = $order->getIncrementId();
+        $url .= $orderReference;
+        $url .= '&OrderKey=880914cc-6484-4a74-9fc6-f66def4f60c0';
+
+        $moduleVersion = $version = Mage::helper('mundipagg')
+            ->getExtensionVersion();
+
+        $headers = [
+            'Content-Type: application/json',
+            "MerchantKey: {$merchantKey}",
+            'Accept: JSON',
+            'MagentoOne: ' . $moduleVersion
+        ];
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $timeoutLimit = Mage::getStoreConfig('payment/mundipagg_standard/integration_timeout_limit');
+
+        if (is_null($timeoutLimit) === false) {
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutLimit);
+        }
+
+        // Execute get
+        $response = curl_exec($ch);
+
+        //check for curl errors
+        $curlErrorNumber = curl_errno($ch);
+
+        // Close connection
+        curl_close($ch);
+
+        $responseData = json_decode($response, true);
+    }
+
     /**
      * Convert CreditcardTransaction Collection From Request
      */
@@ -551,6 +743,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             }
 
             $response = $this->sendJSON($_request);
+
+            if ($response === null || true) {
+                $helperLog->error('Null response received! Trying to get orderData from API...');
+
+                $response = $this->tryGetOrderDataFromAPI($_request,$response);
+                if ($response === null) {
+                    $helperLog->error('Failed to get orderData from API!');
+                    return false;
+                }
+            }
 
             // time out or no Mundipagg API response
             if ($response === false) {
