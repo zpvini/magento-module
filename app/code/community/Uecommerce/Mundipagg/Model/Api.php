@@ -436,73 +436,55 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         return false;
     }
 
-    protected function tryGetOrderDataFromAPI($request)
+    protected function getTransactionTypeDataKeyFromOrderData($orderData)
     {
-        $ordersData = $this->getOrderDataFromAPI($request);
-
-        $APIOrderData = null;
-        foreach ($ordersData['SaleDataCollection'] as $orderData) {
-            $filteredOrderData = array_filter($orderData,function($value,$key){
-              return !($value === null || strpos(strtolower($key),'transactiondata') === false);
-            },ARRAY_FILTER_USE_BOTH);
-            $key = array_keys($filteredOrderData);
-            if (count($key) !== 1) {
-                continue;
-            }
-            $APIKey = end($key);
-            $requestKey = str_replace("Data","",$APIKey);
-
-            //verify if the transaction type is equals to the request transaction type.
-            if (!isset($request[$requestKey])) {
-                continue;
-            }
-
-            $createTimestamp = strtotime($orderData['OrderData']['CreateDate']);
-
-            //verify if the transaction was created in the last five minutes
-            $diffInSeconds = abs($createTimestamp - (new Datetime())->getTimestamp());
-            if ($diffInSeconds > 300) {
-                continue;
-            }
-
-            //verify each charge values on the transaction
-            $differentValue = false;
-            foreach ($orderData[$APIKey] as $index => $charge) {
-                if($request[$requestKey][$index]['AmountInCents'] != $charge['AmountInCents']) {
-                    $differentValue = true;
-                }
-            }
-            if ($differentValue) {
-                continue;
-            }
-
-            //all tests passed. We have the right transaction.
-            $APIOrderData = $orderData;
-            foreach($APIOrderData[$APIKey] as &$transaction) {
-                $transaction['Success'] = false;
-                if(
-                    (isset($transaction['CreditCardTransactionStatus']) &&
-                        !in_array($transaction['CreditCardTransactionStatus'],['WithError','NotAuthorized'])
-                    )
-                    ||
-                    (isset($transaction['BoletoTransactionStatus']) &&
-                        $transaction['BoletoTransactionStatus'] === 'Generated'
-                    )
-                ) {
-                    $transaction['Success'] = true;
-                }
-                $transaction['AuthorizationCode'] = $transaction['AcquirerAuthorizationCode'];
-            }
-
-            break;
+        $filteredOrderData = array_filter($orderData,function($value, $key){
+            return !($value === null || strpos(strtolower($key),'transactiondata') === false);
+        },ARRAY_FILTER_USE_BOTH);
+        $key = array_keys($filteredOrderData);
+        if (count($key) !== 1) {
+            return false;
         }
+        return end($key);
+    }
 
-        if ($APIOrderData === null) {
-            return null;
+    protected function isOrderDataAndRequestValuesDifferent(
+        $APIKey,
+        $requestKey,
+        $orderData,
+        $request
+    ) {
+        $differentValue = false;
+        foreach ($orderData[$APIKey] as $index => $charge) {
+            if($request[$requestKey][$index]['AmountInCents'] != $charge['AmountInCents']) {
+                $differentValue = true;
+            }
         }
+        return $differentValue;
+    }
 
-        //build a new response based on API data.
-        $newResponse = [
+    protected function prepareAPIDataToResponse($APIKey, &$APIOrderData)
+    {
+        foreach($APIOrderData[$APIKey] as &$transaction) {
+            $transaction['Success'] = false;
+            if(
+                (isset($transaction['CreditCardTransactionStatus']) &&
+                    !in_array($transaction['CreditCardTransactionStatus'],['WithError','NotAuthorized'])
+                )
+                ||
+                (isset($transaction['BoletoTransactionStatus']) &&
+                    $transaction['BoletoTransactionStatus'] === 'Generated'
+                )
+            ) {
+                $transaction['Success'] = true;
+            }
+            $transaction['AuthorizationCode'] = $transaction['AcquirerAuthorizationCode'];
+        }
+    }
+
+    protected function buildNewReponseData($APIOrderData)
+    {
+        return [
             'BoletoTransactionResultCollection' =>
                 $APIOrderData['BoletoTransactionDataCollection'] !== null ?
                     $APIOrderData['BoletoTransactionDataCollection'] :
@@ -523,21 +505,65 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             'OrderResult' =>  $APIOrderData['OrderData'],
             'RequestKey' => 'FetchFromAPI'
         ];
+    }
 
-        return $newResponse;
+    protected function tryGetOrderDataFromAPI($request)
+    {
+        $ordersData = $this->getOrderDataFromAPI($request);
+
+        $APIOrderData = null;
+        foreach ($ordersData['SaleDataCollection'] as $orderData) {
+
+            //get transaction type keys
+            $APIKey = $this->getTransactionTypeDataKeyFromOrderData($orderData);
+            if ($APIKey === false) {
+                continue;
+            }
+            $requestKey = str_replace("Data", "", $APIKey);
+
+            //verify if the transaction type is equals to the request transaction type.
+            if (!isset($request[$requestKey])) {
+                continue;
+            }
+
+            $createTimestamp = strtotime($orderData['OrderData']['CreateDate']);
+            //verify if the transaction was created in the last five minutes
+            $diffInSeconds = abs($createTimestamp - (new Datetime())->getTimestamp());
+            if ($diffInSeconds > 300) {
+                continue;
+            }
+
+            //verify each charge values on the transaction
+            if ($this->isOrderDataAndRequestValuesDifferent(
+                $APIKey,
+                $requestKey,
+                $orderData,
+                $request)
+            ) {
+                continue;
+            }
+
+            //all tests passed. We have the right transaction.
+            $APIOrderData = $orderData;
+            $this->prepareAPIDataToResponse($APIKey,$APIOrderData);
+
+            break;
+        }
+
+        if ($APIOrderData === null) {
+            return null;
+        }
+
+        //build a new response based on API data.
+        return $this->buildNewReponseData($APIOrderData);
     }
 
     protected function getOrderDataFromAPI($request)
     {
         $merchantKey = $this->modelStandard->getMerchantKey();
-        $url = $this->modelStandard->getUrl();
-
-        $url .= 'Query/OrderReference=';
-
-        $environment = $this->modelStandard->getEnvironment();
-
         $orderReference = $request['Order']['OrderReference'];
-        $url .= $orderReference;
+        $url = $this->modelStandard->getUrl();
+        $url .= 'Query/OrderReference=' . $orderReference;
 
         $moduleVersion = $version = Mage::helper('mundipagg')
             ->getExtensionVersion();
