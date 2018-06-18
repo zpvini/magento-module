@@ -248,7 +248,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
                 $response = $this->tryGetOrderDataFromAPI($_request);
                 if ($response === null) {
-                    $helperLog->error('Failed to get orderData from API!');
+                    $helperLog->error('Null response handling: Failed to get orderData from API!');
                     return false;
                 }
             }
@@ -732,7 +732,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
                 $response = $this->tryGetOrderDataFromAPI($_request);
                 if ($response === null) {
-                    $helperLog->error('Failed to get orderData from API!');
+                    $helperLog->error('Null response handling: Failed to get orderData from API!');
                     return false;
                 }
             }
