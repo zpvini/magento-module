@@ -74,6 +74,7 @@ jobs:
       - run:
           name: Activate and setup Plugin
           command: |
+             docker exec -it newimage /root/bin/modman clone https://github.com/deivisonarthur/OSC-Magento-Brasil-6-Pro.git
              docker exec -it newimage /root/bin/modman repair
              docker exec -it newimage /bin/sh -c "ls"
              docker exec -it newimage php index.php
