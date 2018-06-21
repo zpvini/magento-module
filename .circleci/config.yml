@@ -77,6 +77,11 @@ jobs:
              docker exec -it newimage /root/bin/modman repair
              docker exec -it newimage /bin/sh -c "ls"
              docker exec -it newimage php index.php
+             docker exec -it newimage /bin/sh -c \
+                            "mysql magento < /app/.modman/magento-one/magento_one_module_install.sql"
+             docker exec -it newimage mysql magento -e \
+                            "INSERT INTO magento.core_config_data (scope, scope_id, path, value) VALUES \
+                            ('default', 0, 'payment/mundipagg_standard/merchantKeyStaging', '${API_MARCHANTKEY_SANDBOX}');"
              docker exec -it newimage mysql magento -e \
                "UPDATE magento.core_config_data SET value = 'https://${STG_URL}/'\
                 WHERE path IN ('web/unsecure/base_url','web/secure/base_url');"
