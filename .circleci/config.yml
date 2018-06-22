@@ -105,7 +105,6 @@ jobs:
              docker login ${DOCKER_ACCOUNT} -u ${DOCKER_USER} -p ${DOCKER_PASS}
              docker commit newimage ${DOCKER_ACCOUNT}/${PROJECT_NAME}:latest
              docker tag ${DOCKER_ACCOUNT}/${PROJECT_NAME} "${DOCKER_ACCOUNT}/${PROJECT_NAME}:latest"
-             docker tag ${DOCKER_ACCOUNT}/${PROJECT_NAME} "${DOCKER_ACCOUNT}/${PROJECT_NAME}:master"
              docker tag ${DOCKER_ACCOUNT}/${PROJECT_NAME} "${DOCKER_ACCOUNT}/${PROJECT_NAME}:${CIRCLE_BRANCH}"
              docker tag ${DOCKER_ACCOUNT}/${PROJECT_NAME} "${DOCKER_ACCOUNT}/${PROJECT_NAME}:${CIRCLE_SHA1:0:8}"
              docker push "${DOCKER_ACCOUNT}/${PROJECT_NAME}"
@@ -116,7 +115,7 @@ jobs:
        - run:
            name: Send deployment webhook to Rancher
            command: |
-             BODY='{"push_data":{"tag":"master"},"repository":{"repo_name":"'"${DOCKER_ACCOUNT}/${PROJECT_NAME}"'"}}'
+             BODY='{"push_data":{"tag":"'"${CIRCLE_BRANCH}"'"},"repository":{"repo_name":"'"${DOCKER_ACCOUNT}/${PROJECT_NAME}"'"}}'
              curl -X POST ${RANCHER_STG_DEPLOY_URL} -H 'Content-Type: application/json' -d "${BODY}"
 
 workflows:
@@ -127,6 +126,12 @@ workflows:
       - publish:
           requires:
             - build
+          filters:
+            branches:
+              only: master
       - deploy_staging:
           requires:
             - publish
+          filters:
+            branches:
+              only: master
