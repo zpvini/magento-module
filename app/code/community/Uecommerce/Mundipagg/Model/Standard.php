@@ -2140,7 +2140,6 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $orderIncrementId = $order->getIncrementId();
 
             $api = new Uecommerce_Mundipagg_Model_Api();
-            $orderInOfflineRetry = $api->orderIsInOfflineRetry($orderIncrementId);
 
             if (in_array($ccTransactionStatus, $transactionOpenStatuses)) {
                 $transaction->setIsClosed(0);
