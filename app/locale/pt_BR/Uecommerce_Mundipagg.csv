@@ -110,7 +110,7 @@
 "Order status is: Canceled","Status do pedido: Cancelado"
 "Order status is: PartialPaid","Status do pedido: Pago parcialmente"
 "No OrderKey found.","Chave do pedido não encontrada."
-"Waiting for Boleto Bancário payment","Aguardando pagamento do Boleto Bancário"
+"MP - Waiting for Boleto Bancário payment","MP - Aguardando pagamento do Boleto Bancário"
 "InstallmentCount","Parcela"
 "InstallmentsCount","Parcelas"
 "Installments","Parcelas"
