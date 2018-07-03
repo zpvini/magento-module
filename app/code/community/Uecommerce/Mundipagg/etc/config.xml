@@ -29,6 +29,7 @@
             <sales>
                 <rewrite>
                     <order_payment>Uecommerce_Mundipagg_Model_Payment</order_payment>
+                    <order>Uecommerce_Mundipagg_Model_Order</order>
                 </rewrite>
             </sales>
         </models>
