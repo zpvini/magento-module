@@ -198,7 +198,7 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
             $newStatus = 'overpaid';
             $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, 'overpaid');
         } else {
-            $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true, 'Boleto pago', true);
+            $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true, 'MP - Boleto pago', true);
         }
         $order->save();
         $returnMessage = "OK | {$returnMessageLabel} | invoice created and order state changed to {$newStatus}.";
