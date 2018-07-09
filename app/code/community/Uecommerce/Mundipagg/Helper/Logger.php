@@ -3,8 +3,6 @@
 class Uecommerce_Mundipagg_Helper_Logger extends Mage_Core_Helper_Abstract
 {
 
-    const _allowedFileExtensions = array('log', 'txt', 'html', 'csv');
-
     /**
      * @param string $message
      * @param integer $level
@@ -84,10 +82,15 @@ class Uecommerce_Mundipagg_Helper_Logger extends Mage_Core_Helper_Abstract
     {
         $result = false;
         $validatedFileExtension = pathinfo($file, PATHINFO_EXTENSION);
-        if ($validatedFileExtension && in_array($validatedFileExtension, self::_allowedFileExtensions)) {
+        if ($validatedFileExtension && in_array($validatedFileExtension, self::getAllowedFileExtensions())) {
             $result = true;
         }
 
         return $result;
+    }
+
+    protected static function getAllowedFileExtensions()
+    {
+        return ['log', 'txt', 'html', 'csv'];
     }
 }
