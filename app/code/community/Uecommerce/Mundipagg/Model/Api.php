@@ -438,9 +438,16 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
     protected function getTransactionTypeDataKeyFromOrderData($orderData)
     {
-        $filteredOrderData = array_filter($orderData,function($value, $key){
-            return !($value === null || strpos(strtolower($key),'transactiondata') === false);
-        },ARRAY_FILTER_USE_BOTH);
+
+        $filteredOrderData = [];
+
+        foreach ($orderData as $key => $value) {
+            $transactionData = strpos(strtolower($key), 'transactiondata');
+            if (!($value === null || $transactionData === false)) {
+                $filteredOrderData[$key] = $value;
+            }
+        }
+
         $key = array_keys($filteredOrderData);
         if (count($key) !== 1) {
             return false;
