@@ -442,11 +442,10 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $filteredOrderData = [];
 
         foreach ($orderData as $key => $value) {
-            $transactionData = strpos(strtolower($key),'transactiondata');
+            $transactionData = strpos(strtolower($key), 'transactiondata');
             if (!($value === null || $transactionData === false)) {
                 $filteredOrderData[$key] = $value;
             }
-            continue;
         }
 
         $key = array_keys($filteredOrderData);
