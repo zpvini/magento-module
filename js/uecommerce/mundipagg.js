@@ -297,6 +297,17 @@ function updateInstallments(ccType, element, total) {
                     }
                 }
 
+                for(j = element.options.length; j > 0; j--) {
+                    var currentOption = element.options[j-1];
+                    element.options[j] = new Option(
+                        currentOption.text,
+                        currentOption.value,
+                        false,
+                        false
+                    );
+                }
+                element.options[0] = new Option('Selecione', '', true, true);
+
                 if (res['brand'] != undefined) {
                     window['brand_' + id.replace('mundipagg_twocreditcards_', '').replace('_cc_number', '')] = res.brand;
                 }
