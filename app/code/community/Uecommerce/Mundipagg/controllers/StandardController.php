@@ -526,8 +526,13 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         }
 
         $newFiles = [];
+        $unreadableFiles = [];
         $alteredFiles = [];
         foreach ($files as $fileName => $md5) {
+            if ($md5 === false) {
+                $unreadableFiles[] = $fileName;
+                continue;
+            }
             if(isset($integrityData[$fileName])) {
                 if ($md5 != $integrityData[$fileName]) {
                     $alteredFiles[] = $fileName;
@@ -538,6 +543,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         }
         $info['newFiles'] = $newFiles;
         $info['alteredFiles'] = $alteredFiles;
+        $info['unreadableFiles'] = $unreadableFiles;
 
         echo '<pre>';
         print_r($info);
@@ -565,6 +571,9 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
 
     protected function filterFileCheckSum($checkSumArray)
     {
+        if(count($checkSumArray) === 1) {
+            return $checkSumArray;
+        }
         $data = serialize($checkSumArray);
         $data = explode('";s:32:"',$data);
         $currentFile = null;
@@ -574,7 +583,7 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             $raw = explode('"',$line);
             if( $currentFile ) {
                 $files[$currentFile] = $raw[0];
-                $currentFile = null;
+                $currentFile = end($raw);
                 continue;
             }
             $currentFile = end($raw);

@@ -25,8 +25,6 @@ app/design/frontend/base/default/template/mundipagg/payment/info/mundipagg.phtml
 app/design/frontend/base/default/template/mundipagg/redirect.phtml            app/design/frontend/base/default/template/mundipagg/redirect.phtml
 app/design/frontend/base/default/template/mundipagg/partial.phtml            app/design/frontend/base/default/template/mundipagg/partial.phtml
 app/design/frontend/base/default/template/mundipagg/success.phtml            app/design/frontend/base/default/template/mundipagg/success.phtml
-app/design/frontend/rwd/default/template/mundipagg/form.phtml            app/design/frontend/rwd/default/template/mundipagg/form.phtml
-app/design/frontend/rwd/default/template/mundipagg/debit.phtml            app/design/frontend/rwd/default/template/mundipagg/debit.phtml
 app/design/adminhtml/default/default/layout/mundipagg.xml            app/design/adminhtml/default/default/layout/mundipagg.xml
 app/design/adminhtml/default/default/template/mundipagg/form.phtml            app/design/adminhtml/default/default/template/mundipagg/form.phtml
 app/design/adminhtml/default/default/template/mundipagg/system/config/button.phtml            app/design/adminhtml/default/default/template/mundipagg/system/config/button.phtml
