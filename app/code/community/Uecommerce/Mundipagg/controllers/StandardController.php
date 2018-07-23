@@ -496,7 +496,9 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         $info = [
             'modmanFilePath' => $modmanFilePath,
             'integrityCheckFile' => $integrityCheckFile,
-            'php_version' => phpversion()
+            'php_version' => phpversion(),
+            'magento_version' => Mage::getVersion(),
+            'module_version' => Mage::helper('mundipagg')->getExtensionVersion()
         ];
 
         $modmanRawData = file_get_contents($modmanFilePath);
@@ -541,13 +543,38 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             }
             $newFiles[$fileName] = $md5;
         }
-        $info['newFiles'] = $newFiles;
-        $info['alteredFiles'] = $alteredFiles;
-        $info['unreadableFiles'] = $unreadableFiles;
 
+        echo "<h3>Module info</h3>";
         echo '<pre>';
         print_r($info);
         echo '</pre>';
+        echo json_encode($info);
+
+
+
+        if (count($newFiles) > 0) {
+            echo "<h3 style='color:red'>Warning! New files were added to module directories!</h3>";
+            echo '<pre>';
+            print_r($newFiles);
+            echo '</pre>';
+            echo json_encode($newFiles);
+        }
+
+        if (count($alteredFiles) > 0) {
+            echo "<h3 style='color:red'>Warning! Module files were modified!</h3>";
+            echo '<pre>';
+            print_r($alteredFiles);
+            echo '</pre>';
+            echo json_encode($alteredFiles);
+        }
+
+        if (count($unreadableFiles) > 0) {
+            echo "<h3 style='color:red'>Warning! Module files become unreadable!</h3>";
+            echo '<pre>';
+            print_r($unreadableFiles);
+            echo '</pre>';
+            echo json_encode($unreadableFiles);
+        }
     }
 
     protected function dirCheckSum($dir)
