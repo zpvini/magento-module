@@ -2,30 +2,23 @@
 
 class IntegrityEngine
 {
-    public function dirCheckSum($dir)
+    public function generateCheckSum($dir)
     {
+        if (!is_dir($dir)) {
+            return  [
+                $dir => file_exists($dir) ? md5_file($dir) : false
+            ];
+        }
+
         $files = scandir($dir);
         $md5 = [];
         foreach ($files as $file) {
             if ($file !== '.' && $file !== '..') {
                 $file = $dir . DIRECTORY_SEPARATOR . $file;
-
-                $checkMethod = 'fileCheckSum';
-                if (is_dir($file)) {
-                    $checkMethod = 'dirCheckSum';
-                }
-
-                $md5[$file] = $this->$checkMethod($file);
+                $md5[$file] = $this->generateCheckSum($file);
             }
         }
         return $md5;
-    }
-
-    public function fileCheckSum($file)
-    {
-        return  [
-            $file => file_exists($file) ? md5_file($file) : false
-        ];
     }
 
     public function generateModuleFilesMD5s($modmanFilePath)
@@ -45,11 +38,9 @@ class IntegrityEngine
         }
         foreach ($lines as $index => $line) {
             $elementName = './' . $line[1];
-            $checkMethod = 'fileCheckSum';
-            if (is_dir($elementName)) {
-                $checkMethod = 'dirCheckSum';
-            }
-            $lines[$index][] = $this->filterFileCheckSum($this->$checkMethod($elementName));
+            $lines[$index][] = $this->filterFileCheckSum(
+                $this->generateCheckSum($elementName)
+            );
         }
         $files = [];
         foreach($lines as $line) {
@@ -84,20 +75,6 @@ class IntegrityEngine
                 continue;
             }
             $currentFile = end($raw);
-        }
-        return $files;
-    }
-
-    public function filterFileMd5($pathArray)
-    {
-        $files = [];
-        foreach ($pathArray as $path => $md5) {
-            if (!is_dir($path)) {
-                $files[$path] = $md5;
-            }
-            else {
-                $files = array_merge($files,$this->filterFileMd5($path));
-            }
         }
         return $files;
     }
