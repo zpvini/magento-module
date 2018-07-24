@@ -66,3 +66,5 @@ skin/frontend/default/default/images/mundipagg/di.png            skin/frontend/d
 skin/adminhtml/default/default/images/mundipagg/ajax-loader.gif            skin/adminhtml/default/default/images/mundipagg/ajax-loader.gif
 skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png            skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png
 skin/adminhtml/default/default/images/mundipagg/boleto.jpg            skin/adminhtml/default/default/images/mundipagg/boleto.jpg
+#this file
+modman .modman/magento-module/app/code/community/Uecommerce/Mundipagg/etc/modman

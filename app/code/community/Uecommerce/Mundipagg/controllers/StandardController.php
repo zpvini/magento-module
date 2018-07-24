@@ -501,18 +501,18 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             return;
         }
 
-        $modmanFilePath = './.modman/magento-module/modman';
-        $integrityCheckFile = './.modman/magento-module/integrityCheck';
+        //integrity check.
+        $modmanFilePath = './app/code/community/Uecommerce/Mundipagg/etc/modman';
+        $integrityCheckFile = './app/code/community/Uecommerce/Mundipagg/etc/integrityCheck';
         $integrityData = json_decode(file_get_contents($integrityCheckFile),true);
-
-
 
         $info = [
             'modmanFilePath' => $modmanFilePath,
             'integrityCheckFile' => $integrityCheckFile,
-            'php_version' => phpversion(),
-            'magento_version' => Mage::getVersion(),
-            'module_version' => Mage::helper('mundipagg')->getExtensionVersion()
+            'phpVersion' => phpversion(),
+            'magentoVersion' => Mage::getVersion(),
+            'moduleVersion' => Mage::helper('mundipagg')->getExtensionVersion(),
+            'installType' => 'modman'
         ];
 
         $modmanRawData = file_get_contents($modmanFilePath);
@@ -541,10 +541,21 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             $files = array_merge($files,end($line));
         }
 
+        //removing base modman file from check.
+        unset($files['./.modman/magento-module/app/code/community/Uecommerce/Mundipagg/etc/modman']);
+
         $newFiles = [];
         $unreadableFiles = [];
         $alteredFiles = [];
+
+
+        //validating files
         foreach ($files as $fileName => $md5) {
+            if (
+                $fileName === './app/code/community/Uecommerce/Mundipagg/etc/integrityCheck') {
+                //skip validation of integrityCheck file
+                continue;
+            }
             if ($md5 === false) {
                 $unreadableFiles[] = $fileName;
                 continue;
