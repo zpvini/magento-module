@@ -24,37 +24,24 @@ class IntegrityEngine
     public function generateModuleFilesMD5s($modmanFilePath)
     {
         $modmanRawData = file_get_contents($modmanFilePath);
-
         $rawLines = explode("\n",$modmanRawData);
-        $lines = [];
+
+        $md5s = [];
         foreach ($rawLines as $rawLine) {
             if (
-                substr($rawLine,0,1) === '#' ||
-                strlen($rawLine) === 0
+                substr($rawLine,0,1) !== '#' &&
+                strlen($rawLine) > 0
             ) {
-                continue;
-            }
-            $lines[] = array_values(array_filter(explode(' ',$rawLine)));
-        }
-        foreach ($lines as $index => $line) {
-            $elementName = './' . $line[1];
-            $lines[$index][] = $this->filterFileCheckSum(
-                $this->generateCheckSum($elementName)
-            );
-        }
-        $files = [];
-        foreach($lines as $line) {
-            $files = array_merge($files,end($line));
-        }
-
-        //removing modman base files from generated hashs.
-        foreach($files as $filePath => $md5) {
-            if (strpos($filePath,'./.modman/') !== false) {
-                unset($files[$filePath]);
+                $line = array_values(array_filter(explode(' ',$rawLine)));
+                if (strpos($line[1], ".modman/") !== 0) { //ignore .modman/*
+                    $md5s = array_merge($md5s,$this->filterFileCheckSum(
+                        $this->generateCheckSum('./' . $line[1])
+                    ));
+                }
             }
         }
 
-        return $files;
+        return $md5s;
     }
 
     public function filterFileCheckSum($checkSumArray)
