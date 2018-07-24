@@ -5,7 +5,6 @@ $integrityEngineClassFilePath = './app/code/community/Uecommerce/Mundipagg/etc/i
 $integrityFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/integrityCheck';
 $modmanFilePath = 'modman';
 
-
 require_once $integrityEngineClassFilePath;
 $integrityEngine = new IntegrityEngine();
 $integrityData = $integrityEngine->generateModuleFilesMD5s($modmanFilePath);
