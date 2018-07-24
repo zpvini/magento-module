@@ -67,4 +67,4 @@ skin/adminhtml/default/default/images/mundipagg/ajax-loader.gif            skin/
 skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png            skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png
 skin/adminhtml/default/default/images/mundipagg/boleto.jpg            skin/adminhtml/default/default/images/mundipagg/boleto.jpg
 #this file
-modman .modman/magento-module/app/code/community/Uecommerce/Mundipagg/etc/modman
+modman .modman/magento-module/app/code/community/Uecommerce/Mundipagg/etc/integrity/modman

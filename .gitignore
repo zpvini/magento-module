@@ -2,4 +2,4 @@ vendor/
 features/*.swp
 features/bootstrap/*.swp
 features/bootstrap/.env
-app/code/community/Uecommerce/Mundipagg/etc/modman
+app/code/community/Uecommerce/Mundipagg/etc/integrity/modman
