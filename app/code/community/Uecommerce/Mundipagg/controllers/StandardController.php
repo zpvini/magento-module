@@ -485,4 +485,92 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         $payment = $order->getPayment();
         $info = $payment->getAdditionalInformation();
     }
+
+    /** Returns info about module files and integrity */
+    public function versionAction()
+    {
+        //auth
+        $standardModel = Mage::getmodel('mundipagg/standard');
+        $merchantKey = $standardModel->getmerchantKey();
+        $merchantKeyHashEncoded = base64_encode(hash('sha512',$merchantKey));
+        $urlToken = Mage::app()->getRequest()->getParam('token');
+
+        if ($urlToken !== $merchantKeyHashEncoded || strlen($merchantKey) < 1) {
+            header('HTTP/1.0 401 Unauthorized');
+            $this->getResponse()->setBody('Unauthorized');
+            return;
+        }
+
+        //gathering environment and module info
+        $modmanFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/modman';
+        $integrityCheckFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/integrityCheck';
+
+        $installType = 'package';
+        if (is_dir('./.modman')) {
+            $installType = 'modman';
+        }
+
+        $info = [
+            'modmanFilePath' => $modmanFilePath,
+            'integrityCheckFile' => $integrityCheckFilePath,
+            'phpVersion' => phpversion(),
+            'magentoVersion' => Mage::getVersion(),
+            'moduleVersion' => Mage::helper('mundipagg')->getExtensionVersion(),
+            'moduleCheckSum' => '',
+            'installType' => $installType
+        ];
+
+        //integrity check
+        require_once './app/code/community/Uecommerce/Mundipagg/etc/integrity/IntegrityEngine.php';
+        $integrityEngine = new IntegrityEngine();
+        $integrityResult = $integrityEngine->verifyIntegrity(
+            $modmanFilePath,
+            $integrityCheckFilePath,
+            [
+                './var/connect/mundipagg_payment_gateway.xml'
+            ]
+        );
+
+        $info['moduleCheckSum'] = md5(json_encode($integrityResult['files']));
+
+        //showing environment and module info
+        echo "<h3>Module info</h3>";
+        echo '<pre>';
+        print_r($info);
+        echo '</pre>';
+        echo json_encode($info);
+
+        //showing integrity check result
+        if (count($integrityResult['newFiles']) > 0) {
+            echo "<h3 style='color:red'>Warning! New files were added to module directories!</h3>";
+            echo '<pre>';
+            print_r($integrityResult['newFiles']);
+            echo '</pre>';
+            echo json_encode($integrityResult['newFiles']);
+        }
+
+        if (count($integrityResult['alteredFiles']) > 0) {
+            echo "<h3 style='color:red'>Warning! Module files were modified!</h3>";
+            echo '<pre>';
+            print_r($integrityResult['alteredFiles']);
+            echo '</pre>';
+            echo json_encode($integrityResult['alteredFiles']);
+        }
+
+        if (count($integrityResult['unreadableFiles']) > 0) {
+            echo "<h3 style='color:red'>Warning! Module files become unreadable!</h3>";
+            echo '<pre>';
+            print_r($integrityResult['unreadableFiles']);
+            echo '</pre>';
+            echo json_encode($integrityResult['unreadableFiles']);
+        }
+
+        echo '<h3>File List ('.count($integrityResult['files']).')</h3><pre>';
+        print_r($integrityResult['files']);
+        echo '</pre>';
+        echo json_encode($integrityResult['files']);
+
+        echo '<h3>phpinfo()</h3>';
+        phpinfo();
+    }
 }
