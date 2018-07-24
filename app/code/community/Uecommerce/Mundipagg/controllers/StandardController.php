@@ -501,10 +501,15 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             return;
         }
 
-        //integrity check.
+        //gathering environment and module info
         $modmanFilePath = './app/code/community/Uecommerce/Mundipagg/etc/modman';
         $integrityCheckFile = './app/code/community/Uecommerce/Mundipagg/etc/integrityCheck';
-        $integrityData = json_decode(file_get_contents($integrityCheckFile),true);
+
+        $installType = 'package';
+
+        if (is_dir('./.modman')) {
+            $installType = 'modman';
+        }
 
         $info = [
             'modmanFilePath' => $modmanFilePath,
@@ -512,37 +517,12 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             'phpVersion' => phpversion(),
             'magentoVersion' => Mage::getVersion(),
             'moduleVersion' => Mage::helper('mundipagg')->getExtensionVersion(),
-            'installType' => 'modman'
+            'installType' => $installType
         ];
 
-        $modmanRawData = file_get_contents($modmanFilePath);
-
-        $rawLines = explode("\n",$modmanRawData);
-        $lines = [];
-        foreach ($rawLines as $rawLine) {
-            if (
-                substr($rawLine,0,1) === '#' ||
-                strlen($rawLine) === 0
-            ) {
-                continue;
-            }
-            $lines[] = array_values(array_filter(explode(' ',$rawLine)));
-        }
-        foreach ($lines as $index => $line) {
-            $elementName = './' . $line[1];
-            $checkMethod = 'fileCheckSum';
-            if (is_dir($elementName)) {
-                $checkMethod = 'dirCheckSum';
-            }
-            $lines[$index][] = $this->filterFileCheckSum($this->$checkMethod($elementName));
-        }
-        $files = [];
-        foreach($lines as $line) {
-            $files = array_merge($files,end($line));
-        }
-
-        //removing base modman file from check.
-        unset($files['./.modman/magento-module/app/code/community/Uecommerce/Mundipagg/etc/modman']);
+        //integrity check
+        $integrityData = json_decode(file_get_contents($integrityCheckFile),true);
+        $files = $this->generateModuleFilesMD5s($modmanFilePath);
 
         $newFiles = [];
         $unreadableFiles = [];
@@ -630,6 +610,44 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         return $md5;
     }
 
+    public function generateModuleFilesMD5s($modmanFilePath) {
+
+        $modmanRawData = file_get_contents($modmanFilePath);
+
+        $rawLines = explode("\n",$modmanRawData);
+        $lines = [];
+        foreach ($rawLines as $rawLine) {
+            if (
+                substr($rawLine,0,1) === '#' ||
+                strlen($rawLine) === 0
+            ) {
+                continue;
+            }
+            $lines[] = array_values(array_filter(explode(' ',$rawLine)));
+        }
+        foreach ($lines as $index => $line) {
+            $elementName = './' . $line[1];
+            $checkMethod = 'fileCheckSum';
+            if (is_dir($elementName)) {
+                $checkMethod = 'dirCheckSum';
+            }
+            $lines[$index][] = $this->filterFileCheckSum($this->$checkMethod($elementName));
+        }
+        $files = [];
+        foreach($lines as $line) {
+            $files = array_merge($files,end($line));
+        }
+
+        //removing modman base files from generated hashs.
+        foreach($files as $filePath => $md5) {
+            if (strpos($filePath,'./.modman/') !== false) {
+                unset($files[$filePath]);
+            }
+        }
+
+        return $files;
+    }
+
     protected function filterFileCheckSum($checkSumArray)
     {
         if(count($checkSumArray) === 1) {
@@ -671,6 +689,5 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         return  [
             $file => md5_file($file)
         ];
-
     }
 }
