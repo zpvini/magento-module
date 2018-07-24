@@ -25,8 +25,6 @@ app/design/frontend/base/default/template/mundipagg/payment/info/mundipagg.phtml
 app/design/frontend/base/default/template/mundipagg/redirect.phtml            app/design/frontend/base/default/template/mundipagg/redirect.phtml
 app/design/frontend/base/default/template/mundipagg/partial.phtml            app/design/frontend/base/default/template/mundipagg/partial.phtml
 app/design/frontend/base/default/template/mundipagg/success.phtml            app/design/frontend/base/default/template/mundipagg/success.phtml
-app/design/frontend/rwd/default/template/mundipagg/form.phtml            app/design/frontend/rwd/default/template/mundipagg/form.phtml
-app/design/frontend/rwd/default/template/mundipagg/debit.phtml            app/design/frontend/rwd/default/template/mundipagg/debit.phtml
 app/design/adminhtml/default/default/layout/mundipagg.xml            app/design/adminhtml/default/default/layout/mundipagg.xml
 app/design/adminhtml/default/default/template/mundipagg/form.phtml            app/design/adminhtml/default/default/template/mundipagg/form.phtml
 app/design/adminhtml/default/default/template/mundipagg/system/config/button.phtml            app/design/adminhtml/default/default/template/mundipagg/system/config/button.phtml
@@ -68,3 +66,5 @@ skin/frontend/default/default/images/mundipagg/di.png            skin/frontend/d
 skin/adminhtml/default/default/images/mundipagg/ajax-loader.gif            skin/adminhtml/default/default/images/mundipagg/ajax-loader.gif
 skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png            skin/adminhtml/default/default/images/mundipagg/mundi-magento-admin-banner.png
 skin/adminhtml/default/default/images/mundipagg/boleto.jpg            skin/adminhtml/default/default/images/mundipagg/boleto.jpg
+#this file
+modman .modman/magento-module/app/code/community/Uecommerce/Mundipagg/etc/integrity/modman
