@@ -486,12 +486,26 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         $info = $payment->getAdditionalInformation();
     }
 
-    /** Returns info about module integrity */
+    /** Returns info about module files and integrity */
     public function versionAction()
     {
+        //auth
+        $standardModel = Mage::getmodel('mundipagg/standard');
+        $merchantKey = $standardModel->getmerchantKey();
+        $merchantKeyHashEncoded = base64_encode(hash('sha512',$merchantKey));
+        $urlToken = Mage::app()->getRequest()->getParam('token');
+
+        if ($urlToken !== $merchantKeyHashEncoded) {
+            header('HTTP/1.0 401 Unauthorized');
+            $this->getResponse()->setBody('Unauthorized');
+            return;
+        }
+
         $modmanFilePath = './.modman/magento-module/modman';
         $integrityCheckFile = './.modman/magento-module/integrityCheck';
         $integrityData = json_decode(file_get_contents($integrityCheckFile),true);
+
+
 
         $info = [
             'modmanFilePath' => $modmanFilePath,
@@ -575,6 +589,15 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             echo '</pre>';
             echo json_encode($unreadableFiles);
         }
+
+        echo '<h3>File List ('.count($files).')</h3><pre>';
+        print_r($files);
+        echo '</pre>';
+        echo json_encode($files);
+
+        echo '<h3>phpnfo()</h3>';
+        phpinfo();
+
     }
 
     protected function dirCheckSum($dir)
