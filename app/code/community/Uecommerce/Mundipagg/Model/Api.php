@@ -697,7 +697,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 }
 
                 $baseGrandTotal = str_replace(',', '.', $order->getBaseGrandTotal());
-                $amountInCentsVar = intval(strval((($baseGrandTotal / $data['boleto_parcelamento']) * 100)));
+                $amountInCentsVar = intval(strval(((round($baseGrandTotal / $data['boleto_parcelamento'], 2)) * 100)));
                 $boletoTransactionData->AmountInCents = $amountInCentsVar;
                 $boletoTransactionData->Instructions = $standard->getInstrucoesCaixa();
 
