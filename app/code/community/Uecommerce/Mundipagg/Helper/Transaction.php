@@ -38,7 +38,6 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
             }
         }
 
-        $transaction = null;
         $orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
         if (is_null($totalPaid)) {
             $totalPaid = 0;
@@ -48,6 +47,7 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
         $entityId = $order->getEntityId();
 
         $this->validateTransactions($entityId, $transactionKey);
+        $transaction = $this->getTransaction($entityId,$transactionKey);
 
         $order->setBaseTotalPaid($totalPaid)
             ->setTotalPaid($totalPaid)
