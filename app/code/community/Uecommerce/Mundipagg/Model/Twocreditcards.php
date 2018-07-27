@@ -115,12 +115,18 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
         }
         
         $interest = $interest1+$interest2;
-        
+        $valueWithInterest1 = preg_replace("/[^0-9]/", "",end(explode(":",Mage::helper('mundipagg/installments')->getInstallmentForCreditCardType($cctype1, $value1)[$parcelsNumber1])));        
+        $valueWithInterest2 = preg_replace("/[^0-9]/", "",end(explode(":",Mage::helper('mundipagg/installments')->getInstallmentForCreditCardType($cctype2, $value2)[$parcelsNumber2])));        
+        $totalValueWithInterest = ($valueWithInterest1 + $valueWithInterest2) / 100;
+        $grandTotal = $info->getQuote()->getGrandTotal();
+        $interest = $totalValueWithInterest - $grandTotal;
+
         if ($interest > 0) {
             $info->setAdditionalInformation('mundipagg_interest_information', array());
             $info->setAdditionalInformation('mundipagg_interest_information', $interestInformation);
             $this->applyInterest($info, $interest);
         } else {
+            $interest = 0;
             // If none of Cc parcels doens't have interest we reset interest
             $info = $this->resetInterest($info);
         }

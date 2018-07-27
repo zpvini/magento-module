@@ -120,7 +120,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             }
 
             $baseGrandTotal = str_replace(',', '.', $order->getBaseGrandTotal());
-            $amountInCentsVar = intval(strval(($baseGrandTotal * 100)));
+            $amountInCentsVar = intval(strval((round($baseGrandTotal, 2) * 100)));
             $num = $helper->getCreditCardsNumber($data['payment_method']);
             $installmentCount = 1;
 
