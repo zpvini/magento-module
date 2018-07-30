@@ -2,6 +2,21 @@
 
 class IntegrityEngine
 {
+
+    private function hasPermissions($file)
+    {
+        if (!file_exists($file)) {
+            echo "<pre>File <strong>'$file'</strong> does not exists!</pre>";
+            return false;
+        }
+
+        if (!is_readable($file)) {
+            echo "<pre>File <strong>'$file'</strong> is not readable!</pre>";
+            return false;
+        }
+        return true;
+    }
+
     public function generateCheckSum($dir)
     {
         if (!is_dir($dir)) {
@@ -23,6 +38,10 @@ class IntegrityEngine
 
     public function generateModuleFilesMD5s($modmanFilePath)
     {
+        if(!$this->hasPermissions($modmanFilePath)) {
+            return [];
+        }
+
         $modmanRawData = file_get_contents($modmanFilePath);
         $rawLines = explode("\n",$modmanRawData);
 
@@ -69,6 +88,10 @@ class IntegrityEngine
     public function verifyIntegrity($modmanFilePath, $integrityCheckFilePath, $ignoreList = [])
     {
         $integrityData = json_decode(file_get_contents($integrityCheckFilePath),true);
+
+        if(!$this->hasPermissions($integrityCheckFilePath)) {
+            $integrityData = [];
+        }
 
         $newFiles = [];
         $unreadableFiles = [];
