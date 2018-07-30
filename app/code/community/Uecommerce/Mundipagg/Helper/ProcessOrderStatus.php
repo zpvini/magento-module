@@ -72,7 +72,7 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
                 $baseTotalPaid = $capturedAmountInCents * 0.01;
                 $order->setTotalPaid($baseTotalPaid);
             }
-            $accOrderGrandTotal = sprintf($order->getGrandTotal());
+            $accOrderGrandTotal = sprintf(round($order->getGrandTotal(), 2));
             $accBaseTotalPaid = sprintf($baseTotalPaid);
             // Can invoice only if total captured amount is equal to GrandTotal
             if ($accBaseTotalPaid == $accOrderGrandTotal) {

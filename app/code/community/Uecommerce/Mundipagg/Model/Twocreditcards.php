@@ -114,14 +114,20 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
             $interestInformation[$keyCode.'_2_2']->setInterest(str_replace(',', '.', $interest2))->setValue(str_replace(',', '.', $value2));
         }
         
-        $interest = $interest1+$interest2;
-        
+        $valueWithInterest1 = $this->getValueWithInterest($cctype1, $value1, $parcelsNumber1);
+        $valueWithInterest2 = $this->getValueWithInterest($cctype2, $value2, $parcelsNumber2);
+        $totalValueWithInterest = ($valueWithInterest1 + $valueWithInterest2) / 100;
+
+        $grandTotal = $info->getQuote()->getGrandTotal();
+        $interest = $totalValueWithInterest - $grandTotal;
+
         if ($interest > 0) {
             $info->setAdditionalInformation('mundipagg_interest_information', array());
             $info->setAdditionalInformation('mundipagg_interest_information', $interestInformation);
             $this->applyInterest($info, $interest);
         } else {
             // If none of Cc parcels doens't have interest we reset interest
+            $interest = 0;
             $info = $this->resetInterest($info);
         }
         $discount = Uecommerce_Mundipagg_Helper_Installments::getRecurrenceDiscount($info->getQuote());
@@ -140,6 +146,15 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
             }
         }
         return parent::assignData($data);
+    }
+
+
+    public function getValueWithInterest($cctype, $value, $parcelsNumber)
+    {
+        $installment = Mage::helper('mundipagg/installments')
+                        ->getInstallmentForCreditCardType($cctype, $value)[$parcelsNumber];
+
+        return preg_replace("/[^0-9]/", "",end(explode(":", $installment)));
     }
 
     /**
