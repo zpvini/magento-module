@@ -154,7 +154,8 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
         $installment = Mage::helper('mundipagg/installments')
                         ->getInstallmentForCreditCardType($cctype, $value)[$parcelsNumber];
 
-        return preg_replace("/[^0-9]/", "",end(explode(":", $installment)));
+        $rawData = explode(":", $installment);
+        return preg_replace("/[^0-9]/", "",end($rawData));
     }
 
     /**
