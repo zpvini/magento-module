@@ -2,7 +2,6 @@
 
 class IntegrityEngine
 {
-
     public function listLogFiles($directories, $logFileConfig) {
         $allLogs = [];
         foreach ($directories as $dir) {
@@ -10,15 +9,18 @@ class IntegrityEngine
         }
         $allLogs = array_keys($allLogs);
         $allLogs = array_filter($allLogs,function($logFile) use ($logFileConfig) {
-            if (substr($logFile, -4) !== '.log') {
-                return false;
-            }
             $logFileName = explode (DIRECTORY_SEPARATOR,$logFile);
             $logFileName = end($logFileName);
 
+            if (
+                substr($logFile, -4) !== '.log' &&
+                !in_array($logFileName,$logFileConfig['includes'])
+            ) {
+                return false;
+            }
+
             return
-                $logFileName === $logFileConfig['system'] || //magento exception log file
-                $logFileName === $logFileConfig['exception'] || //magento system log file
+                in_array($logFileName,$logFileConfig['includes']) ||
                 strpos($logFileName, $logFileConfig['moduleFilenamePrefix']) === 0 ; //module log file.
         });
 
