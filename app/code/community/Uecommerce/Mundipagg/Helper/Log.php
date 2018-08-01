@@ -25,6 +25,16 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract
         }
     }
 
+    public function getLogPath()
+    {
+        return $this->logPath;
+    }
+
+    public function getModuleLogFilenamePrefix()
+    {
+        return 'Mundipagg_Integracao_';
+    }
+
     public function setMethod($method)
     {
         $this->method = $method;
@@ -81,7 +91,7 @@ class Uecommerce_Mundipagg_Helper_Log extends Mage_Core_Helper_Abstract
 
         $version = Mage::helper('mundipagg')->getExtensionVersion();
 
-        $file = "Mundipagg_Integracao_" . date('Y-m-d');
+        $file = $this->getModuleLogFilenamePrefix() . date('Y-m-d');
         if ($this->addHostName) {
             $file .= '_' . gethostname();
         }
