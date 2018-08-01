@@ -508,7 +508,19 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         //gathering environment and module info
         $modmanFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/modman';
         $integrityCheckFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/integrityCheck';
-        $moduleLogsDirectory = "./" . Mage::helper("mundipagg/log")->getLogPath();
+        $moduleLogsDirectory = Mage::helper("mundipagg/log")->getLogPath();
+        if (substr($moduleLogsDirectory,0,1) !== DIRECTORY_SEPARATOR) {
+            $moduleLogsDirectory = "./" . $moduleLogsDirectory;
+        }
+        else {
+            $moduleLogsDirectory = "." . substr_replace(
+                $moduleLogsDirectory,
+                '',
+                0,
+                strlen(Mage::getBaseDir('base'))
+            );
+        }
+
         $magentoLogsDirectory =  Mage::getBaseDir("log");
         $magentoLogsDirectory = "." . substr_replace(
             $magentoLogsDirectory,
@@ -639,7 +651,19 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         require_once './app/code/community/Uecommerce/Mundipagg/etc/integrity/IntegrityEngine.php';
         $integrityEngine = new IntegrityEngine();
 
-        $moduleLogsDirectory = "./" . Mage::helper("mundipagg/log")->getLogPath();
+        $moduleLogsDirectory = Mage::helper("mundipagg/log")->getLogPath();
+        if (substr($moduleLogsDirectory,0,1) !== DIRECTORY_SEPARATOR) {
+            $moduleLogsDirectory = "./" . $moduleLogsDirectory;
+        }
+        else {
+            $moduleLogsDirectory = "." . substr_replace(
+                $moduleLogsDirectory,
+                '',
+                0,
+                strlen(Mage::getBaseDir('base'))
+            );
+        }
+
         $magentoLogsDirectory =  Mage::getBaseDir("log");
         $magentoLogsDirectory = "." . substr_replace(
                 $magentoLogsDirectory,

@@ -1,5 +1,5 @@
 <_>
-   <form_key>tV5rRdv3ZdZLbbVc</form_key>
+   <form_key>TNC4CQKeY7scXknU</form_key>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -59,7 +59,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>                                          </files>
+            <files>                                               </files>
          </files>
       </package>
       <extension>
