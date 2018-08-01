@@ -66,14 +66,14 @@ class IntegrityEngine
     public function generateModuleFilesMD5s($modmanFilePath, $integrityCheckFilePath)
     {
 
-        if($this->hasPermissions($modmanFilePath)) {
+        if ($this->hasPermissions($modmanFilePath)) {
             $modmanRawData = file_get_contents($modmanFilePath);
             $rawLines = explode("\n",$modmanRawData);
 
             return $this->getMD5FromArrayData($rawLines, self::MODMAN_CHECK);
         }
 
-        if($this->hasPermissions($integrityCheckFilePath)) {
+        if ($this->hasPermissions($integrityCheckFilePath)) {
             $integrityCheckRawData = file_get_contents($integrityCheckFilePath);
             $data = json_decode($integrityCheckRawData, true);
             $rawLines = array_keys($data);
