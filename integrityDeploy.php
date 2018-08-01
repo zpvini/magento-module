@@ -30,6 +30,6 @@ if (!isset($integrityEngineBasePath)) {
 //creating moduleFiles md5;
 require_once $integrityEngineClassFilePath;
 $integrityEngine = new IntegrityEngine();
-$integrityData = $integrityEngine->generateModuleFilesMD5s($modmanFilePath);
+$integrityData = $integrityEngine->generateModuleFilesMD5s($modmanFilePath, IntegrityEngine::MODMAN_CHECK);
 file_put_contents($integrityFilePath,json_encode($integrityData));
 echo 'integrityFile generated.';
