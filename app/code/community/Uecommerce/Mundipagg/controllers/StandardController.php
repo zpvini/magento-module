@@ -486,16 +486,20 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         $info = $payment->getAdditionalInformation();
     }
 
-    /** Returns info about module files and integrity */
-    public function versionAction()
+    private function checkMaintenanceRouteAccessPermition()
     {
-        //auth
         $standardModel = Mage::getmodel('mundipagg/standard');
         $merchantKey = $standardModel->getmerchantKey();
         $merchantKeyHashEncoded = base64_encode(hash('sha512',$merchantKey));
         $urlToken = Mage::app()->getRequest()->getParam('token');
 
-        if ($urlToken !== $merchantKeyHashEncoded || strlen($merchantKey) < 1) {
+        return $urlToken !== $merchantKeyHashEncoded || strlen($merchantKey) < 1;
+    }
+
+    /** Returns info about module files and integrity */
+    public function versionAction()
+    {
+        if ($this->checkMaintenanceRouteAccessPermition()) {
             header('HTTP/1.0 401 Unauthorized');
             $this->getResponse()->setBody('Unauthorized');
             return;
@@ -504,7 +508,21 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         //gathering environment and module info
         $modmanFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/modman';
         $integrityCheckFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/integrityCheck';
-
+        $moduleLogsDirectory = "./" . Mage::helper("mundipagg/log")->getLogPath();
+        $magentoLogsDirectory =  Mage::getBaseDir("log");
+        $magentoLogsDirectory = "." . substr_replace(
+            $magentoLogsDirectory,
+            '',
+            0,
+            strlen(Mage::getBaseDir('base'))
+        );
+        $logFileConfig = [
+            'includes' => [
+                Mage::getStoreConfig('dev/log/file'),
+                Mage::getStoreConfig('dev/log/exception_file')
+            ],
+            'moduleFilenamePrefix' => mage::helper('mundipagg/log')->getModuleLogFilenamePrefix(),
+        ];
         $installType = 'package';
         if (is_dir('./.modman')) {
             $installType = 'modman';
@@ -517,7 +535,10 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             'magentoVersion' => Mage::getVersion(),
             'moduleVersion' => Mage::helper('mundipagg')->getExtensionVersion(),
             'moduleCheckSum' => '',
-            'installType' => $installType
+            'installType' => $installType,
+            'moduleLogsDirectory' => $moduleLogsDirectory,
+            'magentoLogsDirectory' => $magentoLogsDirectory,
+            'logConfigs' => $logFileConfig
         ];
 
         //integrity check
@@ -570,7 +591,103 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         echo '</pre>';
         echo json_encode($integrityResult['files']);
 
+        $allLogs = $integrityEngine->listLogFiles(
+            [
+                $moduleLogsDirectory,
+                $magentoLogsDirectory
+            ],
+            $logFileConfig
+        );
+
+        echo '<h3>Logs ('.count($allLogs).')</h3><pre>';
+        foreach($allLogs as $logFile) {
+            $link = "<strong style='color:red'>$logFile</strong><br />";
+            if (is_readable($logFile)) {
+                $fileRoute =  '/mundipagg/standard/log';
+                $fileRoute .= '?token=' . Mage::app()->getRequest()->getParam('token');
+                $fileRoute .= '&file=' . base64_encode($logFile);
+
+                $link =
+                    '<a href="'.$fileRoute.'" target="_self">' .
+                    $logFile . ' (' . filesize($logFile) . ' bytes)'.
+                    '</a><br />';
+            }
+            echo $link;
+        }
+
         echo '<h3>phpinfo()</h3>';
         phpinfo();
+    }
+
+    public function logAction()
+    {
+        if ($this->checkMaintenanceRouteAccessPermition()) {
+            header('HTTP/1.0 401 Unauthorized');
+            $this->getResponse()->setBody('Unauthorized');
+            return;
+        }
+
+        $file = Mage::app()->getRequest()->getParam('file');
+        if (!$file) {
+            header('HTTP/1.0 404 Not Found');
+            $this->getResponse()->setBody('Resource not found');
+            return;
+        }
+
+        $file=base64_decode($file);
+
+        require_once './app/code/community/Uecommerce/Mundipagg/etc/integrity/IntegrityEngine.php';
+        $integrityEngine = new IntegrityEngine();
+
+        $moduleLogsDirectory = "./" . Mage::helper("mundipagg/log")->getLogPath();
+        $magentoLogsDirectory =  Mage::getBaseDir("log");
+        $magentoLogsDirectory = "." . substr_replace(
+                $magentoLogsDirectory,
+                '',
+                0,
+                strlen(Mage::getBaseDir('base'))
+            );
+        $logFileConfig = [
+            'includes' => [
+                Mage::getStoreConfig('dev/log/file'),
+                Mage::getStoreConfig('dev/log/exception_file')
+            ],
+            'moduleFilenamePrefix' => mage::helper('mundipagg/log')->getModuleLogFilenamePrefix(),
+        ];
+
+        $logFiles = $integrityEngine->listLogFiles(
+            [
+                $moduleLogsDirectory,
+                $magentoLogsDirectory
+            ],
+            $logFileConfig
+        );
+
+        if (!is_readable($file) || !in_array($file, $logFiles)) {
+            header('HTTP/1.0 403 Not Found');
+            $this->getResponse()->setBody('Forbidden');
+            return;
+        }
+
+        $zip = new ZipArchive;
+        $zipFileName = tempnam(sys_get_temp_dir(), 'MP_');
+        $zipSuccess = false;
+        $downloadFileName = str_replace(DIRECTORY_SEPARATOR, "_", $file);
+        if ($zip->open($zipFileName) === TRUE) {
+            $zip->addFile($file, $downloadFileName);
+            $zip->close();
+            $zipSuccess = true;
+        }
+
+        if ($zipSuccess) {
+            header('Content-Type: application/zip');
+            header('Content-Disposition: attachment; filename='.$downloadFileName.'.zip');
+            header('Pragma: no-cache');
+            readfile($zipFileName);
+            return;
+        }
+
+        header('HTTP/1.0 500 Internal Server Error');
+        $this->getResponse()->setBody('Zip encoding failure');
     }
 }
