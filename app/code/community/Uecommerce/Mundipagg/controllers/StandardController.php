@@ -504,7 +504,19 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         //gathering environment and module info
         $modmanFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/modman';
         $integrityCheckFilePath = './app/code/community/Uecommerce/Mundipagg/etc/integrity/integrityCheck';
-
+        $moduleLogsDirectory = "./" . Mage::helper("mundipagg/log")->getLogPath();
+        $magentoLogsDirectory =  Mage::getBaseDir("log");
+        $magentoLogsDirectory = "." . substr_replace(
+            $magentoLogsDirectory,
+            '',
+            0,
+            strlen(Mage::getBaseDir('base'))
+        );
+        $logFileConfig = [
+            'system' => Mage::getStoreConfig('dev/log/file'),
+            'exception' => Mage::getStoreConfig('dev/log/exception_file'),
+            'moduleFilenamePrefix' => mage::helper('mundipagg/log')->getModuleLogFilenamePrefix(),
+        ];
         $installType = 'package';
         if (is_dir('./.modman')) {
             $installType = 'modman';
@@ -517,7 +529,10 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             'magentoVersion' => Mage::getVersion(),
             'moduleVersion' => Mage::helper('mundipagg')->getExtensionVersion(),
             'moduleCheckSum' => '',
-            'installType' => $installType
+            'installType' => $installType,
+            'moduleLogsDirectory' => $moduleLogsDirectory,
+            'magentoLogsDirectory' => $magentoLogsDirectory,
+            'logConfigs' => $logFileConfig
         ];
 
         //integrity check
@@ -569,6 +584,26 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         print_r($integrityResult['files']);
         echo '</pre>';
         echo json_encode($integrityResult['files']);
+
+        $allLogs = $integrityEngine->listLogFiles(
+            [
+                $moduleLogsDirectory,
+                $magentoLogsDirectory
+            ],
+            $logFileConfig
+        );
+
+        echo '<h3>Logs ('.count($allLogs).')</h3><pre>';
+        foreach($allLogs as $logFile) {
+            $link = "<strong style='color:red'>$logFile</strong><br />";
+            if (is_readable($logFile)) {
+                $link =
+                    '<a href="#">' .
+                    $logFile .
+                    '</a><br />';
+            }
+            echo $link;
+        }
 
         echo '<h3>phpinfo()</h3>';
         phpinfo();

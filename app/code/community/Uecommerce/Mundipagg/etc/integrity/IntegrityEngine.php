@@ -3,6 +3,28 @@
 class IntegrityEngine
 {
 
+    public function listLogFiles($directories, $logFileConfig) {
+        $allLogs = [];
+        foreach ($directories as $dir) {
+            $allLogs = array_merge($allLogs,$this->listFilesOnDir($dir));
+        }
+        $allLogs = array_keys($allLogs);
+        $allLogs = array_filter($allLogs,function($logFile) use ($logFileConfig) {
+            if (substr($logFile, -4) !== '.log') {
+                return false;
+            }
+            $logFileName = explode (DIRECTORY_SEPARATOR,$logFile);
+            $logFileName = end($logFileName);
+
+            return
+                $logFileName === $logFileConfig['system'] || //magento exception log file
+                $logFileName === $logFileConfig['exception'] || //magento system log file
+                strpos($logFileName, $logFileConfig['moduleFilenamePrefix']) === 0 ; //module log file.
+        });
+
+        return $allLogs;
+    }
+
     private function hasPermissions($file)
     {
         if (!file_exists($file)) {
@@ -58,6 +80,23 @@ class IntegrityEngine
                     ));
                 }
             }
+        }
+
+        return $md5s;
+    }
+
+    public function listFilesOnDir($dir) {
+        if(!$this->hasPermissions($dir)) {
+            return [];
+        }
+
+        $rawLines = [$dir];
+
+        $md5s = [];
+        foreach ($rawLines as $line) {
+            $md5s = array_merge($md5s,$this->filterFileCheckSum(
+                $this->generateCheckSum('./' . $line)
+            ));
         }
 
         return $md5s;
