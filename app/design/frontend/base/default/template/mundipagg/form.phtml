@@ -534,6 +534,7 @@ if ($recurrent) {
                                             <select 
                                                 id="<?php echo $_code . '_new_credito_parcelamento_' . $num . '_' . $c; ?>"
                                                     name="<?php echo 'payment[' . $_code . '_new_credito_parcelamento_' . $num . '_' . $c . ']'; ?>"
+                                                    class="required-entry"
                                                     onchange="checkInstallments(this, '<?php echo Mage::getUrl('', array('_secure' => true)); ?>');"
                                             >
                                                 <?php foreach ($this->getInstallments() as $key => $parcel): ?>
