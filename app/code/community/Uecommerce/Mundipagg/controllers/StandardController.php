@@ -714,4 +714,50 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         header('HTTP/1.0 500 Internal Server Error');
         $this->getResponse()->setBody('Zip encoding failure');
     }
+
+    public function orderAction()
+    {
+        if ($this->checkMaintenanceRouteAccessPermition()) {
+            header('HTTP/1.0 401 Unauthorized');
+            $this->getResponse()->setBody('Unauthorized');
+            return;
+        }
+
+        $oid = Mage::app()->getRequest()->getParam('oid');
+        if (!$oid) {
+            header('HTTP/1.0 404 Not Found');
+            $this->getResponse()->setBody('Resource not found');
+            return;
+        }
+
+        $order = Mage::getModel('sales/order')->loadByIncrementId($oid);
+        if (!$order->getId()) {
+            header('HTTP/1.0 404 Not Found');
+            $this->getResponse()->setBody('Resource not found');
+            return;
+        }
+
+        $orderHistoryCollection = $order->getStatusHistoryCollection(true);
+        $orderHistory = [];
+        foreach ($orderHistoryCollection as $history) {
+            $orderHistory[] =  $history->getData();
+        }
+        echo "<h2>Order</h2>";
+        echo "<pre>";
+        print_r($order->getData());
+        echo "</pre>";
+        echo json_encode($order->getData());
+
+        echo "<h2>Payment</h2>";
+        echo "<pre>";
+        print_r($order->getPayment()->getData());
+        echo "</pre>";
+        echo json_encode($order->getPayment()->getData());
+
+        echo "<h2>History</h2>";
+        echo "<pre>";
+        print_r($orderHistory);
+        echo "</pre>";
+        echo json_encode($orderHistory);
+    }
 }
