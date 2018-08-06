@@ -265,6 +265,31 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
         $info->setAdditionalInformation('CountCcs', $mundipagg['countccs']);
 
+        $helperInstallments = Mage::helper('mundipagg/Installments');
+
+        if ($helperInstallments->isInstallmentsEnabled() !== '0') {
+            $dataKeys = array_keys($mundipagg);
+            $ccIndexes = array_filter($dataKeys, function($key) {
+                return strpos($key,'_token_') !== false;
+            });
+
+            $validInstallments = $helperInstallments->getInstallmentForCreditCardType();
+
+            foreach ($ccIndexes as $tokenIndex) {
+                $cardId = substr($tokenIndex,strlen($tokenIndex)-3);
+
+                $new = $mundipagg[$tokenIndex] === 'new' ? "_new" : "";
+
+                $installmentValue = $mundipagg[
+                $mundipagg["method"] . $new .
+                "_credito_parcelamento_" . $cardId
+                ];
+                if (!isset($validInstallments[$installmentValue])) {
+                    Mage::throwException("MP - Invalid installment number: ($installmentValue)");
+                }
+            }
+        }
+
         if (!empty($mundipagg)) {
             $helperInstallments = Mage::helper('mundipagg/Installments');
 

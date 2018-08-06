@@ -125,7 +125,7 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
         $transactions = Mage::getModel('sales/order_payment_transaction')
             ->getCollection()
             ->addAttributeToFilter('order_id', ['eq' => $entityId])
-            ->addAttributeToFilter('txn_id', ['eq' => $transactionKeyString]);
+            ->addAttributeToFilter('txn_id', ['like' => $transactionKeyString . "%"]);
 
         return $transactions->getFirstItem();
     }
