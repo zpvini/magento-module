@@ -742,6 +742,23 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         foreach ($orderHistoryCollection as $history) {
             $orderHistory[] =  $history->getData();
         }
+
+        $transactionsCollection = Mage::getModel('sales/order_payment_transaction')
+            ->getCollection()
+            ->addAttributeToFilter('order_id', ['eq' => $order->getEntityId()]);
+        $transactions = [];
+        foreach ($transactionsCollection as $transaction) {
+            $transactions[] = $transaction->getData();
+        }
+
+        $invoicesCollection = Mage::getModel('sales/order_invoice')
+            ->getCollection()
+            ->addAttributeToFilter('order_id', ['eq' => $order->getEntityId()]);
+        $invoices = [];
+        foreach ($invoicesCollection as $invoice) {
+            $invoices[] = $invoice->getData();
+        }
+
         echo "<h2>Order</h2>";
         echo "<pre>";
         print_r($order->getData());
@@ -759,5 +776,17 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         print_r($orderHistory);
         echo "</pre>";
         echo json_encode($orderHistory);
+
+        echo "<h2>Transactions</h2>";
+        echo "<pre>";
+        print_r($transactions);
+        echo "</pre>";
+        echo json_encode($transactions);
+
+        echo "<h2>Invoices</h2>";
+        echo "<pre>";
+        print_r($invoices);
+        echo "</pre>";
+        echo json_encode($invoices);
     }
 }
