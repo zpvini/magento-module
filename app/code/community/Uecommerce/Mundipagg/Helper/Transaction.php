@@ -9,6 +9,13 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
     const ORDER_UNDERPAID              = "Order underpaid";
     const UNEXPECTED_ERROR             = "Unexpected error";
 
+    protected function roundMagentoFloatNumber($number)
+    {
+        $parts = explode(".",$number);
+        $decimal = substr($parts[1],0,2);
+        return floatval($parts[0] . '.' . $decimal);
+    }
+
     /**
      * @param Mage_Sales_Model_Order $order
      * @param $amountToCapture
@@ -27,12 +34,12 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
     {
         $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
         $log->setLogLabel("#{$order->getIncrementId()} | {$transactionKey}");
-        $totalPaid = $order->getTotalPaid();
-        $grandTotal = $order->getGrandTotal();
+        $totalPaid = $this->roundMagentoFloatNumber($order->getTotalPaid());
+        $grandTotal = $this->roundMagentoFloatNumber($order->getGrandTotal());
 
         if ($amountInCents !== null) {
-            $amount = floatval($amountInCents * 0.01);
-            if (floatval($grandTotal) != floatval($amount)) {
+            $amount = $this->roundMagentoFloatNumber($amountInCents * 0.01);
+            if ($grandTotal != $amount) {
                 $log->warning('Grand Total differs from amount in Mundipagg: ' . $grandTotal . ' != ' . $amount);
                 $grandTotal = $amount;
             }
@@ -42,7 +49,7 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
         if (is_null($totalPaid)) {
             $totalPaid = 0;
         }
-        $totalPaid += $amountToCapture;
+        $totalPaid += $this->roundMagentoFloatNumber($amountToCapture);
 
         $entityId = $order->getEntityId();
 
@@ -52,8 +59,8 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
         $order->setBaseTotalPaid($totalPaid)
             ->setTotalPaid($totalPaid)
             ->save();
-        $accTotalPaid = sprintf($totalPaid);
-        $accGrandTotal = sprintf($grandTotal);
+        $accTotalPaid = $this->roundMagentoFloatNumber($totalPaid);
+        $accGrandTotal = $this->roundMagentoFloatNumber($grandTotal);
         switch (true) {
             // total paid equal grand_total, create invoice
             case $accTotalPaid == $accGrandTotal:

@@ -26,22 +26,22 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
         if ($return instanceof Mage_Sales_Model_Order_Invoice) {
             Mage::helper('mundipagg')->sendNewInvoiceEmail($return,$order);
 
-            $returnMessage = "OK | #{$orderReference} | {$transactionKey} | " . self::TRANSACTION_CAPTURED;
+            $returnMessage = "OK | #{$orderReference} | {$transactionKey} | Invoice created - " . self::TRANSACTION_CAPTURED;
             $log->info($returnMessage);
-            $log->info("Current order status: " . $order->getStatusLabel());
+            $log->info("#{$orderReference} | Invoice Created - Current order status: " . $order->getStatusLabel());
             return $returnMessage;
         }
         if ($return === self::TRANSACTION_CAPTURED) {
-            $returnMessage = "OK | #{$orderReference} | {$transactionKey} | Transaction captured.";
+            $returnMessage = "OK | #{$orderReference} | {$transactionKey} | Transaction captured, but there are some remaining.";
             $log->info($returnMessage);
-            $log->info("Current order status: " . $order->getStatusLabel());
+            $log->info("#{$orderReference} | Current order status: " . $order->getStatusLabel());
             return $returnMessage;
         }
         // cannot capture transaction
         $returnMessage = "KO | #{$orderReference} | {$transactionKey} | Transaction can't be captured: ";
         $returnMessage .= $return;
         $log->info($returnMessage);
-        $log->info("Current order status: " . $order->getStatusLabel());
+        $log->info("#{$orderReference} | Current order status: " . $order->getStatusLabel());
         return $returnMessage;
     }
 
