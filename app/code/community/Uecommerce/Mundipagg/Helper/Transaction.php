@@ -12,7 +12,7 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
     protected function roundMagentoFloatNumber($number)
     {
         $parts = explode(".",$number);
-        $decimal = substr($parts[1],0,2);
+        $decimal = isset($parts[1]) ? substr($parts[1],0,2) : '';
         return floatval($parts[0] . '.' . $decimal);
     }
 
