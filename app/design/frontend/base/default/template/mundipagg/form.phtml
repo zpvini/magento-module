@@ -699,7 +699,7 @@ if ($recurrent) {
                         return;
                     }
                     Form.getElements(element).each(function(formElement){
-                        var event = formElement.tagName.toUpperCase () == 'SELECT' ? 'change' : 'keyup';
+                        var event = formElement.tagName.toUpperCase () == 'SELECT' ? 'change' : 'blur';
                         formElement.observe(event, function(e){
                             var matches = formElement.id.match(/^mundipagg_[\w]+_cc_number$/g);
                             if(matches !== null && formElement.value.length < 15) {
