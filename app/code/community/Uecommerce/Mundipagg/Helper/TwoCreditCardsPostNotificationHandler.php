@@ -122,6 +122,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         $this->setOrderReference($data['OrderReference']);
         $this->setTransactionKey($data['CreditCardTransaction']['TransactionKey']);
         $this->setMundipaggOrderStatus($data['OrderStatus']);
+
     }
 
     private function setLogHeader()
@@ -144,7 +145,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
             $this->splitNotificationPostData($notificationPostData);
             $this->setLogHeader();
 
-            $this->log->info(self::CURRENT_ORDER_STATE . $order->getState() .' => ' . $order->getStatus());
+            $this->log->info(self::CURRENT_ORDER_STATE . $order->getState() .' (' . $order->getStatus() . ')');
 
             $transactionHelper = Mage::helper('mundipagg/transaction');
             $transaction = $transactionHelper->getTransaction($order->getEntityId(), $this->getTransactionKey());
@@ -157,14 +158,13 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
                 Mage::throwException(SELF::TRANSACTION_NOT_FOUND_ON_MAGENTO . $this->getTransactionKey());
             }
 
-            $totalPaid = $order->getTotalPaid();
-
             $this->addOrderHistoryStatusUpdate($order, $cardPrefix);
             $order->save();
 
 
-
-
+            if (!$this->alreadyUpdated($additionalInformation, $cardPrefix)) {
+                $this->updateCapturedAmount($order, $cardPrefix);
+            }
 
             //$payment->setAdditionalInformation('CreditCardTransactionStatusEnum');
 
@@ -195,6 +195,12 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
     {
         $payment = $order->getPayment();
         return $payment->getAdditionalInformation();
+    }
+
+    private function setAdditionalInformation($order, $key, $value)
+    {
+        $payment = $order->getPayment();
+        $payment->setAdditionalInformation($key, $value);
     }
 
     /**
@@ -234,7 +240,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         $comment =
             self::TRANSACTION_UPDATED .
             $this->getCreditCardTransactionStatus() . '<br>' .
-            self::CURRENT_ORDER_STATE . $order->getState() .' => ' . $order->getStatus() . '<br>' .
+            self::CURRENT_ORDER_STATE . $order->getState() .' (' . $order->getStatus() . ')<br>' .
             'Transacion key: ' . $this->getTransactionKey() . '<br>' .
             'Card sort order: ' . str_replace('_', '', $cardPrefix)
         ;
@@ -247,5 +253,36 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         return
             $additionalInformation[$cardPrefix . 'CreditCardTransactionStatus'] ==
             $this->getCreditCardTransactionStatus();
+    }
+
+    private function updateCapturedAmount($order, $cardPrefix) {
+        $totalPaidInCents = $this->getTotalPaidInCents($order);
+        $order->setTotalPaid($totalPaidInCents * 0.01);
+
+        $this->updateAdditionalInformation($order, $cardPrefix, $totalPaidInCents);
+
+        $order->save();
+
+        return $totalPaidInCents;
+    }
+
+    private function updateAdditionalInformation($order, $cardPrefix, $totalPaidInCents)
+    {
+        $this->setAdditionalInformation($order, $cardPrefix . 'CapturedAmountInCents', $totalPaidInCents);
+        $this->setAdditionalInformation(
+            $order,
+            $cardPrefix . 'CreditCardTransactionStatus',
+            $this->getCreditCardTransactionStatus()
+        );
+    }
+
+    private function getTotalPaidInCents($order)
+    {
+        $orderTotalPaid = $order->getTotalPaid() ? number_format($order->getTotalPaid(), 2) : 0;
+        $totalPaidInCents = str_replace('.', '', $orderTotalPaid);
+
+        $totalPaidInCents += $this->getCapturedAmountInCents();
+
+        return $totalPaidInCents;
     }
 }
