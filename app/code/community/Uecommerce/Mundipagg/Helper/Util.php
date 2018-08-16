@@ -30,4 +30,15 @@ class Uecommerce_Mundipagg_Helper_Util extends Mage_Core_Helper_Abstract
         $xmlString = simplexml_load_string($xml);
         return json_encode($xmlString, $pretty);
     }
+
+    public function arrayToString($array)
+    {
+        $result = '';
+
+        foreach ($array as $key => $value) {
+            $result .= $key . ' => ' . $value . "\n";
+        }
+
+        return $result;
+    }
 }

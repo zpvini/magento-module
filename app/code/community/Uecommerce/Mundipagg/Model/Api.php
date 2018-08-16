@@ -1529,6 +1529,13 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
             $payment = $order->getPayment();
 
+            //We created this method because the order processing was generating o lot of bugs for two credit cards
+            //Its processing is
+            if ($order->getPayment()->getMethod() === 'mundipagg_twocreditcards') {
+                $twoCreditCardsHelper = Mage::helper('mundipagg/twoCreditCardsPostNotificationHandler');
+                return $twoCreditCardsHelper->processTwoCreditCardsNotificationPost($order, $data);
+            }
+
             // We check if transactionKey exists in database
             $t = $this->getLocalTransactionsQty($order->getId(), $transactionKey);
 
@@ -1563,6 +1570,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $statusWithError = Uecommerce_Mundipagg_Model_Enum_CreditCardTransactionStatusEnum::WITH_ERROR;
             $statusWithError = strtolower($statusWithError);
 
+            $amountToCapture = 0;
+
             if (empty($capturedAmountInCents) === false) {
                 $amountToCapture = $capturedAmountInCents * 0.01;
             }
@@ -1580,7 +1589,9 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $data,
                 $transactionData,
                 $statusWithError,
-                $amountInCents);
+                $amountInCents
+            );
+
         } catch (Exception $e) {
             $returnMessage = "Internal server error | {$e->getCode()} - ErrMsg: {$e->getMessage()}";
 
