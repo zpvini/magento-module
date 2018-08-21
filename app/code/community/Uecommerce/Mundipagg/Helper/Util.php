@@ -2,7 +2,6 @@
 
 class Uecommerce_Mundipagg_Helper_Util extends Mage_Core_Helper_Abstract
 {
-
     /**
      * @todo must be deprecated, remove code duplication with Uecommerce_Mundipagg_Helper_Data
      * @param $input
@@ -29,5 +28,22 @@ class Uecommerce_Mundipagg_Helper_Util extends Mage_Core_Helper_Abstract
     {
         $xmlString = simplexml_load_string($xml);
         return json_encode($xmlString, $pretty);
+    }
+
+    public function arrayToString($array)
+    {
+        $result = '';
+
+        foreach ($array as $key => $value) {
+            $result .= $key . ' => ' . $value . "\n";
+        }
+
+        return $result;
+    }
+
+    public function floatToCents($amount)
+    {
+        $float = number_format($amount, 2);
+        return str_replace('.', '', $float);
     }
 }
