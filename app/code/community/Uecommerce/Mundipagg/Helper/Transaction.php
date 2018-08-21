@@ -62,6 +62,7 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
         $accTotalPaid = $this->roundMagentoFloatNumber($totalPaid);
         $accGrandTotal = $this->roundMagentoFloatNumber($grandTotal);
         switch (true) {
+
             // total paid equal grand_total, create invoice
             case $accTotalPaid == $accGrandTotal:
                 try {
@@ -84,7 +85,7 @@ class Uecommerce_Mundipagg_Helper_Transaction extends Mage_Core_Helper_Abstract
             // order underpaid
             case $accTotalPaid < $accGrandTotal:
                 try {
-                    $orderPayment->orderUnderPaid($order, $amountToCapture);
+                    $orderPayment->orderUnderPaid($order);
                 } catch (Exception $e) {
                     Mage::throwException("Cannot set order to underpaid: {$e->getMessage()}");
                 }
