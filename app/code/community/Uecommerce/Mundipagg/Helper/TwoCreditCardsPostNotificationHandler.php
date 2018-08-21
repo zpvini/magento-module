@@ -17,6 +17,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
     const CURRENT_ORDER_STATE = 'Current order state: ';
     const CURRENT_ORDER_STATUS = 'Current order status: ';
     const ORDER_HISTORY_ADD = 'Order history add: ';
+    const CAPTURED_AMOUNT = 'Captured amount in cents: ';
 
     /**
      * @return mixed
@@ -28,10 +29,12 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
     /**
      * @param mixed $notificationPostJson
+     * @return Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler
      */
     public function setNotificationPostData($notificationPostData)
     {
         $this->notificationPostData = $notificationPostData;
+        return $this;
     }
 
     /**
@@ -44,10 +47,12 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
     /**
      * @param mixed $orderReference
+     * @return Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler
      */
     public function setOrderReference($orderReference)
     {
         $this->orderReference = $orderReference;
+        return $this;
     }
 
     /**
@@ -60,10 +65,12 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
     /**
      * @param mixed $transactionKey
+     * @return Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler
      */
     public function setTransactionKey($transactionKey)
     {
         $this->transactionKey = $transactionKey;
+        return $this;
     }
 
     /**
@@ -76,10 +83,12 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
     /**
      * @param mixed $creditCardTransactionStatus
+     * @return Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler
      */
     public function setCreditCardTransactionStatus($creditCardTransactionStatus)
     {
         $this->creditCardTransactionStatus = $creditCardTransactionStatus;
+        return $this;
     }
 
     /**
@@ -92,10 +101,12 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
     /**
      * @param mixed $capturedAmountInCents
+     * @return Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler
      */
     public function setCapturedAmountInCents($capturedAmountInCents)
     {
         $this->capturedAmountInCents = $capturedAmountInCents;
+        return $this;
     }
 
     /**
@@ -108,21 +119,22 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
     /**
      * @param mixed $mundipaggOrderStatus
+     * @return Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler
      */
     public function setMundipaggOrderStatus($mundipaggOrderStatus)
     {
         $this->mundipaggOrderStatus = $mundipaggOrderStatus;
+        return $this;
     }
 
     private function splitNotificationPostData($data)
     {
-        $this->setNotificationPostData($data);
-        $this->setCapturedAmountInCents($data['CreditCardTransaction']['CapturedAmountInCents']);
-        $this->setCreditCardTransactionStatus($data['CreditCardTransaction']['CreditCardTransactionStatus']);
-        $this->setOrderReference($data['OrderReference']);
-        $this->setTransactionKey($data['CreditCardTransaction']['TransactionKey']);
-        $this->setMundipaggOrderStatus($data['OrderStatus']);
-
+        $this->setNotificationPostData($data)
+        ->setCapturedAmountInCents($data['CreditCardTransaction']['CapturedAmountInCents'])
+        ->setCreditCardTransactionStatus($data['CreditCardTransaction']['CreditCardTransactionStatus'])
+        ->setOrderReference($data['OrderReference'])
+        ->setTransactionKey($data['CreditCardTransaction']['TransactionKey'])
+        ->setMundipaggOrderStatus($data['OrderStatus']);
     }
 
     private function setLogHeader()
@@ -208,6 +220,8 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
             $transaction->setOrderPaymentObject($order->getPayment());
             $transaction->setIsClosed(true)->save();
         }
+
+        $this->log->info(SELF::CAPTURED_AMOUNT . $this->getCapturedAmountInCents());
 
         $this->updateCapturedAmount($order, $cardPrefix);
 
@@ -303,6 +317,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
         Mage::throwException($comment);
     }
+
     private function addOrderHistoryStatusUpdate($order, $cardPrefix, $notify = false)
     {
         $comment = $this->historyComment($order, $cardPrefix);

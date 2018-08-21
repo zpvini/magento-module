@@ -2,15 +2,12 @@
 
 class Uecommerce_Mundipagg_Helper_Invoice extends Mage_Core_Helper_Abstract
 {
-
-
     public function create(Mage_Sales_Model_Order $order, $amount)
     {
         try {
             $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
-            if(!$order->canInvoice())
-            {
+            if (!$order->canInvoice()) {
                 $log->error('Cannot create invoice');
                 Mage::throwException('Cannot create invoice');
             }
