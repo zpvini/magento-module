@@ -2,7 +2,6 @@
 
 class Uecommerce_Mundipagg_Helper_Util extends Mage_Core_Helper_Abstract
 {
-
     /**
      * @todo must be deprecated, remove code duplication with Uecommerce_Mundipagg_Helper_Data
      * @param $input
@@ -40,5 +39,11 @@ class Uecommerce_Mundipagg_Helper_Util extends Mage_Core_Helper_Abstract
         }
 
         return $result;
+    }
+
+    public function floatToCents($amount)
+    {
+        $float = number_format($amount,2);
+        return str_replace('.', '', $float);
     }
 }
