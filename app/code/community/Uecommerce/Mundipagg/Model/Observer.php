@@ -98,7 +98,8 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
         if ($method == 'mundipagg_boleto' && $approvalRequestSuccess != 'cancel') {
             $comment = Mage::helper('mundipagg')->__('MP - Waiting for Boleto Bancário payment');
 
-            $this->_updateStatus($event->getOrder(), Mage_Sales_Model_Order::STATE_HOLDED, true, $comment, false);
+            $event->getOrder()->hold();
+            $event->getOrder()->addStatusHistoryComment($comment);
         }
     }
 
