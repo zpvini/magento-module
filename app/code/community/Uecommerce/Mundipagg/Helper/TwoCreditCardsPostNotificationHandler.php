@@ -197,7 +197,8 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
                 $this->getTransactionKey()
             );
 
-        if (empty($transaction->getTransactionId())) {
+        $transactionId = $transaction->getTransactionId();
+        if (empty($transactionId)) {
             $comment =
                 SELF::TRANSACTION_NOT_FOUND_ON_MAGENTO .
                 $this->getTransactionKey();
