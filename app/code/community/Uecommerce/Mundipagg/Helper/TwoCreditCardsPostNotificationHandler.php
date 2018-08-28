@@ -141,7 +141,6 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
     {
         $this->log->setLogLabel("Order #{$this->getOrderReference()}");
 
-
         $info['Transaction key'] = $this->getTransactionKey();
         $info['CreditCardTransactionStatus: '] = $this->getCreditCardTransactionStatus();
         $info['Mundipagg OrderStatus'] = $this->getMundipaggOrderStatus();
