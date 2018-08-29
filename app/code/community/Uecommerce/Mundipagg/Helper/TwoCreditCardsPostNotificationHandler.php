@@ -140,7 +140,6 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
     private function setLogHeader()
     {
         $this->log->setLogLabel("Order #{$this->getOrderReference()}");
-        $this->log->info("Processing two credit cards order " );
 
         $info['Transaction key'] = $this->getTransactionKey();
         $info['CreditCardTransactionStatus: '] = $this->getCreditCardTransactionStatus();
@@ -157,6 +156,8 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         $this->log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
         try {
+            $this->log->info("Processing two credit cards order " );
+
             $this->splitNotificationPostData($notificationPostData);
             $this->setLogHeader();
 
@@ -183,7 +184,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         } catch (Exception $e) {
             $this->log->error($e->getMessage());
 
-            return $e->getMessage();
+            return "KO | " . $e->getMessage();
         }
     }
 
@@ -197,7 +198,8 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
                 $this->getTransactionKey()
             );
 
-        if (empty($transaction->getTransactionId())) {
+        $transactionId = $transaction->getTransactionId();
+        if (empty($transactionId)) {
             $comment =
                 SELF::TRANSACTION_NOT_FOUND_ON_MAGENTO .
                 $this->getTransactionKey();

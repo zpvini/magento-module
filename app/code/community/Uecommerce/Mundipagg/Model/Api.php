@@ -982,6 +982,12 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $telephone = '55(21)88888888';
         }
 
+        $mobilePhone = Mage::helper('mundipagg')->applyTelephoneMask($billingAddress->getFax());
+
+        if ($billingAddress->getFax() == '') {
+            $mobilePhone = '55(21)88888888';
+        }
+
         $data['DocumentNumber'] = $this->getCustomerDocumentNumber($data, $order);
 
         $invalid = 0;
@@ -1020,7 +1026,8 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $_request["Buyer"]["EmailType"] = 'Personal';
         $_request["Buyer"]["Name"] = $order->getCustomerName();
         $_request["Buyer"]["PersonType"] = $data['PersonType'];
-        $_request["Buyer"]["MobilePhone"] = $telephone;
+        $_request["Buyer"]["HomePhone"] = $telephone;
+        $_request["Buyer"]["MobilePhone"] = $mobilePhone;
         $_request["Buyer"]['BuyerCategory'] = 'Normal';
         $_request["Buyer"]['FacebookId'] = '';
         $_request["Buyer"]['TwitterId'] = '';
@@ -1530,7 +1537,6 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
             $payment = $order->getPayment();
 
             //We created this method because the order processing was generating o lot of bugs for two credit cards
-            //Its processing is
             if ($order->getPayment()->getMethod() === 'mundipagg_twocreditcards') {
                 $twoCreditCardsHelper = Mage::helper('mundipagg/twoCreditCardsPostNotificationHandler');
                 return $twoCreditCardsHelper->processTwoCreditCardsNotificationPost($order, $data);

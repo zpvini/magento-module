@@ -379,13 +379,16 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             // Get posted data
             $postData = $this->getRequest()->getPost();
             $api = Mage::getModel('mundipagg/api');
+            $log = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
 
             // Process order
             $result = $api->processOrder($postData);
 
             // If result is empty we redirect to homepage
-            if ($result === false) {
-                $this->_redirect('');
+            if (!$result) {
+                $message = "KO | Process Order returned false.";
+                $log->error($message);
+                $this->getResponse()->setBody($message);
             } else {
                 $this->getResponse()->setBody($result);
             }
