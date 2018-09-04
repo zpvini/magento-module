@@ -261,6 +261,7 @@ class Uecommerce_Mundipagg_Model_Observer extends Uecommerce_Mundipagg_Model_Sta
             case 'mundipagg_boleto':
             case 'mundipagg_debit':
             case 'mundipagg_twocreditcards':
+            case 'mundipagg_creditcardoneinstallment':
             case 'mundipagg_creditcard':
                 if ($itemAlone && !$recurenceMix) {
                     $result->isAvailable = false;

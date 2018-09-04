@@ -370,6 +370,13 @@
                 <integration_timeout_limit>30</integration_timeout_limit>
                 <overwrite_magento_flags>1</overwrite_magento_flags>
             </mundipagg_standard>
+            <mundipagg_creditcardoneinstallment>
+                <model>mundipagg/creditcardoneinstallment</model>
+                <active>0</active>
+                <title><![CDATA[Cartão de Crédito à vista]]></title>
+                <allowspecific>0</allowspecific>
+                <payment_action>authorize</payment_action>
+            </mundipagg_creditcardoneinstallment>
             <mundipagg_creditcard>
                 <model>mundipagg/creditcard</model>
                 <active>0</active>
