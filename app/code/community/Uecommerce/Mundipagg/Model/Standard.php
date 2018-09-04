@@ -284,7 +284,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 $mundipagg["method"] . $new .
                 "_credito_parcelamento_" . $cardId
                 ];
-                if (!isset($validInstallments[$installmentValue])) {
+                if (
+                    !isset($validInstallments[$installmentValue]) &&
+                    $mundipagg["method"] !== "mundipagg_creditcardoneinstallment"
+                ) {
                     Mage::throwException("MP - Invalid installment number: ($installmentValue)");
                 }
             }
@@ -303,12 +306,16 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 $info->setAdditionalInformation('PaymentMethod', $mundipagg['method']);
 
                 switch ($mundipagg['method']) {
+                    case 'mundipagg_creditcardoneinstallment':
                     case 'mundipagg_creditcard':
                         try {
-                            $mundipagg['mundipagg_creditcard_1_1_cc_type_max_installments'] =
-                                $helperInstallments->getMaxInstallments(
-                                    $mundipagg['mundipagg_creditcard_1_1_cc_type']
-                                );
+
+                            if ($mundipagg['method'] == "mundipagg_creditcard") {
+                                $mundipagg['mundipagg_creditcard_1_1_cc_type_max_installments'] =
+                                    $helperInstallments->getMaxInstallments(
+                                        $mundipagg['mundipagg_creditcard_1_1_cc_type']
+                                    );
+                            }
 
                             $this->saveCreditCardAdditionalInformation($mundipagg, $info);
                         } catch (Exception $e) {
@@ -2738,20 +2745,22 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
      */
     private function saveCreditCardAdditionalInformation($mundipagg, $info)
     {
-        if (isset($mundipagg['mundipagg_creditcard_1_1_cc_type'])) {
+
+        $method = $mundipagg['method'];
+        if (!empty($mundipagg[$method . '_1_1_cc_type'])) {
             $this->blockNotAllowedInstallments($mundipagg);
 
-            $info->setCcType($mundipagg['mundipagg_creditcard_1_1_cc_type'])
-                ->setCcOwner($mundipagg['mundipagg_creditcard_cc_holder_name_1_1'])
-                ->setCcLast4(substr($mundipagg['mundipagg_creditcard_1_1_cc_number'], -4))
-                ->setCcNumber($mundipagg['mundipagg_creditcard_1_1_cc_number'])
-                ->setCcCid($mundipagg['mundipagg_creditcard_cc_cid_1_1'])
-                ->setCcExpMonth($mundipagg['mundipagg_creditcard_expirationMonth_1_1'])
-                ->setCcExpYear($mundipagg['mundipagg_creditcard_expirationYear_1_1']);
+            $info->setCcType($mundipagg[$method . '_1_1_cc_type'])
+                ->setCcOwner($mundipagg[$method . '_cc_holder_name_1_1'])
+                ->setCcLast4(substr($mundipagg[$method . '_1_1_cc_number'], -4))
+                ->setCcNumber($mundipagg[$method . '_1_1_cc_number'])
+                ->setCcCid($mundipagg[$method . '_cc_cid_1_1'])
+                ->setCcExpMonth($mundipagg[$method . '_expirationMonth_1_1'])
+                ->setCcExpYear($mundipagg[$method . '_expirationYear_1_1']);
         } else {
             $info->setAdditionalInformation(
-                'mundipagg_creditcard_token_1_1',
-                $mundipagg['mundipagg_creditcard_token_1_1']
+                $method . '_token_1_1',
+                $mundipagg[$method . '_token_1_1']
             );
         }
     }
