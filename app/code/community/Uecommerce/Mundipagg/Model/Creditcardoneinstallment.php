@@ -66,6 +66,7 @@ class Uecommerce_Mundipagg_Model_Creditcardoneinstallment extends Uecommerce_Mun
         }
 
         $info = $this->getInfoInstance();
+        $info->getQuote()->setTotalsCollectedFlag(false)->collectTotals();
 
         // Reset interests from old methods first
         $this->resetInterest($info);
