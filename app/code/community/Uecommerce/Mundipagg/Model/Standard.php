@@ -284,7 +284,10 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 $mundipagg["method"] . $new .
                 "_credito_parcelamento_" . $cardId
                 ];
-                if (!isset($validInstallments[$installmentValue]) && ($mundipagg["method"] !== "mundipagg_creditcardoneinstallment")) {
+                if (
+                    !isset($validInstallments[$installmentValue]) &&
+                    $mundipagg["method"] !== "mundipagg_creditcardoneinstallment"
+                ) {
                     Mage::throwException("MP - Invalid installment number: ($installmentValue)");
                 }
             }
