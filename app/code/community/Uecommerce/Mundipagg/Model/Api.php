@@ -985,7 +985,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $mobilePhone = Mage::helper('mundipagg')->applyTelephoneMask($billingAddress->getFax());
 
         if ($billingAddress->getFax() == '') {
-            $mobilePhone = '55(21)88888888';
+            $mobilePhone = null;
         }
 
         $data['DocumentNumber'] = $this->getCustomerDocumentNumber($data, $order);
