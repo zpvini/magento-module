@@ -201,7 +201,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         $transactionId = $transaction->getTransactionId();
         if (empty($transactionId)) {
             $comment =
-                SELF::TRANSACTION_NOT_FOUND_ON_MAGENTO .
+                self::TRANSACTION_NOT_FOUND_ON_MAGENTO .
                 $this->getTransactionKey();
 
             Mage::throwException($comment);
@@ -223,7 +223,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
             $transaction->setIsClosed(true)->save();
         }
 
-        $this->log->info(SELF::CAPTURED_AMOUNT . $this->getCapturedAmountInCents());
+        $this->log->info(self::CAPTURED_AMOUNT . $this->getCapturedAmountInCents());
 
         $this->updateCapturedAmount($order, $cardPrefix);
 
@@ -312,7 +312,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         $util = Mage::helper('mundipagg/util');
 
         $comment =
-            SELF::TRANSACTION_NOT_FOUND_ON_ADDITIONAL_INFO .
+            self::TRANSACTION_NOT_FOUND_ON_ADDITIONAL_INFO .
             $this->getTransactionKey() . "\n" .
             "Additional information: \n\n" .
             $util->arrayToString($additionalInformation);
