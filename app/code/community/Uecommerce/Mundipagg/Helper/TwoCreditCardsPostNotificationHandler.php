@@ -227,7 +227,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
         if (
             $this->getMundipaggOrderStatus() == 'Paid' &&
-            $newTotalPaidInCents == $baseGrandTotalInCents
+            abs($newTotalPaidInCents - $baseGrandTotalInCents) <= 2
         ) {
             $this->setOrderAsProcessing($order, $newTotalPaidInCents);
             $this->updateAdditionalInformation(
