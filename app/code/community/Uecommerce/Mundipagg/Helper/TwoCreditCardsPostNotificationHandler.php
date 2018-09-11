@@ -215,9 +215,6 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
     {
         $util= Mage::helper('mundipagg/util');
 
-        $totalPaidInCents = $this->getTotalPaidInCents($order);
-        $baseGrandTotalInCents = $util->floatToCents($order->getBaseGrandTotal());
-
         if ($this->getCreditCardTransactionStatus() == 'Captured') {
             $transaction->setOrderPaymentObject($order->getPayment());
             $transaction->setIsClosed(true)->save();
@@ -225,14 +222,19 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
 
         $this->log->info(self::CAPTURED_AMOUNT . $this->getCapturedAmountInCents());
 
-        $this->updateCapturedAmount($order, $cardPrefix);
+        $newTotalPaidInCents = $this->updateCapturedAmount($order, $cardPrefix);
+        $baseGrandTotalInCents = $util->floatToCents($order->getBaseGrandTotal());
 
         if (
             $this->getMundipaggOrderStatus() == 'Paid' &&
-            $totalPaidInCents == $baseGrandTotalInCents
+            $newTotalPaidInCents == $baseGrandTotalInCents
         ) {
-            $this->setOrderAsProcessing($order, $totalPaidInCents);
-            $this->updateAdditionalInformation($order, $cardPrefix, $totalPaidInCents);
+            $this->setOrderAsProcessing($order, $newTotalPaidInCents);
+            $this->updateAdditionalInformation(
+                $order,
+                $cardPrefix,
+                $this->getCapturedAmountInCents()
+            );
             $order->save();
             $this->addOrderHistoryStatusUpdate($order, $cardPrefix, true);
         }
@@ -355,14 +357,18 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
     }
 
     private function updateCapturedAmount($order, $cardPrefix) {
-        $totalPaidInCents = $this->getTotalPaidInCents($order);
-        $order->setTotalPaid($totalPaidInCents * 0.01);
+        $capturedAmountInCents = $this->getCapturedAmountInCents();
+        $currentTotalPaidInCents = $this->getTotalPaidInCents($order);
 
-        $this->updateAdditionalInformation($order, $cardPrefix, $totalPaidInCents);
+        $newTotalPaidInCents = $capturedAmountInCents + $currentTotalPaidInCents;
+
+        $order->setTotalPaid($newTotalPaidInCents * 0.01);
+
+        $this->updateAdditionalInformation($order, $cardPrefix, $capturedAmountInCents);
 
         $order->save();
 
-        return $totalPaidInCents;
+        return $newTotalPaidInCents;
     }
 
     private function updateAdditionalInformation($order, $cardPrefix, $transactionPaidAmount)
@@ -388,8 +394,6 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         if ($order->getTotalPaid()) {
             $totalPaidInCents =  $util->floatToCents($order->getTotalPaid());
         }
-
-        $totalPaidInCents += $this->getCapturedAmountInCents();
 
         return $totalPaidInCents;
     }
