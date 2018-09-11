@@ -320,16 +320,12 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
                 $all_installments = $this->getInstallments();
             }
 
-            $installmentKey = $installments - 1;
+            $installmentData = array_filter($all_installments,function($data) use ($installments) {
+                return $data[1] == $installments;
+            });
 
-            if (!$installmentKey) {
-                return 0;
-            }
-
-            $helper = Mage::helper('mundipagg');
-            $installment = $helper->issetOr($all_installments[$installmentKey]);
-
-            if ($installment != null && is_array($installment)) {
+            if (count($installmentData)) {
+                $installment = array_shift($installmentData);
                 // check if interest rate is filled in
                 if (isset($installment[2]) && $installment[2] > 0) {
                     if (!$grandTotal) {
