@@ -320,9 +320,12 @@ class Uecommerce_Mundipagg_Helper_Installments extends Mage_Core_Helper_Abstract
                 $all_installments = $this->getInstallments();
             }
 
-            $installmentData = array_filter($all_installments,function($data) use ($installments) {
-                return $data[1] == $installments;
-            });
+            $installmentData = array_filter(
+                $all_installments,
+                function($data) use ($installments) {
+                    return $data[1] == $installments;
+                }
+            );
 
             if (count($installmentData)) {
                 $installment = array_shift($installmentData);
