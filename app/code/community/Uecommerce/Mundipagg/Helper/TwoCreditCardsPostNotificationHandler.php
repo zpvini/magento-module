@@ -223,11 +223,11 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         $this->log->info(self::CAPTURED_AMOUNT . $this->getCapturedAmountInCents());
 
         $newTotalPaidInCents = $this->updateCapturedAmount($order, $cardPrefix);
-        $baseGrandTotalInCents = $util->floatToCents($order->getBaseGrandTotal());
+        $grandTotalInCents = $util->floatToCents($order->getGrandTotal());
 
         if (
             $this->getMundipaggOrderStatus() == 'Paid' &&
-            abs($newTotalPaidInCents - $baseGrandTotalInCents) <= 2
+            abs($newTotalPaidInCents - $grandTotalInCents) <= 2
         ) {
             $this->setOrderAsProcessing($order, $newTotalPaidInCents);
             $order->save();
