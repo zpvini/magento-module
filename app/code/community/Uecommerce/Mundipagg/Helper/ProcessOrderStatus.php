@@ -64,88 +64,18 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
         // Partial invoice
         $epsilon = 0.00001;
         if ($order->canInvoice() && abs($order->getGrandTotal() - $capturedAmountInCents * 0.01) > $epsilon) {
-            $baseTotalPaid = $order->getTotalPaid();
-            // If there is already a positive baseTotalPaid value it's not the first transaction
-            if ($baseTotalPaid > 0) {
-                $baseTotalPaid += $capturedAmountInCents * 0.01;
-                $order->setTotalPaid(0);
-            } else {
-                $baseTotalPaid = $capturedAmountInCents * 0.01;
-                $order->setTotalPaid($baseTotalPaid);
-            }
-            $accOrderGrandTotal = sprintf(round($order->getGrandTotal(), 2));
-            $accBaseTotalPaid = sprintf($baseTotalPaid);
-            // Can invoice only if total captured amount is equal to GrandTotal
-            if ($accBaseTotalPaid == $accOrderGrandTotal) {
-                $result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
-                return $result;
-            } elseif ($accBaseTotalPaid > $accOrderGrandTotal) {
-                $order->setTotalPaid(0);
-                $result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
-                return $result;
-            } else {
-                $order->save();
-                $returnMessage = "OK | {$returnMessageLabel} | ";
-                $returnMessage .= "Captured amount isn't equal to grand total, invoice not created.";
-                $returnMessage .= "Transaction status '{$status}' received.";
-                $helperLog->info($returnMessage);
-                $helperLog->info("Current order status: " . $order->getStatusLabel());
-                return $returnMessage;
-            }
+            return $this->doPartialInvoice(
+                $order,
+                $returnMessageLabel,
+                $capturedAmountInCents,
+                $data,
+                $status,
+                $helperLog
+            );
         }
         // Create invoice
         if ($order->canInvoice() && abs($capturedAmountInCents * 0.01 - $order->getGrandTotal()) < $epsilon) {
-            try {
-                $orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
-                $return = $orderPayment->createInvoice($order);
-            } catch (Exception $e) {
-                $errMsg = $e->getMessage();
-                $returnMessage = "OK | #{$orderReference} | ";
-                $returnMessage .= "Can't pay order: {$errMsg}";
-                $helperLog->info($returnMessage);
-                $helperLog->info("Current order status: " . $order->getStatusLabel());
-                return $returnMessage;
-            }
-            if ($return instanceof Mage_Sales_Model_Order_Invoice) {
-                $grandTotal = floatval($order->getGrandTotal());
-                $discountAmount = floatval($order->getDiscountAmount());
-
-                $payment = $order->getPayment();
-                $payment
-                    ->setAmountPaid($grandTotal)
-                    ->setBaseAmountPaid($grandTotal);
-                $payment
-                    ->save();
-
-                $order
-                    ->setTotalPaid($grandTotal)
-                    ->setBaseTotalPaid($grandTotal)
-                    ->setTotalInvoiced($grandTotal)
-                    ->setBaseTotalInvoiced($grandTotal);
-                $order
-                    ->save();
-                ;
-
-                $return
-                    ->setGrandTotal($grandTotal)
-                    ->setBaseGrandTotal($grandTotal)
-                    ->setDiscountAmount($discountAmount)
-                    ->setBaseDiscountAmount($discountAmount)
-                    ->save()
-                ;
-                Mage::helper('mundipagg')->sendNewInvoiceEmail($return,$order);
-
-                $returnMessage = "OK | #{$orderReference} | Invoice created - Order Paid";
-                $helperLog->info($returnMessage);
-                $helperLog->info("#{$orderReference} | Invoice Created - Current order status: " . $order->getStatusLabel());
-                return $returnMessage;
-            }
-            // can't pay order
-            $returnMessage = "KO | #{$orderReference} | Can't pay order: ";
-            $returnMessage .= $return;
-            $helperLog->info($returnMessage);
-            $helperLog->info("#{$orderReference} | Current order status: " . $order->getStatusLabel());
-            return $returnMessage;
+            return $this->doFullInvoice($order, $orderReference, $helperLog);
         }
         $returnMessage = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
         $helperLog->error($returnMessage);
@@ -253,6 +183,115 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
         $order->save();
         $returnMessage = "OK | {$returnMessageLabel} | invoice created and order state changed to {$newStatus}.";
         $helperLog->info($returnMessage);
+        return $returnMessage;
+    }
+
+    /**
+     * @param $order
+     * @param $return
+     */
+    protected function persistTotalChanges($order, $return)
+    {
+        $grandTotal = floatval($order->getGrandTotal());
+        $discountAmount = floatval($order->getDiscountAmount());
+
+        $payment = $order->getPayment();
+        $payment
+            ->setAmountPaid($grandTotal)
+            ->setBaseAmountPaid($grandTotal);
+        $payment
+            ->save();
+
+        $order
+            ->setTotalPaid($grandTotal)
+            ->setBaseTotalPaid($grandTotal)
+            ->setTotalInvoiced($grandTotal)
+            ->setBaseTotalInvoiced($grandTotal);
+        $order
+            ->save();;
+
+        $return
+            ->setGrandTotal($grandTotal)
+            ->setBaseGrandTotal($grandTotal)
+            ->setDiscountAmount($discountAmount)
+            ->setBaseDiscountAmount($discountAmount)
+            ->save();
+    }
+
+    /**
+     * @param $order
+     * @param $returnMessageLabel
+     * @param $capturedAmountInCents
+     * @param $data
+     * @param $status
+     * @param $helperLog
+     * @return string
+     */
+    protected function doPartialInvoice($order, $returnMessageLabel, $capturedAmountInCents, $data, $status, $helperLog)
+    {
+        $baseTotalPaid = $order->getTotalPaid();
+        // If there is already a positive baseTotalPaid value it's not the first transaction
+        if ($baseTotalPaid > 0) {
+            $baseTotalPaid += $capturedAmountInCents * 0.01;
+            $order->setTotalPaid(0);
+        } else {
+            $baseTotalPaid = $capturedAmountInCents * 0.01;
+            $order->setTotalPaid($baseTotalPaid);
+        }
+        $accOrderGrandTotal = sprintf(round($order->getGrandTotal(), 2));
+        $accBaseTotalPaid = sprintf($baseTotalPaid);
+        // Can invoice only if total captured amount is equal to GrandTotal
+        if ($accBaseTotalPaid == $accOrderGrandTotal) {
+            $result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
+            return $result;
+        } elseif ($accBaseTotalPaid > $accOrderGrandTotal) {
+            $order->setTotalPaid(0);
+            $result = $this->createInvoice($order, $data, $baseTotalPaid, $status);
+            return $result;
+        } else {
+            $order->save();
+            $returnMessage = "OK | {$returnMessageLabel} | ";
+            $returnMessage .= "Captured amount isn't equal to grand total, invoice not created.";
+            $returnMessage .= "Transaction status '{$status}' received.";
+            $helperLog->info($returnMessage);
+            $helperLog->info("Current order status: " . $order->getStatusLabel());
+            return $returnMessage;
+        }
+    }
+
+    /**
+     * @param $order
+     * @param $orderReference
+     * @param $helperLog
+     * @return string
+     */
+    protected function doFullInvoice($order, $orderReference, $helperLog)
+    {
+        try {
+            $orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
+            $return = $orderPayment->createInvoice($order);
+        } catch (Exception $e) {
+            $errMsg = $e->getMessage();
+            $returnMessage = "OK | #{$orderReference} | ";
+            $returnMessage .= "Can't pay order: {$errMsg}";
+            $helperLog->info($returnMessage);
+            $helperLog->info("Current order status: " . $order->getStatusLabel());
+            return $returnMessage;
+        }
+        if ($return instanceof Mage_Sales_Model_Order_Invoice) {
+            $this->persistTotalChanges($order, $return);
+            Mage::helper('mundipagg')->sendNewInvoiceEmail($return, $order);
+
+            $returnMessage = "OK | #{$orderReference} | Invoice created - Order Paid";
+            $helperLog->info($returnMessage);
+            $helperLog->info("#{$orderReference} | Invoice Created - Current order status: " . $order->getStatusLabel());
+            return $returnMessage;
+        }
+        // can't pay order
+        $returnMessage = "KO | #{$orderReference} | Can't pay order: ";
+        $returnMessage .= $return;
+        $helperLog->info($returnMessage);
+        $helperLog->info("#{$orderReference} | Current order status: " . $order->getStatusLabel());
         return $returnMessage;
     }
 }
