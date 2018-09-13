@@ -48,6 +48,7 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
     public function paidOverpaid($order,$returnMessageLabel,$capturedAmountInCents,$data,$status)
     {
         $helperLog = new Uecommerce_Mundipagg_Helper_Log(__METHOD__);
+        $orderReference = $order->getIncrementId();
 
         if ($order->canUnhold()) {
             $order->unhold();
@@ -94,8 +95,57 @@ class Uecommerce_Mundipagg_Helper_ProcessOrderStatus extends Mage_Core_Helper_Ab
         }
         // Create invoice
         if ($order->canInvoice() && abs($capturedAmountInCents * 0.01 - $order->getGrandTotal()) < $epsilon) {
-            $result = $this->createInvoice($order, $data, $order->getGrandTotal(), $status);
-            return $result;
+            try {
+                $orderPayment = new Uecommerce_Mundipagg_Model_Order_Payment();
+                $return = $orderPayment->createInvoice($order);
+            } catch (Exception $e) {
+                $errMsg = $e->getMessage();
+                $returnMessage = "OK | #{$orderReference} | ";
+                $returnMessage .= "Can't pay order: {$errMsg}";
+                $helperLog->info($returnMessage);
+                $helperLog->info("Current order status: " . $order->getStatusLabel());
+                return $returnMessage;
+            }
+            if ($return instanceof Mage_Sales_Model_Order_Invoice) {
+                $grandTotal = floatval($order->getGrandTotal());
+                $discountAmount = floatval($order->getDiscountAmount());
+
+                $payment = $order->getPayment();
+                $payment
+                    ->setAmountPaid($grandTotal)
+                    ->setBaseAmountPaid($grandTotal);
+                $payment
+                    ->save();
+
+                $order
+                    ->setTotalPaid($grandTotal)
+                    ->setBaseTotalPaid($grandTotal)
+                    ->setTotalInvoiced($grandTotal)
+                    ->setBaseTotalInvoiced($grandTotal);
+                $order
+                    ->save();
+                ;
+
+                $return
+                    ->setGrandTotal($grandTotal)
+                    ->setBaseGrandTotal($grandTotal)
+                    ->setDiscountAmount($discountAmount)
+                    ->setBaseDiscountAmount($discountAmount)
+                    ->save()
+                ;
+                Mage::helper('mundipagg')->sendNewInvoiceEmail($return,$order);
+
+                $returnMessage = "OK | #{$orderReference} | Invoice created - Order Paid";
+                $helperLog->info($returnMessage);
+                $helperLog->info("#{$orderReference} | Invoice Created - Current order status: " . $order->getStatusLabel());
+                return $returnMessage;
+            }
+            // can't pay order
+            $returnMessage = "KO | #{$orderReference} | Can't pay order: ";
+            $returnMessage .= $return;
+            $helperLog->info($returnMessage);
+            $helperLog->info("#{$orderReference} | Current order status: " . $order->getStatusLabel());
+            return $returnMessage;
         }
         $returnMessage = "Order {$order->getIncrementId()} | Unable to create invoice for this order.";
         $helperLog->error($returnMessage);
