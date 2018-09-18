@@ -3,6 +3,7 @@
 class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 {
     const INTEGRATION_TIMEOUT = "MundiPagg API timeout, waiting notification";
+    const CREATE_ORDER_TRIES = 2;
 
     private $helperUtil;
     private $modelStandard;
@@ -16,6 +17,30 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
         $this->moduleVersion = Mage::helper('mundipagg')->getExtensionVersion();
         $this->debugEnabled = $this->modelStandard->getDebug();
         parent::_construct();
+    }
+
+    protected function tryCreateOrder($helperLog, $request, $try)
+    {
+        if ($try == 0) {
+            return false;
+        }
+
+        $helperLog->info("Trying to create order on Mundipagg. Remaining Tries: $try");
+        $response = $this->sendJSON($request);
+
+        if ($response !== null) {
+            return $response;
+        }
+
+        $helperLog->error('Null response received! Trying to get orderData from API...');
+
+        $response = $this->tryGetOrderDataFromAPI($request);
+        if ($response !== null) {
+            return $response;
+        }
+
+        $helperLog->error('Null response handling: Failed to get orderData from API!');
+        return $this->tryCreateOrder($helperLog, $request, $try - 1);
     }
 
     public function getHolderNameByInstantBuyKey($instantBuyKey)
@@ -241,16 +266,26 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 }
             }
 
-            $response = $this->sendJSON($_request);
-
-            if ($response === null) {
-                $helperLog->error('Null response received! Trying to get orderData from API...');
-
-                $response = $this->tryGetOrderDataFromAPI($_request);
-                if ($response === null) {
-                    $helperLog->error('Null response handling: Failed to get orderData from API!');
-                    return false;
-                }
+            $response = $this->tryCreateOrder(
+                $helperLog,
+                $_request,
+                self::CREATE_ORDER_TRIES);
+            if ($response === false) {
+                $helperLog->error('Could not create order on Mundipagg!');
+                $order->addStatusHistoryComment(
+                    "MP - Order Creation was tried by " .
+                    self::CREATE_ORDER_TRIES .
+                    " times, but the creation failed." .
+                    "The order was canceled. Please contact Mundipagg support.",
+                    false
+                );
+                $order->save();
+                return [
+                    'error'            => 1,
+                    'ErrorCode'        => 'OrderCreationFailed',
+                    'ErrorDescription' => 'OrderCreationFailed',
+                    'result'           => $response
+                ];
             }
 
             $errorReport = $helper->issetOr($response['ErrorReport']);
@@ -663,6 +698,7 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
 
         return $newCreditcardTransCollection;
     }
+
     /**
      * Boleto transaction
      **/
@@ -732,16 +768,27 @@ class Uecommerce_Mundipagg_Model_Api extends Uecommerce_Mundipagg_Model_Standard
                 $_request['RequestData'] = $nodeRequestData;
             }
 
-            $response = $this->sendJSON($_request);
 
-            if ($response === null) {
-                $helperLog->error('Null response received! Trying to get orderData from API...');
-
-                $response = $this->tryGetOrderDataFromAPI($_request);
-                if ($response === null) {
-                    $helperLog->error('Null response handling: Failed to get orderData from API!');
-                    return false;
-                }
+            $response = $this->tryCreateOrder(
+                $helperLog,
+                $_request,
+                self::CREATE_ORDER_TRIES);
+            if ($response === false) {
+                $helperLog->error('Could not create order on Mundipagg!');
+                $order->addStatusHistoryComment(
+                    "MP - Order Creation was tried by " .
+                        self::CREATE_ORDER_TRIES .
+                        " times, but the creation failed." .
+                        "The order was canceled. Please contact Mundipagg support.",
+                    false
+                );
+                $order->save();
+                return [
+                    'error'            => 1,
+                    'ErrorCode'        => 'OrderCreationFailed',
+                    'ErrorDescription' => 'OrderCreationFailed',
+                    'result'           => $response
+                ];
             }
 
             // time out or no Mundipagg API response
