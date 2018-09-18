@@ -172,18 +172,25 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
             $additionalInformation = $this->getAdditionalInformation($order);
             $cardPrefix = $this->discoverCardPrefix($additionalInformation);
 
+            //Avoiding parallel processing
+            $this->semaphore($order,$cardPrefix);
+            $order->setMundipaggLock(true);
+            $order->save();
+
             $this->addOrderHistoryStatusUpdate($order, $cardPrefix);
             $order->save();
 
             if (!$this->alreadyUpdated($additionalInformation, $cardPrefix)) {
                 $this->capture($order, $transaction, $cardPrefix);
             }
-
+            $order->setMundipaggLock(false);
+            $order->save();
             return 'OK';
 
         } catch (Exception $e) {
+            $order->setMundipaggLock(false);
+            $order->save();
             $this->log->error($e->getMessage());
-
             return "KO | " . $e->getMessage();
         }
     }
@@ -395,5 +402,27 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         }
 
         return $totalPaidInCents;
+    }
+
+    private function semaphore($order, $cardPrefix)
+    {
+        $currentOrder = $order;
+        $pre = 100000 + (rand(100,10000)*100);
+        usleep($pre);
+        do {
+            $uWait = (rand(1,9) * 50) + 100;
+            $uWait *= 1000;
+            uSleep($uWait);
+
+            $currentOrder->load($currentOrder->getId());
+            $isLocked = boolval($currentOrder->getMundipaggLock());
+            $this->log->info(
+                '#'. $order->getIncrementId() .
+                ": SEMAPHORE for card $cardPrefix: " .
+                intval(($uWait + $pre) / 1000) . " ms"
+            );
+            $pre = 0;
+        }while($isLocked);
+        return $currentOrder;
     }
 }

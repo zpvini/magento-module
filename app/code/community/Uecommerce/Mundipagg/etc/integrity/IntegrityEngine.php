@@ -5,10 +5,17 @@ class IntegrityEngine
     const MODMAN_CHECK = 'modman';
     const INTEGRITY_CHECK = 'integrityCheck';
 
+    protected static $NULL_HASH;
+
+    public function __construct()
+    {
+        self::$NULL_HASH =  md5('null');
+    }
+
     public function listLogFiles($directories, $logFileConfig) {
         $allLogs = [];
         foreach ($directories as $dir) {
-            $allLogs = array_merge($allLogs,$this->listFilesOnDir($dir));
+            $allLogs = array_merge($allLogs,$this->listFilesOnDir($dir, false));
         }
         $allLogs = array_keys($allLogs);
         $allLogs = array_filter($allLogs,function($logFile) use ($logFileConfig) {
@@ -44,11 +51,15 @@ class IntegrityEngine
         return true;
     }
 
-    public function generateCheckSum($dir)
+    public function generateCheckSum($dir, $calculateHash = true)
     {
         if (!is_dir($dir)) {
+            $hash = false;
+            if (file_exists($dir)) {
+                $hash = $calculateHash ? md5_file($dir) : self::$NULL_HASH;
+            }
             return  [
-                $dir => file_exists($dir) ? md5_file($dir) : false
+                $dir => $hash
             ];
         }
 
@@ -57,7 +68,7 @@ class IntegrityEngine
         foreach ($files as $file) {
             if ($file !== '.' && $file !== '..') {
                 $file = $dir . DIRECTORY_SEPARATOR . $file;
-                $md5[$file] = $this->generateCheckSum($file);
+                $md5[$file] = $this->generateCheckSum($file, $calculateHash);
             }
         }
         return $md5;
@@ -112,7 +123,7 @@ class IntegrityEngine
 
     }
 
-    public function listFilesOnDir($dir) {
+    public function listFilesOnDir($dir, $calculateHash = true) {
         if(!$this->hasPermissions($dir)) {
             return [];
         }
@@ -122,7 +133,7 @@ class IntegrityEngine
         $md5s = [];
         foreach ($rawLines as $line) {
             $md5s = array_merge($md5s,$this->filterFileCheckSum(
-                $this->generateCheckSum('./' . $line)
+                $this->generateCheckSum('./' . $line, $calculateHash)
             ));
         }
 
