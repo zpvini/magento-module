@@ -102,8 +102,7 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
         }
         if ($parcelsNumber1 > 1) {
             $interest1 = Mage::helper('mundipagg/installments')->getInterestForCard($parcelsNumber1, $cctype1, $value1);
-            
-            
+
             $interestInformation[$keyCode.'_2_1'] = new Varien_Object();
             $interestInformation[$keyCode.'_2_1']->setInterest(str_replace(',', '.', $interest1))->setValue(str_replace(',', '.', $value1));
         }
@@ -113,6 +112,13 @@ class Uecommerce_Mundipagg_Model_Twocreditcards extends Uecommerce_Mundipagg_Mod
             $interestInformation[$keyCode.'_2_2'] = new Varien_Object();
             $interestInformation[$keyCode.'_2_2']->setInterest(str_replace(',', '.', $interest2))->setValue(str_replace(',', '.', $value2));
         }
+
+        $info->setAdditionalInformation('mundipagg_installments',
+            [
+                1 => $parcelsNumber1,
+                2 => $parcelsNumber2
+            ]
+        );
         
         $valueWithInterest1 = $this->getValueWithInterest($cctype1, $value1, $parcelsNumber1);
         $valueWithInterest2 = $this->getValueWithInterest($cctype2, $value2, $parcelsNumber2);

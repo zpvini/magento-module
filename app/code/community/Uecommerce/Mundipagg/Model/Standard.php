@@ -1914,6 +1914,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             $errorMsg[] = Mage::helper('payment')->__('Informe o CVV');
         }
 
+
+
         // Check if we are dealing with a new Credit Card
         $isToken = $info->getAdditionalInformation('mundipagg_creditcard_token_1_1');
 
@@ -1968,12 +1970,29 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             }
         }
 
+        if (!$this->validateInstallments($info)) {
+            $errorMsg[] = Mage::helper('payment')
+                ->__('Invalid installments number');
+        }
+
         if ($errorMsg) {
             $json = json_encode($errorMsg);
             Mage::throwException($json);
         }
 
         return $this;
+    }
+
+    private function validateInstallments($info)
+    {
+        $installments = $info->getAdditionalInformation('mundipagg_installments');
+        foreach ($installments as $installmentsByCard) {
+            if (!$installmentsByCard) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
