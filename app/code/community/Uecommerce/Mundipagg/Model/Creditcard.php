@@ -61,6 +61,12 @@ class Uecommerce_Mundipagg_Model_Creditcard extends Uecommerce_Mundipagg_Model_S
                 $info->getQuote()->getGrandTotal() - $discount
             );
 
+        $info->setAdditionalInformation('mundipagg_installments',
+            [
+                1 => $parcelsNumber
+            ]
+        );
+
         if ($interest > 0) {
             $interestInformation = [];
             $interestInformation[$this->_code.'_1_1'] = new Varien_Object();
