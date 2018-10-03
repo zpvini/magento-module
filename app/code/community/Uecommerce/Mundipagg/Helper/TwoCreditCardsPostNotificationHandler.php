@@ -239,10 +239,10 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
             $this->setOrderAsProcessing($order, $newTotalPaidInCents);
             $order->save();
             $this->addOrderHistoryStatusUpdate($order, $cardPrefix, true);
-        } else {
-            $this->log->info("Total paid until now: $newTotalPaidInCents" );
-            $this->log->info("Grand total order amount in cents: $grandTotalInCents");
         }
+
+        $this->log->info("Total paid until now: $newTotalPaidInCents" );
+        $this->log->info("Grand total order amount in cents: $grandTotalInCents");
 
         $order->save();
 
