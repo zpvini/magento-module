@@ -1,5 +1,5 @@
 <_>
-   <form_key>s9GMl6wM7Vc7mACH</form_key>
+   <form_key>3DRke1xmU9hV4E8V</form_key>
    <name>Mundipagg_Integracao</name>
    <channel>community</channel>
    <version_ids>
@@ -27,9 +27,9 @@ IMPORTANTE
 Em qualquer procedimento de instalação ou update existem riscos, aconselhamos sempre criar backups de sua loja e efetuar qualquer procedimento em ambiente de desenvolvimento antes, nunca diretamente em produção. Não nos responsabilizamos por eventuais incidentes causados por negligenciar este alerta ou por uso de produtos ou serviços de terceiros.</description>
    <license>MIT</license>
    <license_uri/>
-   <version>2.17.0</version>
+   <version>2.17.06</version>
    <stability>stable</stability>
-   <notes>- Add new payment method (Credit Card One Installment)</notes>
+   <notes>- Fix php incompatibilities and others bugs</notes>
    <authors>
       <name>
          <name>mundipagg</name>
@@ -58,7 +58,7 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
             <max/>
          </max>
          <files>
-            <files>                                                 </files>
+            <files>                                                   </files>
          </files>
       </package>
       <extension>
@@ -160,8 +160,4 @@ Em qualquer procedimento de instalação ou update existem riscos, aconselhamos 
          <ignore/>
       </ignore>
    </contents>
-   <page>1</page>
-   <limit>200</limit>
-   <folder/>
-   <package/>
 </_>
