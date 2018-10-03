@@ -1968,7 +1968,8 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
             }
         }
 
-        if (!$this->validateInstallments($info)) {
+        if ($info->getAdditionalInformation('PaymentMethod') !== 'mundipagg_creditcardoneinstallment' &&
+            !$this->validateInstallments($info)) {
             $errorMsg[] = Mage::helper('payment')
                 ->__('Invalid installments number');
         }

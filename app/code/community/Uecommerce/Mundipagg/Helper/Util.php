@@ -43,7 +43,7 @@ class Uecommerce_Mundipagg_Helper_Util extends Mage_Core_Helper_Abstract
 
     public function floatToCents($amount)
     {
-        $float = number_format($amount, 2);
-        return str_replace('.', '', $float);
+        $float = number_format($amount, 2, "", "");
+        return str_replace(['.', ','], '', $float);
     }
 }

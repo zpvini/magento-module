@@ -173,7 +173,7 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
             $cardPrefix = $this->discoverCardPrefix($additionalInformation);
 
             //Avoiding parallel processing
-            $this->semaphore($order,$cardPrefix);
+            $this->semaphore($order, $cardPrefix);
             $order->setMundipaggLock(true);
             $order->save();
 
@@ -239,6 +239,9 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
             $this->setOrderAsProcessing($order, $newTotalPaidInCents);
             $order->save();
             $this->addOrderHistoryStatusUpdate($order, $cardPrefix, true);
+        } else {
+            $this->log->info("Total paid until now: $newTotalPaidInCents" );
+            $this->log->info("Grand total order amount in cents: $grandTotalInCents");
         }
 
         $order->save();
@@ -412,10 +415,10 @@ class Uecommerce_Mundipagg_Helper_TwoCreditCardsPostNotificationHandler extends 
         do {
             $uWait = (rand(1,9) * 50) + 100;
             $uWait *= 1000;
-            uSleep($uWait);
+            usleep($uWait);
 
             $currentOrder->load($currentOrder->getId());
-            $isLocked = boolval($currentOrder->getMundipaggLock());
+            $isLocked = (bool) $currentOrder->getMundipaggLock();
             $this->log->info(
                 '#'. $order->getIncrementId() .
                 ": SEMAPHORE for card $cardPrefix: " .
