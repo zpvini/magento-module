@@ -96,6 +96,17 @@ class IntegrityEngine
 
     }
 
+    public function isFileOverride($file)
+    {
+        $local = str_replace("community", "local", $file);
+
+        if (file_exists($local) && strpos($file, "community") !== false) {
+            return $local;
+        }
+
+        return false;
+    }
+
     public function getMD5FromArrayData($arrayData, $fileOrigin = self::MODMAN_CHECK)
     {
         $md5s = [];
@@ -173,6 +184,7 @@ class IntegrityEngine
         $newFiles = [];
         $unreadableFiles = [];
         $alteredFiles = [];
+        $overrideFiles = [];
 
         $files = $this->generateModuleFilesMD5s($modmanFilePath, $integrityCheckFilePath);
 
@@ -186,6 +198,9 @@ class IntegrityEngine
                 //skip validation of integrityCheck file
                 continue;
             }
+
+            $overrideFiles[] = $this->isFileOverride($fileName);
+
             if ($md5 === false) {
                 $unreadableFiles[] = $fileName;
                 continue;
@@ -203,7 +218,8 @@ class IntegrityEngine
             'files' => $files,
             'newFiles' => $newFiles,
             'unreadableFiles' => $unreadableFiles,
-            'alteredFiles' => $alteredFiles
+            'alteredFiles' => $alteredFiles,
+            'overrideFiles' => array_values(array_filter($overrideFiles))
         ];
     }
 }

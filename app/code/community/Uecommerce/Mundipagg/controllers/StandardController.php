@@ -601,6 +601,14 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             echo json_encode($integrityResult['unreadableFiles']);
         }
 
+        if (count($integrityResult['overrideFiles']) > 0) {
+            echo "<h3 style='color:red'>Warning! Module files were overrided!</h3>";
+            echo '<pre>';
+            print_r($integrityResult['overrideFiles']);
+            echo '</pre>';
+            echo json_encode($integrityResult['overrideFiles']);
+        }
+
         echo '<h3>File List ('.count($integrityResult['files']).')</h3><pre>';
         print_r($integrityResult['files']);
         echo '</pre>';
