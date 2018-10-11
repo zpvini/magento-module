@@ -142,6 +142,8 @@ $standard = Mage::getModel('mundipagg/standard');
 
                 $acquireMessage = $info->getAdditionalInformation($i . "_AcquirerMessage");
 
+                $NSU = $this->getInfo()->getAdditionalInformation("{$i}_UniqueSequentialNumber");
+
                 echo "<p>";
                 echo "{$helper->__('Credit card issuer')}: {$brand}<br/>";
                 echo "{$helper->__('Masked number')}: {$maskedCreditCardNumber}<br/>";
@@ -149,6 +151,7 @@ $standard = Mage::getModel('mundipagg/standard');
                 echo "{$helper->__('Installments')}: {$installmentsNumber}<br/>";
                 echo "{$helper->__('Authorization code')}: {$authorizationCode}<br/>";
                 echo "{$helper->__('Transaction ID')}: {$txnId}<br/>";
+                echo "{$helper->__('NSU')}: {$NSU}<br/>";
                 echo "{$helper->__('Acquirer message')}: {$acquireMessage}<br/>";
                 echo "</p>";
             }
