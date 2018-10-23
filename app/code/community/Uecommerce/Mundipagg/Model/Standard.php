@@ -249,6 +249,11 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         $helper = Mage::helper('mundipagg');
 
         foreach ($data->getData() as $id => $value) {
+
+            if (preg_match('/card_on_file_cvv/', $id) == 1) {
+                continue;
+            }
+
             $mundipagg[$id] = $value;
 
             // We verify if a CPF OR CNPJ is valid
@@ -1821,9 +1826,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
         if (Mage::getStoreConfig('payment/mundipagg_standard/ask_cvv_cardonfile')) {
             switch ($paymentType) {
                 case '1CreditCards':
-                    $cvv = $info->getAdditionalInformation(
-                        'mundipagg_creditcard_card_on_file_cvv_1_1'
-                    );
+                    $cvv = null;
                     $token = $info->getAdditionalInformation(
                         'mundipagg_creditcard_token_1_1'
                     );
@@ -1842,12 +1845,7 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
                 case '2CreditCards':
                     $totalSavedCardsUsed = 0;
 
-                    $cvv1 = $info->getAdditionalInformation(
-                        'mundipagg_twocreditcards_card_on_file_cvv_2_1'
-                    );
-                    $cvv2 = $info->getAdditionalInformation(
-                        'mundipagg_twocreditcards_card_on_file_cvv_2_2'
-                    );
+                    $cvv1 = $cvv2 = null;
 
                     $token1 = $info->getAdditionalInformation(
                         'mundipagg_twocreditcards_token_2_1'
