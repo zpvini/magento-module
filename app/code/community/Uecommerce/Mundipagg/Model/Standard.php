@@ -272,7 +272,15 @@ class Uecommerce_Mundipagg_Model_Standard extends Mage_Payment_Model_Method_Abst
 
         $helperInstallments = Mage::helper('mundipagg/Installments');
 
-        if ($helperInstallments->isInstallmentsEnabled() !== '0') {
+        $methodsWithInstallments = [
+            'mundipagg_creditcard',
+            'mundipagg_twocreditcards'
+        ];
+
+        if (
+            $helperInstallments->isInstallmentsEnabled() !== '0' &&
+            in_array($mundipagg['method'], $methodsWithInstallments)
+        ) {
             $dataKeys = array_keys($mundipagg);
             $ccIndexes = array_filter($dataKeys, function($key) {
                 return strpos($key,'_token_') !== false;
