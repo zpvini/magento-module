@@ -502,6 +502,11 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
     /** Returns info about module files and integrity */
     public function versionAction()
     {
+        $log = Mage::app()->getRequest()->getParam('log');
+        if ($log) {
+            return $this->logAction();
+        }
+
         if ($this->checkMaintenanceRouteAccessPermition()) {
             header('HTTP/1.0 401 Unauthorized');
             $this->getResponse()->setBody('Unauthorized');
@@ -704,10 +709,17 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
             return;
         }
 
+        $downloadFileName = str_replace(DIRECTORY_SEPARATOR, "_", $file);
+
+        $extension = Mage::app()->getRequest()->getParam('extension');
+
+        if ($extension == "txt") {
+            return $this->downloadLog($downloadFileName.'.txt', $file);
+        }
+
         $zip = new ZipArchive;
         $zipFileName = tempnam(sys_get_temp_dir(), 'MP_');
         $zipSuccess = false;
-        $downloadFileName = str_replace(DIRECTORY_SEPARATOR, "_", $file);
         if ($zip->open($zipFileName) === TRUE) {
             $zip->addFile($file, $downloadFileName);
             $zip->close();
@@ -715,15 +727,20 @@ class Uecommerce_Mundipagg_StandardController extends Mage_Core_Controller_Front
         }
 
         if ($zipSuccess) {
-            header('Content-Type: application/zip');
-            header('Content-Disposition: attachment; filename='.$downloadFileName.'.zip');
-            header('Pragma: no-cache');
-            readfile($zipFileName);
-            return;
+            return $this->downloadLog($downloadFileName.'.zip', $zipFileName);
         }
 
         header('HTTP/1.0 500 Internal Server Error');
         $this->getResponse()->setBody('Zip encoding failure');
+    }
+
+    public function downloadLog($filename, $file)
+    {
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Pragma: no-cache');
+        readfile($file);
+        return;
     }
 
     public function orderAction()
