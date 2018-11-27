@@ -68,6 +68,19 @@ class Uecommerce_Mundipagg_Model_Order_Payment
             $standard->closeAuthorizationTxns($order);
             $log->info("Authorization transactions closed");
 
+            if ($order->getTotalPaid() < $invoice->getBaseGrandTotal()) {
+
+                $log->info("Order Total Paid (" . intval($order->getTotalPaid()) .
+                    ") is less than Invoice Total (" . $invoice->getBaseGrandTotal() . ")");
+
+                $order
+                    ->setBaseTotalPaid($invoice->getBaseGrandTotal())
+                    ->setTotalPaid($invoice->getBaseGrandTotal())
+                    ->save();
+
+                $log->info("Order Total Paid updated: " . $order->getTotalPaid());
+            }
+
             return $invoice;
         } catch (Exception $e) {
             Mage::throwException($e);
