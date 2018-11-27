@@ -573,10 +573,10 @@ if ($recurrent) {
 								<?php if (Mage::getStoreConfig('payment/mundipagg_standard/save_cardonfile')): ?>
                                     <li>
 
-                                        <div class="input-box" style="padding-top: 10px">
-                                            <div class="field">
-                                                <label class="required"><?php echo $this->__('Save Card On File') ?></label>
-                                                <input
+                                        <div class="field" style="padding-top: 10px">
+                                            <label class="required"><?php echo $this->__('Save Card On File') ?></label>
+                                            <div class="input-box">
+						<input
                                                     type="checkbox"
                                                     id="<?php echo $_code . '_save_token_' . $num . '_' . $c; ?>"
                                                     name="<?php echo 'payment[' . $_code . '_save_token_' . $num . '_' . $c . ']'; ?>"
